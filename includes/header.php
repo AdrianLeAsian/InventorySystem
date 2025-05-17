@@ -12,8 +12,7 @@
         <nav>
             <ul>
                 <li><a href="index.php?page=dashboard">Dashboard</a></li>
-                <li><a href="index.php?page=categories">Categories</a></li>
-                <li><a href="index.php?page=items">Items</a></li>
+                <li><a href="index.php?page=inventory">Inventory</a></li>
                 <li><a href="index.php?page=tracking">Tracking</a></li>
                 <li><a href="index.php?page=reports">Reports</a></li>
             </ul>
