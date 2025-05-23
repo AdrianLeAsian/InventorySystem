@@ -261,7 +261,7 @@ if($result_activity = mysqli_query($link, $sql_recent_activity)){
 <div class="content-wrapper">
     <div class="dashboard-container">
         <div class="page-header">
-            <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
+            <h1>Dashboard</h1>
             <div class="header-actions">
                 <a href="index.php?page=inventory" class="btn btn-primary">
                     <i class="fas fa-box"></i> View Inventory
@@ -272,99 +272,51 @@ if($result_activity = mysqli_query($link, $sql_recent_activity)){
             </div>
         </div>
 
-        <!-- Quick Stats Cards -->
-        <div class="grid">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-boxes"></i>
-                    <h2>Total Items</h2>
-                </div>
-                <div class="card-body">
-                    <h3><?php echo number_format($total_items_count); ?></h3>
-                    <p>Items in inventory</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-tags"></i>
-                    <h2>Categories</h2>
-                </div>
-                <div class="card-body">
-                    <h3><?php echo number_format($total_categories); ?></h3>
-                    <p>Active categories</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-dollar-sign"></i>
-                    <h2>Total Stock Value</h2>
-                </div>
-                <div class="card-body">
-                    <h3>$<?php echo number_format($total_stock_value, 2); ?></h3>
-                    <p>Current inventory value</p>
-                </div>
-            </div>
-
-            <div class="card <?php echo ($low_stock_count > 0) ? 'alert' : ''; ?>">
-                <div class="card-header">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h2>Low Stock Alerts</h2>
-                </div>
-                <div class="card-body">
-                    <h3><?php echo number_format($low_stock_count); ?></h3>
-                    <p>Items need attention</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content Area -->
-        <div class="two-column-section">
-            <!-- Left Column -->
-            <div class="content-column">
-                <?php if ($low_stock_count > 0): ?>
-                <div class="card alert">
+        <div class="dashboard-main">
+            <div class="dashboard-row dashboard-row-stats">
+                <div class="card stat-card">
                     <div class="card-header">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <h2>Low Stock Items</h2>
+                        <i class="fas fa-boxes"></i>
+                        <h2>Total Items</h2>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Item Name</th>
-                                        <th>Current Quantity</th>
-                                        <th>Unit</th>
-                                        <th>Low Stock At</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($low_stock_items as $item): ?>
-                                    <tr>
-                                        <td><?php echo htmlspecialchars($item['name']); ?></td>
-                                        <td class="<?php echo ($item['quantity'] == 0) ? 'text-danger' : ''; ?>">
-                                            <?php echo htmlspecialchars($item['quantity']); ?>
-                                        </td>
-                                        <td><?php echo htmlspecialchars($item['unit']); ?></td>
-                                        <td><?php echo htmlspecialchars($item['low_stock_threshold']); ?></td>
-                                        <td>
-                                            <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="btn btn-sm btn-primary">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
+                        <h3><?php echo number_format($total_items_count); ?></h3>
+                        <p>Items in inventory</p>
                     </div>
                 </div>
-                <?php endif; ?>
-
-                <div class="card">
+                <div class="card stat-card">
+                    <div class="card-header">
+                        <i class="fas fa-tags"></i>
+                        <h2>Categories</h2>
+                    </div>
+                    <div class="card-body">
+                        <h3><?php echo number_format($total_categories); ?></h3>
+                        <p>Active categories</p>
+                    </div>
+                </div>
+                <div class="card stat-card">
+                    <div class="card-header">
+                        <i class="fas fa-dollar-sign"></i>
+                        <h2>Total Stock Value</h2>
+                    </div>
+                    <div class="card-body">
+                        <h3>$<?php echo number_format($total_stock_value, 2); ?></h3>
+                        <p>Current inventory value</p>
+                    </div>
+                </div>
+                <div class="card stat-card <?php echo ($low_stock_count > 0) ? 'alert' : ''; ?>">
+                    <div class="card-header">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h2>Low Stock Alerts</h2>
+                    </div>
+                    <div class="card-body">
+                        <h3><?php echo number_format($low_stock_count); ?></h3>
+                        <p>Items need attention</p>
+                    </div>
+                </div>
+            </div>
+            <div class="dashboard-row dashboard-row-info">
+                <div class="card info-card">
                     <div class="card-header">
                         <i class="fas fa-history"></i>
                         <h2>Recent Activity</h2>
@@ -400,11 +352,7 @@ if($result_activity = mysqli_query($link, $sql_recent_activity)){
                         <?php endif; ?>
                     </div>
                 </div>
-            </div>
-
-            <!-- Right Column -->
-            <div class="content-column">
-                <div class="card">
+                <div class="card info-card">
                     <div class="card-header">
                         <i class="fas fa-chart-pie"></i>
                         <h2>Category Distribution</h2>

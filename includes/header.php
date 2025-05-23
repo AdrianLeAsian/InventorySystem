@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory System</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -285,35 +286,10 @@
     <?php include 'sidebar.php'; ?>
     <div class="page-header">
         <h1>
-            <i class="fas fa-<?php 
+            <?php 
                 $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
-                switch($page) {
-                    case 'dashboard':
-                        echo 'home';
-                        break;
-                    case 'inventory':
-                        echo 'boxes';
-                        break;
-                    case 'tracking':
-                        echo 'truck';
-                        break;
-                    case 'reports':
-                        echo 'chart-bar';
-                        break;
-                    case 'categories':
-                        echo 'tags';
-                        break;
-                    case 'edit_item':
-                        echo 'edit';
-                        break;
-                    case 'edit_category':
-                        echo 'edit';
-                        break;
-                    default:
-                        echo 'circle';
-                }
-            ?>"></i>
-            <?php echo ucfirst($page); ?>
+                echo ucfirst($page);
+            ?>
         </h1>
     </div>
     <main class="container">
