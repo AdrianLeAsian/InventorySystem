@@ -1,4 +1,3 @@
-<?php ob_start(); ?>
 <?php
 session_start();
 require_once 'config/db.php';
@@ -16,4 +15,4 @@ if (file_exists($page_path)) {
 }
 ?>
 </body>
-</html> 
+</html>

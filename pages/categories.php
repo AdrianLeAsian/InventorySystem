@@ -1,4 +1,5 @@
 <?php
+
 // Handle form submission for adding a new category
 $category_name = '';
 $category_description = '';
@@ -19,9 +20,6 @@ if (isset($_GET['error'])) {
     }
     if ($_GET['error'] == 'invalid_id') {
         $message .= "<p class='error'>Error: Invalid category ID provided for editing.</p>";
-    }
-    if ($_GET['error'] == 'invalid_id_delete') {
-        $message .= "<p class='error'>Error: Invalid category ID provided for deletion.</p>";
     }
     if ($_GET['error'] == 'delete_failed') {
         $message .= "<p class='error'>Error: Could not delete the category.</p>";
@@ -106,7 +104,7 @@ if ($result = mysqli_query($link, $sql_fetch)) {
                     <h2 class="card__title">Add New Category</h2>
                 </div>
                 <div class="card__body">
-                    <form method="POST" class="form">
+                    <form method="POST" class="form" action="index.php?page=categories">
                         <div class="form__group">
                             <label class="form__label">Category Name</label>
                             <input type="text" name="category_name" class="form__input" value="<?php echo htmlspecialchars($category_name); ?>" required>

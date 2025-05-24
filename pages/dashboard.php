@@ -114,7 +114,7 @@ if($result_activity = mysqli_query($link, $sql_recent_activity)){
         </div>
 
         <div class="grid grid--2-cols mt-4">
-            <div class="card">
+            <div class="card" id="recent-activity-card">
                 <div class="card__header">
                     <h2 class="card__title">Recent Activity</h2>
                 </div>
@@ -193,12 +193,12 @@ function updateRecentActivities() {
     fetch('ajax/get_recent_activities.php')
         .then(response => response.text())
         .then(html => {
-            const activitiesContainer = document.querySelector('.card:has(.card__title:contains("Recent Activity")) .card__body');
+            const activitiesContainer = document.querySelector('#recent-activity-card .card__body');
             if (activitiesContainer) {
                 activitiesContainer.innerHTML = html;
             }
         })
-        .catch(error => console.error('Error updating recent activities:', error));
+        .catch(error => console.error('Error updating recent activities:', error.message));
 }
 
 // Update activities every 30 seconds

@@ -1,5 +1,5 @@
 <?php
-require_once '../includes/config.php';
+require_once '../config/db.php';
 
 // Fetch recent activity
 $recent_activity = [];
@@ -47,4 +47,4 @@ if (!empty($recent_activity)): ?>
     </div>
 <?php else: ?>
     <p class="text-center text-muted">No recent stock movements.</p>
-<?php endif; ?> 
+<?php endif; ?>
