@@ -96,88 +96,101 @@ if (!empty($monthly_usage_data)) {
 
 ?>
 
-<h2>Inventory Reports</h2>
+<link rel="stylesheet" href="css/main.css">
 
-<?php echo $message; ?>
+<div class="container">
+    <div class="page">
+        <header class="d-flex justify-between align-center mb-4">
+            <div>
+                <h2 class="card__title">Inventory Reports</h2>
+                <p class="text-muted">View and analyze inventory data and trends.</p>
+            </div>
+        </header>
 
-<div class="report-section form-container">
-    <h3>Daily Items In/Out Report</h3>
-    <form action="index.php" method="get">
-        <input type="hidden" name="page" value="reports">
-        <div>
-            <label for="report_date">Select Date:</label>
-            <input type="date" id="report_date" name="report_date" value="<?php echo htmlspecialchars($report_date); ?>">
-            <button type="submit">View Report</button>
+        <?php if (!empty($message)): ?>
+            <div class="alert alert--error mb-4">
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="grid grid--2-cols gap-4">
+            <div class="card">
+                <div class="card__header">
+                    <h2 class="card__title">Daily Items In/Out Report</h2>
+                </div>
+                <div class="card__body">
+                    <form action="index.php" method="get" class="form">
+                        <input type="hidden" name="page" value="reports">
+                        <div class="form__group">
+                            <label class="form__label">Select Date</label>
+                            <div class="d-flex gap-2">
+                                <input type="date" id="report_date" name="report_date" class="form__input" value="<?php echo htmlspecialchars($report_date); ?>">
+                                <button type="submit" class="btn btn--primary">View Report</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <?php if (!empty($report_data_daily_in_out)): ?>
+                        <div class="d-flex justify-between align-center mt-4 mb-2">
+                            <h3 class="card__title">Report for: <?php echo htmlspecialchars($report_date); ?></h3>
+                            <a href="export.php?type=daily_in_out_csv&date=<?php echo htmlspecialchars($report_date); ?>" class="btn btn--secondary">Export CSV</a>
+                        </div>
+                        <div class="table">
+                            <table class="w-100">
+                                <thead>
+                                    <tr class="table__header">
+                                        <th class="table__cell">Item Name</th>
+                                        <th class="table__cell">Total Stock In</th>
+                                        <th class="table__cell">Total Stock Out</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($report_data_daily_in_out as $record): ?>
+                                        <tr class="table__row">
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['item_name']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['total_in']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['total_out']); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php elseif (isset($_GET['report_date'])): ?>
+                        <p class="text-center text-muted mt-4">No stock movements found for <?php echo htmlspecialchars($report_date); ?>.</p>
+                    <?php else: ?>
+                        <p class="text-center text-muted mt-4">Select a date to view the report.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card__header">
+                    <h2 class="card__title">Monthly Usage Trends</h2>
+                    <p class="text-muted">Last 12 Months - Stock Out</p>
+                </div>
+                <div class="card__body">
+                    <?php if (!empty($chart_datasets)): ?>
+                        <canvas id="monthlyUsageChart" width="400" height="200"></canvas>
+                    <?php else: ?>
+                        <p class="text-center text-muted">No 'stock out' data available for the last 12 months to display usage trends.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
-    </form>
 
-    <?php if (!empty($report_data_daily_in_out)): ?>
-    <h4>Report for: <?php echo htmlspecialchars($report_date); ?> 
-        <a href="export.php?type=daily_in_out_csv&date=<?php echo htmlspecialchars($report_date); ?>" class="button-like-link export-link" style="font-size: 0.8em; padding: 5px 8px; margin-left:10px;">Export CSV</a>
-    </h4>
-    <table class="table-container">
-        <thead>
-            <tr>
-                <th>Item Name</th>
-                <th>Total Stock In</th>
-                <th>Total Stock Out</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($report_data_daily_in_out as $record): ?>
-            <tr>
-                <td><?php echo htmlspecialchars($record['item_name']); ?></td>
-                <td><?php echo htmlspecialchars($record['total_in']); ?></td>
-                <td><?php echo htmlspecialchars($record['total_out']); ?></td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-    <?php elseif (isset($_GET['report_date'])): // Only show if a date was specifically queried (not initial load without data) ?>
-    <p>No stock movements found for <?php echo htmlspecialchars($report_date); ?>.</p>
-    <?php else: ?>
-    <p>Select a date to view the report.</p>
-    <?php endif; ?>
+        <div class="card mt-4">
+            <div class="card__header">
+                <h2 class="card__title">Export Data</h2>
+            </div>
+            <div class="card__body">
+                <div class="d-flex gap-2">
+                    <a href="export.php?type=items_csv" class="btn btn--secondary">Export All Items (CSV)</a>
+                    <a href="export.php?type=categories_csv" class="btn btn--secondary">Export All Categories (CSV)</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-
-<div class="report-section">
-    <h3>Monthly Usage Trends (Last 12 Months - Stock Out)</h3>
-    <?php if (!empty($chart_datasets)): ?>
-        <canvas id="monthlyUsageChart" width="400" height="200"></canvas>
-    <?php else: ?>
-        <p>No 'stock out' data available for the last 12 months to display usage trends.</p>
-    <?php endif; ?>
-</div>
-
-<div class="report-section">
-    <h3>Export Data</h3>
-    <p><em>Export to Excel (CSV) / PDF options will be added here.</em></p>
-    <p><a href="export.php?type=items_csv" class="button-like-link">Export All Items (CSV)</a></p>
-    <p><a href="export.php?type=categories_csv" class="button-like-link">Export All Categories (CSV)</a></p>
-     <!-- Add more export options as needed -->
-</div>
-
-
-<style>
-/* Styles specific to reports, can be moved */
-.report-section { background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-.report-section h3, .report-section h4 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
-.report-section form div { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
-.report-section input[type="date"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-.report-section button, .button-like-link  { 
-    background-color: #007bff; color: white; padding: 8px 12px; 
-    border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block;
-}
-.report-section button:hover, .button-like-link:hover { background-color: #0056b3; }
-
-table.table-container { width: 100%; border-collapse: collapse; margin-top:15px; }
-table.table-container th, table.table-container td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-table.table-container tr:nth-child(even) { background-color: #f2f2f2; }
-table.table-container th { background-color: #333; color: white; }
-
-.success { color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px; background-color: #e6ffe6; }
-.error { color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px; background-color: #ffe6e6; }
-</style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>

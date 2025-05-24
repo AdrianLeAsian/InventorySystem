@@ -58,7 +58,6 @@ if ($category_id) {
                     $category_description = $fetched_description;
                 }
             } else {
-                // Redirect if category not found
                 header("Location: index.php?page=categories&error=notfound");
                 exit;
             }
@@ -71,103 +70,46 @@ if ($category_id) {
     }
 }
 
+// Add CSS link in the head section
 ?>
+<link rel="stylesheet" href="css/main.css">
 
-<h2>Edit Category</h2>
+<div class="container">
+    <div class="page">
+        <header class="d-flex justify-between align-center mb-4">
+            <div>
+                <h2 class="card__title">Edit Category</h2>
+                <p class="text-muted">Update category information.</p>
+            </div>
+            <a href="index.php?page=categories" class="btn btn--secondary">Back to Categories</a>
+        </header>
 
-<?php echo $message; // Display error messages if any ?>
+        <?php if (!empty($message)): ?>
+            <div class="alert alert--error mb-4">
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
 
-<div class="form-container">
-    <form action="index.php?page=edit_category&id=<?php echo $category_id; ?>" method="post">
-        <div>
-            <label for="category_name">Category Name:</label>
-            <input type="text" id="category_name" name="category_name" value="<?php echo htmlspecialchars($category_name); ?>" required>
+        <div class="card">
+            <div class="card__header">
+                <h2 class="card__title">Category Details</h2>
+            </div>
+            <div class="card__body">
+                <form method="POST" class="form">
+                    <div class="form__group">
+                        <label class="form__label">Category Name</label>
+                        <input type="text" name="category_name" class="form__input" value="<?php echo htmlspecialchars($category_name); ?>" required>
+                    </div>
+                    <div class="form__group">
+                        <label class="form__label">Description</label>
+                        <textarea name="category_description" class="form__input" rows="3"><?php echo htmlspecialchars($category_description); ?></textarea>
+                    </div>
+                    <div class="d-flex justify-between mt-4">
+                        <button type="submit" name="update_category" class="btn btn--primary">Update Category</button>
+                        <a href="index.php?page=categories" class="btn btn--secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div>
-            <label for="category_description">Description (Optional):</label>
-            <textarea id="category_description" name="category_description" rows="3"><?php echo htmlspecialchars($category_description); ?></textarea>
-        </div>
-        <div>
-            <button type="submit" name="update_category">Update Category</button>
-            <a href="index.php?page=categories" class="button-like-link">Cancel</a>
-        </div>
-    </form>
+    </div>
 </div>
-
-<style>
-/* Re-using some styles from categories.php for consistency, ideally these would be in a global CSS file */
-.form-container {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
-    max-width: 600px; /* Limit width for edit form */
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.form-container h3 {
-    margin-top: 0;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-}
-
-.form-container div {
-    margin-bottom: 10px;
-}
-
-.form-container label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.form-container input[type="text"],
-.form-container textarea {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-.form-container button, .button-like-link {
-    background-color: #5cb85c; /* Green for submit */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    margin-right: 10px;
-}
-
-.button-like-link {
-    background-color: #f0ad4e; /* Orange for cancel/back */
-}
-
-.form-container button:hover {
-    background-color: #4cae4c;
-}
-.button-like-link:hover {
-    background-color: #ec971f;
-}
-
-.error {
-    color: red;
-    border: 1px solid red;
-    padding: 10px;
-    margin-bottom: 15px;
-    background-color: #ffe6e6;
-}
-.success {
-    color: green;
-    border: 1px solid green;
-    padding: 10px;
-    margin-bottom: 15px;
-    background-color: #e6ffe6;
-}
-
-</style> 

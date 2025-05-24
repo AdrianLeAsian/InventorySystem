@@ -1,3 +1,4 @@
+<?php ob_start(); ?>
 <?php
 session_start();
 require_once 'config/db.php';
@@ -13,6 +14,6 @@ if (file_exists($page_path)) {
     // You can create a 404 page later
     echo "<div class='container'><p>Page not found.</p></div>";
 }
-
-require_once 'includes/footer.php';
-?> 
+?>
+</body>
+</html> 

@@ -116,110 +116,116 @@ if ($result_logs = mysqli_query($link, $sql_fetch_logs)) {
     $message .= "<p class='error'>Error fetching inventory logs: " . mysqli_error($link) . "</p>";
 }
 
+// Add CSS link in the head section
 ?>
+<link rel="stylesheet" href="css/main.css">
 
-<h2>Inventory Tracking (Stock In/Out)</h2>
+<div class="container">
+    <div class="page">
+        <header class="d-flex justify-between align-center mb-4">
+            <div>
+                <h2 class="card__title">Inventory Tracking</h2>
+                <p class="text-muted">Manage stock movements and track inventory changes.</p>
+            </div>
+        </header>
 
-<?php echo $message; ?>
+        <?php if (!empty($message)): ?>
+            <div class="alert <?php echo strpos($message, 'success') !== false ? 'alert--success' : 'alert--error'; ?> mb-4">
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
 
-<div class="form-container tracking-form">
-    <h3>Log Stock Movement</h3>
-    
-    <div style="margin-bottom: 15px;">
-        <label for="barcode_scanner_input">Scan Barcode:</label>
-        <input type="text" id="barcode_scanner_input" placeholder="Click here and scan barcode...">
-        <span id="barcode_status" style="margin-left: 10px;"></span>
+        <div class="grid grid--2-cols gap-4">
+            <div class="card">
+                <div class="card__header">
+                    <h2 class="card__title">Log Stock Movement</h2>
+                </div>
+                <div class="card__body">
+                    <div class="form__group mb-4">
+                        <label class="form__label">Scan Barcode</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="barcode_scanner_input" class="form__input" placeholder="Click here and scan barcode...">
+                            <span id="barcode_status" class="text-muted"></span>
+                        </div>
+                    </div>
+
+                    <form method="POST" class="form">
+                        <div class="form__group">
+                            <label class="form__label">Select Item</label>
+                            <select name="item_id" class="form__input" required>
+                                <option value="">-- Select Item --</option>
+                                <?php foreach ($items_options as $item_opt): ?>
+                                    <option value="<?php echo $item_opt['id']; ?>">
+                                        <?php echo htmlspecialchars($item_opt['name']); ?> 
+                                        (Current Stock: <?php echo htmlspecialchars($item_opt['quantity']); ?> <?php echo htmlspecialchars($item_opt['unit']); ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form__group">
+                            <label class="form__label">Quantity Change</label>
+                            <input type="number" name="quantity_change" class="form__input" min="1" required>
+                        </div>
+
+                        <div class="form__group">
+                            <label class="form__label">Reason/Note</label>
+                            <input type="text" name="reason" class="form__input" placeholder="e.g., New Shipment, Used for X, Spoilage" required>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" name="stock_in" class="btn btn--success">Stock In</button>
+                            <button type="submit" name="stock_out" class="btn btn--danger">Stock Out</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card__header">
+                    <h2 class="card__title">Recent Inventory Movements</h2>
+                    <p class="text-muted">Last 20 movements</p>
+                </div>
+                <div class="card__body">
+                    <?php if (!empty($inventory_logs)): ?>
+                        <div class="table">
+                            <table class="w-100">
+                                <thead>
+                                    <tr class="table__header">
+                                        <th class="table__cell">Log ID</th>
+                                        <th class="table__cell">Item Name</th>
+                                        <th class="table__cell">Type</th>
+                                        <th class="table__cell">Qty Change</th>
+                                        <th class="table__cell">Reason</th>
+                                        <th class="table__cell">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($inventory_logs as $log): ?>
+                                        <tr class="table__row">
+                                            <td class="table__cell"><?php echo htmlspecialchars($log['id']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($log['item_name']); ?></td>
+                                            <td class="table__cell">
+                                                <span class="btn btn--<?php echo $log['type'] == 'in' ? 'success' : 'danger'; ?>">
+                                                    <?php echo htmlspecialchars(ucfirst($log['type'])); ?>
+                                                </span>
+                                            </td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($log['quantity_change']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($log['reason']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($log['log_date']); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php else: ?>
+                        <p class="text-center text-muted">No inventory movements logged yet.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <form action="index.php?page=tracking" method="post" id="stock_movement_form">
-        <div>
-            <label for="item_id">Select Item:</label>
-            <select id="item_id" name="item_id" required>
-                <option value="">-- Select Item --</option>
-                <?php foreach ($items_options as $item_opt): ?>
-                <option value="<?php echo $item_opt['id']; ?>">
-                    <?php echo htmlspecialchars($item_opt['name']); ?> (Current Stock: <?php echo htmlspecialchars($item_opt['quantity']); ?> <?php echo htmlspecialchars($item_opt['unit']); ?>)
-                </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div>
-            <label for="quantity_change">Quantity Change:</label>
-            <input type="number" id="quantity_change" name="quantity_change" min="1" required>
-        </div>
-        <div>
-            <label for="reason">Reason/Note (e.g., New Shipment, Used for X, Spoilage):</label>
-            <input type="text" id="reason" name="reason" required>
-        </div>
-        <div>
-            <button type="submit" name="stock_in" class="stock-in-btn">Stock In</button>
-            <button type="submit" name="stock_out" class="stock-out-btn">Stock Out</button>
-        </div>
-    </form>
 </div>
-
-<div class="table-container">
-    <h3>Recent Inventory Movements (Last 20)</h3>
-    <?php if (!empty($inventory_logs)): ?>
-    <table>
-        <thead>
-            <tr>
-                <th>Log ID</th>
-                <th>Item Name</th>
-                <th>Type</th>
-                <th>Qty Change</th>
-                <th>Reason</th>
-                <!-- <th>User</th> Will be blank if no user system -->
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($inventory_logs as $log): ?>
-            <tr>
-                <td><?php echo htmlspecialchars($log['id']); ?></td>
-                <td><?php echo htmlspecialchars($log['item_name']); ?></td>
-                <td class="log-type-<?php echo htmlspecialchars($log['type']); ?>"><?php echo htmlspecialchars(ucfirst($log['type'])); ?></td>
-                <td><?php echo htmlspecialchars($log['quantity_change']); ?></td>
-                <td><?php echo htmlspecialchars($log['reason']); ?></td>
-                <!-- <td><?php echo htmlspecialchars($log['user_name'] ?? 'N/A'); ?></td> -->
-                <td><?php echo htmlspecialchars($log['log_date']); ?></td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-    <?php else: ?>
-    <p>No inventory movements logged yet.</p>
-    <?php endif; ?>
-</div>
-
-<style>
-/* Styles can be moved to a global style.css later */
-.form-container, .table-container { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
-.tracking-form div { margin-bottom: 10px; }
-.tracking-form label { display: block; margin-bottom: 5px; }
-.tracking-form input[type="text"],
-.tracking-form input[type="number"],
-.tracking-form select {
-    width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;
-}
-.tracking-form button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; margin-right:10px; }
-.stock-in-btn { background-color: #5cb85c; /* Green */ }
-.stock-in-btn:hover { background-color: #4cae4c; }
-.stock-out-btn { background-color: #d9534f; /* Red */ }
-.stock-out-btn:hover { background-color: #c9302c; }
-
-table { width: 100%; border-collapse: collapse; }
-th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-tr:nth-child(even) { background-color: #f2f2f2; }
-th { background-color: #333; color: white; }
-
-.log-type-in { color: green; font-weight: bold; }
-.log-type-out { color: red; font-weight: bold; }
-.log-type-adjustment { color: blue; font-weight: bold; }
-
-.success { color: green; border: 1px solid green; padding: 10px; margin-bottom: 15px; background-color: #e6ffe6; }
-.error { color: red; border: 1px solid red; padding: 10px; margin-bottom: 15px; background-color: #ffe6e6; }
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

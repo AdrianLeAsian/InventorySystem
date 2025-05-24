@@ -173,503 +173,245 @@ function format_last_activity($timestamp) {
 
 ?>
 
-<div class="inventory-container">
-    <header class="inventory-header">
-        <div>
-            <h2>Inventory Items</h2>
-            <p>Manage and track all your inventory items.</p>
-        </div>
-        <div class="header-actions">
-            <!-- Add New Category button is now with Add Item button -->
-            <button class="btn btn-primary" onclick="document.getElementById('addItemModal').style.display='block'">+ Add Item</button>
-            <button class="btn btn-secondary" onclick="document.getElementById('addCategoryModal').style.display='block'">+ Add Category</button>
-            <button class="btn btn-secondary" id="exportItemsBtn">Export</button> <!-- Placeholder for export -->
-        </div>
-    </header>
+<link rel="stylesheet" href="css/main.css">
 
-    <?php if (!empty($message)) echo "<div class='message-area'>" . $message . "</div>"; ?>
+<div class="container">
+    <div class="page">
+        <header class="d-flex justify-between align-center mb-4">
+            <div>
+                <h2 class="card__title">Inventory Items</h2>
+                <p class="text-muted">Manage and track all your inventory items.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn--primary" onclick="document.getElementById('addItemModal').style.display='block'">+ Add Item</button>
+                <button class="btn btn--secondary" onclick="document.getElementById('addCategoryModal').style.display='block'">+ Add Category</button>
+                <button class="btn btn--secondary" id="exportItemsBtn">Export</button>
+            </div>
+        </header>
 
-    <div class="filter-controls">
-        <div class="category-tabs">
-            <button class="tab-link active" onclick="filterItems('all')">All Items</button>
-            <?php foreach ($all_categories as $category): ?>
-                <button class="tab-link" onclick="filterItems('<?php echo htmlspecialchars($category['id']); ?>')">
-                    <?php echo htmlspecialchars($category['name']); ?>
-                </button>
-            <?php endforeach; ?>
-        </div>
-        <div class="search-bar">
-            <select id="categoryFilterSelect" style="display: none;"> <!-- Could be used as an alternative filter -->
-                 <option value="all">All Categories</option>
-                 <?php foreach ($all_categories as $category): ?>
-                    <option value="<?php echo htmlspecialchars($category['id']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
-                <?php endforeach; ?>
-            </select>
-            <input type="text" id="searchItemsInput" placeholder="Search Items...">
+        <?php if (!empty($message)): ?>
+            <div class="alert <?php echo strpos($message, 'success') !== false ? 'alert--success' : 'alert--error'; ?> mb-4">
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="card mb-4">
+            <div class="card__body">
+                <div class="d-flex justify-between align-center mb-3">
+                    <div class="category-tabs">
+                        <button class="btn btn--primary" onclick="filterItems('all')">All Items</button>
+                        <?php foreach ($all_categories as $category): ?>
+                            <button class="btn btn--secondary" onclick="filterItems('<?php echo htmlspecialchars($category['id']); ?>')">
+                                <?php echo htmlspecialchars($category['name']); ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <select id="categoryFilterSelect" class="form__input">
+                            <option value="all">All Categories</option>
+                            <?php foreach ($all_categories as $category): ?>
+                                <option value="<?php echo htmlspecialchars($category['id']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="text" id="searchItemsInput" class="form__input" placeholder="Search Items...">
+                    </div>
+                </div>
+
+                <div class="table">
+                    <table class="w-100">
+                        <thead>
+                            <tr class="table__header">
+                                <th class="table__cell">Name</th>
+                                <th class="table__cell">Category</th>
+                                <th class="table__cell">Current Stock</th>
+                                <th class="table__cell">Min Stock</th>
+                                <th class="table__cell">Unit</th>
+                                <th class="table__cell">Location</th>
+                                <th class="table__cell">Last Activity</th>
+                                <th class="table__cell">Status</th>
+                                <th class="table__cell">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($all_items)): ?>
+                                <?php foreach ($all_items as $item): ?>
+                                    <?php
+                                        $isLowStock = ($item['low_stock_threshold'] > 0 && $item['quantity'] <= $item['low_stock_threshold']);
+                                        $isOutStock = ($item['quantity'] == 0);
+                                        $rowClass = $isLowStock ? 'alert alert--warning' : '';
+                                        if ($isOutStock) $rowClass = 'alert alert--error';
+                                    ?>
+                                    <tr data-category-id="<?php echo htmlspecialchars($item['category_id']); ?>" class="table__row <?php echo $rowClass; ?>">
+                                        <td class="table__cell" title="<?php echo htmlspecialchars($item['name']); ?>">
+                                            <?php echo htmlspecialchars($item['name']); ?>
+                                        </td>
+                                        <td class="table__cell"><?php echo htmlspecialchars($item['category_name']); ?></td>
+                                        <td class="table__cell"><?php echo htmlspecialchars($item['quantity']); ?></td>
+                                        <td class="table__cell"><?php echo htmlspecialchars($item['low_stock_threshold']); ?></td>
+                                        <td class="table__cell"><?php echo htmlspecialchars($item['unit']); ?></td>
+                                        <td class="table__cell"><?php echo 'N/A'; ?></td>
+                                        <td class="table__cell"><?php echo format_last_activity($item['updated_at']); ?></td>
+                                        <td class="table__cell">
+                                            <?php
+                                            $status = 'OK';
+                                            $status_class = 'btn btn--success';
+                                            if ($isLowStock) {
+                                                $status = 'Low Stock';
+                                                $status_class = 'btn btn--warning';
+                                            }
+                                            if ($isOutStock) {
+                                                $status = 'Out of Stock';
+                                                $status_class = 'btn btn--danger';
+                                            }
+                                            ?>
+                                            <span class="<?php echo $status_class; ?>"><?php echo $status; ?></span>
+                                        </td>
+                                        <td class="table__cell">
+                                            <div class="d-flex gap-2">
+                                                <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="btn btn--primary">Edit</a>
+                                                <a href="index.php?page=delete_item&id=<?php echo $item['id']; ?>" class="btn btn--danger" onclick="return confirm('Are you sure you want to delete this item?')">Delete</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr class="table__row">
+                                    <td colspan="9" class="table__cell text-center">No items found.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-
-    <div class="items-table-container">
-        <table id="inventoryItemsTable">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Current Stock</th>
-                    <th>Min Stock</th>
-                    <th>Unit</th>
-                    <th>Location</th>
-                    <th>Last Activity</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($all_items)): ?>
-                    <?php foreach ($all_items as $item): ?>
-                        <tr data-category-id="<?php echo htmlspecialchars($item['category_id']); ?>">
-                            <td><?php echo htmlspecialchars($item['name']); ?></td>
-                            <td><?php echo htmlspecialchars($item['category_name']); ?></td>
-                            <td><?php echo htmlspecialchars($item['quantity']); ?></td>
-                            <td><?php echo htmlspecialchars($item['low_stock_threshold']); ?></td>
-                            <td><?php echo htmlspecialchars($item['unit']); ?></td>
-                            <td><?php echo 'N/A'; // Placeholder for Location ?></td>
-                            <td><?php echo format_last_activity($item['updated_at']); ?></td>
-                            <td>
-                                <?php
-                                $status = 'OK';
-                                $status_class = 'status-ok';
-                                if ($item['low_stock_threshold'] > 0 && $item['quantity'] <= $item['low_stock_threshold']) {
-                                    $status = 'Low Stock';
-                                    $status_class = 'status-low';
-                                } elseif ($item['quantity'] == 0) {
-                                    // $status = 'Out of Stock'; // Alternative
-                                    // $status_class = 'status-empty';
-                                }
-                                // Add 'Warning' logic if defined based on image
-                                ?>
-                                <span class="status-badge <?php echo $status_class; ?>"><?php echo $status; ?></span>
-                            </td>
-                            <td class="actions-cell">
-                                <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="action-icon edit-icon" title="Edit">&#9998;</a> <!-- Edit icon -->
-                                <a href="index.php?page=delete_item&id=<?php echo $item['id']; ?>" class="action-icon delete-icon" title="Delete" onclick="return confirm('Are you sure you want to delete this item? This action cannot be undone.');">&#128465;</a> <!-- Trash icon -->
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr><td colspan="9" style="text-align:center;">No items found. Click "+ Add Item" to add one.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-
-    <footer class="inventory-summary-footer">
-        <div class="summary-card">
-            <h4>Total Items</h4>
-            <p class="summary-value"><?php echo $total_items_count; ?></p>
-            <p class="summary-desc">Across all categories</p>
-        </div>
-        <div class="summary-card">
-            <h4>Low Stock Items</h4>
-            <p class="summary-value low-stock-value"><?php echo $low_stock_items_count; ?></p>
-            <p class="summary-desc">Needs immediate attention</p>
-        </div>
-    </footer>
-
-</div> <!-- .inventory-container -->
-
-
-<!-- Add Category Modal -->
-<div id="addCategoryModal" class="modal">
-  <div class="modal-content">
-    <span class="close-button" onclick="document.getElementById('addCategoryModal').style.display='none'">&times;</span>
-    <div class="form-container">
-        <h3>Add New Category</h3>
-        <form action="index.php?page=inventory" method="post">
-            <div>
-                <label for="category_name_modal">Category Name:</label>
-                <input type="text" id="category_name_modal" name="category_name" value="<?php echo htmlspecialchars($category_name_form); ?>" required>
-            </div>
-            <div>
-                <label for="category_description_modal">Description (Optional):</label>
-                <textarea id="category_description_modal" name="category_description" rows="3"><?php echo htmlspecialchars($category_description_form); ?></textarea>
-            </div>
-            <div>
-                <button type="submit" name="add_category" class="btn btn-primary">Add Category</button>
-            </div>
-        </form>
-    </div>
-  </div>
 </div>
 
-
 <!-- Add Item Modal -->
-<div id="addItemModal" class="modal">
-  <div class="modal-content">
-    <span class="close-button" onclick="document.getElementById('addItemModal').style.display='none'">&times;</span>
-    <div class="form-container item-form">
-        <h3>Add New Item</h3>
-        <form action="index.php?page=inventory" method="post">
-            <div>
-                <label for="item_name_modal">Item Name:</label>
-                <input type="text" id="item_name_modal" name="item_name" value="<?php echo htmlspecialchars($item_name_form); ?>" required>
+<div id="addItemModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="card">
+            <div class="card__header">
+                <h2 class="card__title">Add New Item</h2>
             </div>
-            <div>
-                <label for="item_category_id_modal">Category:</label>
-                <select id="item_category_id_modal" name="item_category_id" required>
-                    <option value="">Select Category</option>
-                    <?php foreach ($all_categories as $category): ?>
-                    <option value="<?php echo $category['id']; ?>" <?php echo ($item_category_id_form == $category['id']) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($category['name']); ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
+            <div class="card__body">
+                <form method="POST" class="form">
+                    <div class="form__group">
+                        <label class="form__label">Item Name</label>
+                        <input type="text" name="item_name" class="form__input" required>
+                    </div>
+                    <div class="form__group">
+                        <label class="form__label">Category</label>
+                        <select name="item_category_id" class="form__input" required>
+                            <option value="">Select Category</option>
+                            <?php foreach ($all_categories as $category): ?>
+                                <option value="<?php echo $category['id']; ?>"><?php echo htmlspecialchars($category['name']); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form__group">
+                        <label class="form__label">Barcode</label>
+                        <input type="text" name="item_barcode" class="form__input">
+                    </div>
+                    <div class="form__group">
+                        <label class="form__label">Quantity</label>
+                        <input type="number" name="item_quantity" class="form__input" value="0" min="0">
+                    </div>
+                    <div class="form__group">
+                        <label class="form__label">Unit</label>
+                        <input type="text" name="item_unit" class="form__input" value="pcs">
+                    </div>
+                    <div class="form__group">
+                        <label class="form__label">Low Stock Threshold</label>
+                        <input type="number" name="item_low_stock_threshold" class="form__input" value="0" min="0">
+                    </div>
+                    <div class="form__group">
+                        <label class="form__label">Purchase Price</label>
+                        <input type="number" name="item_purchase_price" class="form__input" value="0.00" step="0.01" min="0">
+                    </div>
+                    <div class="form__group">
+                        <label class="form__label">Description</label>
+                        <textarea name="item_description" class="form__input"></textarea>
+                    </div>
+                    <div class="form__group">
+                        <label class="form__label">Location</label>
+                        <input type="text" name="item_location" class="form__input">
+                    </div>
+                    <div class="d-flex justify-between mt-4">
+                        <button type="submit" name="add_item" class="btn btn--primary">Add Item</button>
+                        <button type="button" class="btn btn--secondary" onclick="document.getElementById('addItemModal').style.display='none'">Cancel</button>
+                    </div>
+                </form>
             </div>
-            <div>
-                <label for="item_barcode_modal">Barcode (Optional):</label>
-                <input type="text" id="item_barcode_modal" name="item_barcode" value="<?php echo htmlspecialchars($item_barcode_form); ?>">
-            </div>
-            <div>
-                <label for="item_quantity_modal">Initial Quantity:</label>
-                <input type="number" id="item_quantity_modal" name="item_quantity" value="<?php echo (int)$item_quantity_form; ?>" min="0" required>
-            </div>
-            <div>
-                <label for="item_unit_modal">Unit (e.g., pcs, kg, L):</label>
-                <input type="text" id="item_unit_modal" name="item_unit" value="<?php echo htmlspecialchars($item_unit_form); ?>" placeholder="pcs" required>
-            </div>
-            <div>
-                <label for="item_low_stock_threshold_modal">Low Stock Threshold:</label>
-                <input type="number" id="item_low_stock_threshold_modal" name="item_low_stock_threshold" value="<?php echo (int)$item_low_stock_threshold_form; ?>" min="0">
-            </div>
-            <div>
-                <label for="item_purchase_price_modal">Purchase Price (Optional):</label>
-                <input type="number" step="0.01" id="item_purchase_price_modal" name="item_purchase_price" value="<?php echo htmlspecialchars($item_purchase_price_form); ?>" min="0">
-            </div>
-            <!-- Selling price field removed as per request -->
-            <!-- <div>
-                <label for="item_selling_price_modal">Selling Price (Optional):</label>
-                <input type="number" step="0.01" id="item_selling_price_modal" name="item_selling_price" value="<?php echo htmlspecialchars($item_selling_price_form); ?>" min="0">
-            </div> -->
-            <div>
-                <label for="item_description_modal">Description (Optional):</label>
-                <textarea id="item_description_modal" name="item_description" rows="3"><?php echo htmlspecialchars($item_description_form); ?></textarea>
-            </div>
-            <div>
-                <label for="item_location_modal">Location (Optional):</label>
-                <input type="text" id="item_location_modal" name="item_location" value="<?php echo htmlspecialchars($item_location_form); ?>">
-            </div>
-            <div>
-                <button type="submit" name="add_item" class="btn btn-primary">Add Item</button>
-            </div>
-        </form>
+        </div>
     </div>
-  </div>
+</div>
+
+<!-- Add Category Modal -->
+<div id="addCategoryModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="card">
+            <div class="card__header">
+                <h2 class="card__title">Add New Category</h2>
+            </div>
+            <div class="card__body">
+                <form method="POST" class="form">
+                    <div class="form__group">
+                        <label class="form__label">Category Name</label>
+                        <input type="text" name="category_name" class="form__input" required>
+                    </div>
+                    <div class="form__group">
+                        <label class="form__label">Description</label>
+                        <textarea name="category_description" class="form__input"></textarea>
+                    </div>
+                    <div class="d-flex justify-between mt-4">
+                        <button type="submit" name="add_category" class="btn btn--primary">Add Category</button>
+                        <button type="button" class="btn btn--secondary" onclick="document.getElementById('addCategoryModal').style.display='none'">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
-/* General Page & Theming */
-body { /* Assuming styles might be global, or scope to .inventory-container if needed */
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f4f7fc; /* Light blue-gray background */
-    color: #333;
-    margin: 0;
-    padding: 20px; /* Add some padding around the whole page */
-}
-
-.inventory-container {
-    background-color: #fff; /* White background for the main content block */
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.inventory-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #e0e0e0;
-}
-.inventory-header h2 {
-    margin: 0 0 5px 0;
-    font-size: 24px;
-    font-weight: 600;
-    color: #1a202c; /* Darker text for heading */
-}
-.inventory-header p {
-    margin: 0;
-    font-size: 14px;
-    color: #718096; /* Gray text for subheading */
-}
-.header-actions .btn {
-    margin-left: 10px;
-}
-
-/* Buttons */
-.btn {
-    padding: 10px 18px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease;
-}
-.btn-primary {
-    background-color: #4a90e2; /* Primary blue */
-    color: white;
-}
-.btn-primary:hover {
-    background-color: #357abd;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.btn-secondary {
-    background-color: #e2e8f0; /* Light gray for secondary actions */
-    color: #2d3748; /* Darker gray text */
-    border: 1px solid #cbd5e0;
-}
-.btn-secondary:hover {
-    background-color: #cbd5e0;
-    border-color: #a0aec0;
-}
-
-
-/* Filter Controls */
-.filter-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: #f8f9fa; /* Slight off-white for filter bar */
-    border-radius: 6px;
-}
-.category-tabs .tab-link {
-    padding: 8px 15px;
-    margin-right: 8px;
-    border: 1px solid transparent;
-    border-bottom: 2px solid transparent; /* For active state underline */
-    border-radius: 4px 4px 0 0; /* Slight rounding for tabs */
-    cursor: pointer;
-    background-color: transparent;
-    color: #4a5568; /* Grayish text for tabs */
-    font-weight: 500;
-    transition: color 0.2s ease, border-color 0.2s ease;
-}
-.category-tabs .tab-link:hover {
-    color: #2d3748; /* Darker on hover */
-}
-.category-tabs .tab-link.active {
-    color: #4a90e2; /* Blue for active tab */
-    border-bottom-color: #4a90e2; /* Blue underline */
-    font-weight: 600;
-}
-.search-bar input[type="text"] {
-    padding: 8px 12px;
-    border: 1px solid #cbd5e0;
-    border-radius: 4px;
-    min-width: 250px; /* Decent width for search */
-    font-size: 14px;
-}
-
-/* Table Styles */
-.items-table-container {
-    overflow-x: auto; /* For responsive tables */
-}
-#inventoryItemsTable {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 0;
-}
-#inventoryItemsTable th, #inventoryItemsTable td {
-    border: 1px solid #e2e8f0; /* Lighter borders */
-    padding: 12px 15px; /* More padding */
-    text-align: left;
-    font-size: 14px;
-}
-#inventoryItemsTable th {
-    background-color: #f8f9fa; /* Very light gray for headers */
-    font-weight: 600;
-    color: #4a5568; /* Header text color */
-}
-#inventoryItemsTable tr:nth-child(even) {
-    background-color: #fdfdfe; /* Very subtle striping */
-}
-#inventoryItemsTable tr:hover {
-    background-color: #f1f5f9; /* Light hover effect */
-}
-
-/* Status Badges */
-.status-badge {
-    padding: 4px 10px;
-    border-radius: 12px; /* Pill shape */
-    font-size: 12px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-.status-ok {
-    background-color: #e6fffa; /* Light green */
-    color: #2c7a7b; /* Darker green text */
-}
-.status-low {
-    background-color: #fff5f5; /* Light red */
-    color: #c53030; /* Darker red text */
-}
-.status-warning { /* Example if you add warning */
-    background-color: #fffaf0; /* Light orange/yellow */
-    color: #dd6b20; /* Darker orange text */
-}
-
-/* Action Icons */
-.actions-cell a {
-    margin: 0 5px;
-    text-decoration: none;
-    color: #718096; /* Gray for icons */
-    font-size: 18px; /* Slightly larger icons */
-}
-.actions-cell a:hover {
-    color: #4a90e2; /* Blue on hover */
-}
-
-
-/* Footer Summary */
-.inventory-summary-footer {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid #e0e0e0;
-}
-.summary-card {
-    background-color: #f8f9fa;
-    padding: 20px;
-    border-radius: 6px;
-    text-align: center;
-    flex-basis: 30%; /* Distribute space */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-.summary-card h4 {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    color: #718096; /* Gray for title */
-    font-weight: 500;
-}
-.summary-card .summary-value {
-    margin: 0 0 5px 0;
-    font-size: 28px;
-    font-weight: 600;
-    color: #2d3748; /* Dark text for value */
-}
-.summary-card .summary-value.low-stock-value {
-    color: #c53030; /* Red for low stock count */
-}
-.summary-card .summary-desc {
-    margin: 0;
-    font-size: 12px;
-    color: #a0aec0; /* Lighter gray for description */
-}
-
-
-/* Modal Styles (retained and slightly harmonized) */
+/* Modal Styles */
 .modal {
-    display: none; 
-    position: fixed; 
-    z-index: 1000; 
+    display: none;
+    position: fixed;
+    z-index: 1000;
     left: 0;
     top: 0;
-    width: 100%; 
-    height: 100%; 
-    overflow: auto; 
-    background-color: rgba(0,0,0,0.5); 
-    padding-top: 50px;
-}
-.modal-content {
-    background-color: #fff;
-    margin: 5% auto; 
-    padding: 25px 30px;
-    border: none;
-    width: 50%; 
-    max-width: 600px; /* Max width for modals */
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    position: relative;
-}
-.close-button {
-    color: #aaa;
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 28px;
-    font-weight: bold;
-    line-height: 1;
-}
-.close-button:hover,
-.close-button:focus {
-    color: #333;
-    text-decoration: none;
-    cursor: pointer;
-}
-.modal .form-container h3 { /* Modal title */
-    font-size: 20px;
-    font-weight: 600;
-    margin-top: 0;
-    margin-bottom: 25px;
-    color: #1a202c;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #e0e0e0;
-}
-.modal .form-container div {
-    margin-bottom: 15px;
-}
-.modal .form-container label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 500;
-    font-size: 14px;
-    color: #4a5568;
-}
-.modal .form-container input[type="text"],
-.modal .form-container input[type="number"],
-.modal .form-container select,
-.modal .form-container textarea {
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #cbd5e0;
-    border-radius: 4px;
-    box-sizing: border-box; 
-    font-size: 14px;
-}
-.modal .form-container textarea {
-    min-height: 80px;
-}
-.modal .form-container button { /* Submit button in modal */
-    width: 100%; /* Full width button */
-    padding: 12px;
-    font-size: 15px;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
 }
 
-/* Message Area for status/errors */
-.message-area {
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 4px;
-    font-size: 14px;
-}
-.message-area .success { /* These were classes on <p> tags, ensure they are styled */
-    color: green;
-    border: 1px solid green;
-    padding: 10px;
-    background-color: #e6ffe6;
-}
-.message-area .error {
-    color: red;
-    border: 1px solid red;
-    padding: 10px;
-    background-color: #ffe6e6;
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 8px;
 }
 
+/* Additional Utility Classes */
+.gap-2 {
+    gap: 0.5rem;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+
+/* Category Tabs */
+.category-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
 </style>
 
 <script>

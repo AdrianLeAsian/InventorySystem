@@ -27,24 +27,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_item'])) {
     $item_barcode = trim($_POST['item_barcode']);
     $item_unit = trim($_POST['item_unit']);
     $item_low_stock_threshold = (int)$_POST['item_low_stock_threshold'];
-    // Purchase and Selling price removed
     $item_description = trim($_POST['item_description']);
-    $item_location = trim($_POST['item_location']); // Get location from form
 
     if (!empty($item_name) && $item_category_id > 0) {
-        // Updated SQL to include location and remove purchase/selling prices
-        $sql = "UPDATE items SET name = ?, category_id = ?, barcode = ?, unit = ?, low_stock_threshold = ?, description = ?, location = ? WHERE id = ?";
+        // Updated SQL to remove location field
+        $sql = "UPDATE items SET name = ?, category_id = ?, barcode = ?, unit = ?, low_stock_threshold = ?, description = ? WHERE id = ?";
         
         if ($stmt = mysqli_prepare($link, $sql)) {
-            // Adjusted bind_param: s (name), i (cat_id), s (barcode), s (unit), i (low_stock), s (description), s (location), i (id)
-            mysqli_stmt_bind_param($stmt, "sisisssi", 
+            // Adjusted bind_param to remove location
+            mysqli_stmt_bind_param($stmt, "sisissi", 
                 $item_name, 
                 $item_category_id, 
                 $item_barcode, 
                 $item_unit, 
                 $item_low_stock_threshold, 
                 $item_description,
-                $item_location,
                 $item_id
             );
 
@@ -76,15 +73,15 @@ if ($result_cat = mysqli_query($link, $sql_categories)) {
 
 // Fetch the item details for pre-filling the form
 if ($item_id) {
-    // Updated SQL to fetch location and remove purchase/selling prices
-    $sql_fetch = "SELECT name, category_id, barcode, quantity, unit, low_stock_threshold, description, location FROM items WHERE id = ?";
+    // Updated SQL to remove location field
+    $sql_fetch = "SELECT name, category_id, barcode, quantity, unit, low_stock_threshold, description FROM items WHERE id = ?";
     if ($stmt_fetch = mysqli_prepare($link, $sql_fetch)) {
         mysqli_stmt_bind_param($stmt_fetch, "i", $item_id);
         if (mysqli_stmt_execute($stmt_fetch)) {
             mysqli_stmt_store_result($stmt_fetch);
             if (mysqli_stmt_num_rows($stmt_fetch) == 1) {
-                // Adjusted bind_result
-                mysqli_stmt_bind_result($stmt_fetch, $fetched_name, $fetched_cat_id, $fetched_barcode, $fetched_qty, $fetched_unit, $fetched_low_stock, $fetched_desc, $fetched_location);
+                // Adjusted bind_result to remove location
+                mysqli_stmt_bind_result($stmt_fetch, $fetched_name, $fetched_cat_id, $fetched_barcode, $fetched_qty, $fetched_unit, $fetched_low_stock, $fetched_desc);
                 if (mysqli_stmt_fetch($stmt_fetch)) {
                     $item_name = $fetched_name;
                     $item_category_id = $fetched_cat_id;
@@ -92,9 +89,7 @@ if ($item_id) {
                     $item_quantity = $fetched_qty; 
                     $item_unit = $fetched_unit;
                     $item_low_stock_threshold = $fetched_low_stock;
-                    // Purchase and Selling price removed
                     $item_description = $fetched_desc;
-                    $item_location = $fetched_location;
                 }
             } else {
                 // Redirect to the main inventory page if item not found
@@ -109,162 +104,81 @@ if ($item_id) {
          $message = "<p class='error'>Error preparing item fetch query: " . mysqli_error($link) . "</p>";
     }
 }
+
+// Add CSS link in the head section
 ?>
+<link rel="stylesheet" href="css/main.css">
 
-<h2>Edit Item</h2>
+<div class="container">
+    <div class="page">
+        <header class="d-flex justify-between align-center mb-4">
+            <div>
+                <h2 class="card__title">Edit Item</h2>
+                <p class="text-muted">Update item information.</p>
+            </div>
+            <a href="index.php?page=inventory" class="btn btn--secondary">Back to Inventory</a>
+        </header>
 
-<?php echo $message; // Display error messages if any ?>
+        <?php if (!empty($message)): ?>
+            <div class="alert alert--error mb-4">
+                <?php echo $message; ?>
+            </div>
+        <?php endif; ?>
 
-<div class="form-container item-form">
-    <form action="index.php?page=edit_item&id=<?php echo $item_id; ?>" method="post">
-        <p><strong>Current Quantity:</strong> <?php echo htmlspecialchars($item_quantity); ?> <?php echo htmlspecialchars($item_unit); ?> (Quantity is changed via Stock In/Out operations)</p>
-        
-        <div>
-            <label for="item_name">Item Name:</label>
-            <input type="text" id="item_name" name="item_name" value="<?php echo htmlspecialchars($item_name); ?>" required>
+        <div class="card">
+            <div class="card__header">
+                <h2 class="card__title">Item Details</h2>
+            </div>
+            <div class="card__body">
+                <div class="alert alert--info mb-4">
+                    <strong>Current Quantity:</strong> <?php echo htmlspecialchars($item_quantity); ?> <?php echo htmlspecialchars($item_unit); ?> 
+                    <span class="text-muted">(Quantity is changed via Stock In/Out operations)</span>
+                </div>
+
+                <form method="POST" class="form">
+                    <div class="form__group">
+                        <label class="form__label">Item Name</label>
+                        <input type="text" name="item_name" class="form__input" value="<?php echo htmlspecialchars($item_name); ?>" required>
+                    </div>
+
+                    <div class="form__group">
+                        <label class="form__label">Category</label>
+                        <select name="item_category_id" class="form__input" required>
+                            <option value="">Select Category</option>
+                            <?php foreach ($categories_options as $category_opt): ?>
+                                <option value="<?php echo $category_opt['id']; ?>" <?php echo ($item_category_id == $category_opt['id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($category_opt['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form__group">
+                        <label class="form__label">Barcode</label>
+                        <input type="text" name="item_barcode" class="form__input" value="<?php echo htmlspecialchars($item_barcode); ?>">
+                    </div>
+
+                    <div class="form__group">
+                        <label class="form__label">Unit</label>
+                        <input type="text" name="item_unit" class="form__input" value="<?php echo htmlspecialchars($item_unit); ?>" placeholder="pcs" required>
+                    </div>
+
+                    <div class="form__group">
+                        <label class="form__label">Low Stock Threshold</label>
+                        <input type="number" name="item_low_stock_threshold" class="form__input" value="<?php echo (int)$item_low_stock_threshold; ?>" min="0">
+                    </div>
+
+                    <div class="form__group">
+                        <label class="form__label">Description</label>
+                        <textarea name="item_description" class="form__input" rows="3"><?php echo htmlspecialchars($item_description); ?></textarea>
+                    </div>
+
+                    <div class="d-flex justify-between mt-4">
+                        <button type="submit" name="update_item" class="btn btn--primary">Update Item</button>
+                        <a href="index.php?page=inventory" class="btn btn--secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div>
-            <label for="item_category_id">Category:</label>
-            <select id="item_category_id" name="item_category_id" required>
-                <option value="">Select Category</option>
-                <?php foreach ($categories_options as $category_opt): ?>
-                <option value="<?php echo $category_opt['id']; ?>" <?php echo ($item_category_id == $category_opt['id']) ? 'selected' : ''; ?>>
-                    <?php echo htmlspecialchars($category_opt['name']); ?>
-                </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div>
-            <label for="item_barcode">Barcode (Optional):</label>
-            <input type="text" id="item_barcode" name="item_barcode" value="<?php echo htmlspecialchars($item_barcode); ?>">
-        </div>
-        <div>
-            <label for="item_unit">Unit (e.g., pcs, kg, L):</label>
-            <input type="text" id="item_unit" name="item_unit" value="<?php echo htmlspecialchars($item_unit); ?>" placeholder="pcs" required>
-        </div>
-        <div>
-            <label for="item_low_stock_threshold">Low Stock Threshold:</label>
-            <input type="number" id="item_low_stock_threshold" name="item_low_stock_threshold" value="<?php echo (int)$item_low_stock_threshold; ?>" min="0">
-        </div>
-        <div>
-            <label for="item_location">Location (Optional):</label>
-            <input type="text" id="item_location" name="item_location" value="<?php echo htmlspecialchars($item_location); ?>">
-        </div>
-        <!-- Purchase Price and Selling Price fields removed -->
-        <div>
-            <label for="item_description">Description (Optional):</label>
-            <textarea id="item_description" name="item_description" rows="3"><?php echo htmlspecialchars($item_description); ?></textarea>
-        </div>
-        <div>
-            <button type="submit" name="update_item">Update Item</button>
-            <a href="index.php?page=inventory" class="button-like-link">Cancel</a>
-        </div>
-    </form>
+    </div>
 </div>
-
-<style>
-/* Re-using styles, ideally from a global CSS file or the main inventory page styles */
-.form-container {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px; /* Match inventory page style */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Match inventory page style */
-    margin-bottom: 20px;
-    max-width: 700px; /* Control form width */
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.form-container h2 { /* Assuming h2 is used for title, if not, adjust */
-    font-size: 20px;
-    font-weight: 600;
-    margin-top: 0;
-    margin-bottom: 25px;
-    color: #1a202c;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.item-form div {
-    margin-bottom: 15px; /* Consistent spacing */
-}
-.item-form label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 500;
-    font-size: 14px;
-    color: #4a5568;
-}
-.item-form input[type="text"],
-.item-form input[type="number"],
-.item-form select,
-.item-form textarea {
-    width: 100%;
-    padding: 10px 12px; /* Match inventory page modal style */
-    border: 1px solid #cbd5e0;
-    border-radius: 4px;
-    box-sizing: border-box;
-    font-size: 14px;
-}
-.item-form textarea {
-    min-height: 80px;
-}
-
-.item-form button, .button-like-link {
-    padding: 10px 18px; /* Match inventory page btn style */
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    text-decoration: none;
-    display: inline-block;
-    margin-right: 10px;
-    transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease; /* Match */
-}
-
-.item-form button {
-    background-color: #4a90e2; /* Primary blue - Match inventory page */
-    color: white;
-}
-.item-form button:hover {
-    background-color: #357abd; /* Darker blue - Match */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.button-like-link { 
-    background-color: #e2e8f0; /* Light gray - Match inventory page secondary */
-    color: #2d3748;
-    border: 1px solid #cbd5e0;
-}
-.button-like-link:hover { 
-    background-color: #cbd5e0;
-    border-color: #a0aec0;
-}
-
-.error, .success { /* Match inventory page message style */
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 4px;
-    font-size: 14px;
-}
-.error { 
-    color: #c53030; /* Darker red text */
-    border: 1px solid #fed7d7; /* Lighter red border */
-    background-color: #fff5f5; /* Light red background */
-}
-.success { 
-    color: #2c7a7b; /* Darker green text */
-    border: 1px solid #c6f6d5; /* Lighter green border */
-    background-color: #e6fffa; /* Light green background */
-}
-
-/* General body styling (if this page is standalone and not part of a template with global styles) */
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f4f7fc;
-    color: #333;
-    padding: 20px;
-    margin:0;
-}
-</style> 
