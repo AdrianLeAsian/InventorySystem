@@ -51,6 +51,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_category'])) {
                 $message = "<p class='success'>Category added successfully!</p>";
                 $category_name = ''; // Clear form fields
                 $category_description = '';
+
+                // Log the activity
+                $last_id = mysqli_insert_id($link);
+                $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                    $activity_type = 'category_added';
+                    $entity_type = 'category';
+                    $reason = 'New category added';
+                    mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $last_id, $param_name, $reason);
+                    mysqli_stmt_execute($log_stmt);
+                    mysqli_stmt_close($log_stmt);
+                }
+
             } else {
                 $message = "<p class='error'>Error: Could not execute the query: " . mysqli_error($link) . "</p>";
             }

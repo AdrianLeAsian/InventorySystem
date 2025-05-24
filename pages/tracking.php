@@ -55,14 +55,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && (isset($_POST['stock_in']) || isset(
             }
         }
 
-        // 2. Add entry to inventory_log
+        // Fetch item name before logging
+        $item_name_for_log = '';
+        $sql_fetch_item_name = "SELECT name FROM items WHERE id = ?";
+        if ($stmt_fetch_item_name = mysqli_prepare($link, $sql_fetch_item_name)) {
+            mysqli_stmt_bind_param($stmt_fetch_item_name, "i", $item_id);
+            mysqli_stmt_execute($stmt_fetch_item_name);
+            mysqli_stmt_bind_result($stmt_fetch_item_name, $fetched_item_name);
+            mysqli_stmt_fetch($stmt_fetch_item_name);
+            $item_name_for_log = $fetched_item_name;
+            mysqli_stmt_close($stmt_fetch_item_name);
+        }
+
+        // 2. Add entry to activity_log
         if ($success) {
-            $sql_log = "INSERT INTO inventory_log (item_id, type, quantity_change, reason) VALUES (?, ?, ?, ?)";
-            if ($stmt_log = mysqli_prepare($link, $sql_log)) {
-                mysqli_stmt_bind_param($stmt_log, "isis", $item_id, $log_type, $quantity_change, $reason);
-                if (mysqli_stmt_execute($stmt_log)) {
-                    // $message .= "<p class='success'>Stock {$log_type} logged successfully!</p>"; // Will be set by commit
-                } else {
+            $activity_type = 'stock_' . $log_type; // 'stock_in' or 'stock_out'
+            $entity_type = 'item';
+            $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, quantity_change, reason) VALUES (?, ?, ?, ?, ?, ?)";
+            if ($stmt_log = mysqli_prepare($link, $log_sql)) {
+                mysqli_stmt_bind_param($stmt_log, "ssisss", $activity_type, $entity_type, $item_id, $item_name_for_log, $quantity_change, $reason);
+                if (!mysqli_stmt_execute($stmt_log)) {
                     $message .= "<p class='error'>Error logging stock movement: " . mysqli_error($link) . "</p>";
                     $success = false;
                 }
@@ -98,12 +110,12 @@ if ($result_items_opt = mysqli_query($link, $sql_items)) {
     mysqli_free_result($result_items_opt);
 }
 
-// Fetch recent inventory logs to display
-$inventory_logs = [];
-$sql_fetch_logs = "SELECT il.id, i.name as item_name, il.type, il.quantity_change, il.reason, DATE_FORMAT(il.log_date, '%Y-%m-%d %H:%i:%s') as log_date 
-                     FROM inventory_log il 
-                     JOIN items i ON il.item_id = i.id 
-                     ORDER BY il.log_date DESC LIMIT 20";
+// Fetch recent activity logs to display from the new activity_log table
+$inventory_logs = []; // Renamed from $inventory_logs to $activity_logs for clarity, but keeping original variable name for minimal changes
+$sql_fetch_logs = "SELECT id, activity_type, entity_type, entity_id, entity_name, quantity_change, reason, DATE_FORMAT(log_date, '%Y-%m-%d %H:%i:%s') as log_date 
+                     FROM activity_log 
+                     WHERE entity_type = 'item' AND (activity_type = 'stock_in' OR activity_type = 'stock_out')
+                     ORDER BY log_date DESC LIMIT 20";
 
 if ($result_logs = mysqli_query($link, $sql_fetch_logs)) {
     if (mysqli_num_rows($result_logs) > 0) {
@@ -113,7 +125,7 @@ if ($result_logs = mysqli_query($link, $sql_fetch_logs)) {
         mysqli_free_result($result_logs);
     }
 } else {
-    $message .= "<p class='error'>Error fetching inventory logs: " . mysqli_error($link) . "</p>";
+    $message .= "<p class='error'>Error fetching activity logs: " . mysqli_error($link) . "</p>";
 }
 
 // Add CSS link in the head section
@@ -289,4 +301,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-</script> 
+</script>

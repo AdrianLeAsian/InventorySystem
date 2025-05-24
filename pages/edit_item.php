@@ -46,6 +46,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_item'])) {
             );
 
             if (mysqli_stmt_execute($stmt)) {
+                // Log the activity
+                $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                    $activity_type = 'item_updated';
+                    $entity_type = 'item';
+                    $reason = 'Item details updated';
+                    mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $item_id, $item_name, $reason);
+                    mysqli_stmt_execute($log_stmt);
+                    mysqli_stmt_close($log_stmt);
+                }
+
                 // Redirect to the main inventory page with status
                 header("Location: index.php?page=inventory&status=item_updated");
                 exit;

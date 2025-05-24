@@ -19,11 +19,33 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
         }
     }
 
+    // Fetch item name before deletion for logging
+    $item_name_to_delete = '';
+    $sql_fetch_name = "SELECT name FROM items WHERE id = ?";
+    if ($stmt_fetch_name = mysqli_prepare($link, $sql_fetch_name)) {
+        mysqli_stmt_bind_param($stmt_fetch_name, "i", $item_id);
+        mysqli_stmt_execute($stmt_fetch_name);
+        mysqli_stmt_bind_result($stmt_fetch_name, $fetched_name);
+        mysqli_stmt_fetch($stmt_fetch_name);
+        $item_name_to_delete = $fetched_name;
+        mysqli_stmt_close($stmt_fetch_name);
+    }
+
     // Proceed with deletion if no logs are found
     $sql = "DELETE FROM items WHERE id = ?";
     if ($stmt = mysqli_prepare($link, $sql)) {
         mysqli_stmt_bind_param($stmt, "i", $item_id);
         if (mysqli_stmt_execute($stmt)) {
+            // Log the activity
+            $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+            if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                $activity_type = 'item_deleted';
+                $entity_type = 'item';
+                $reason = 'Item deleted';
+                mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $item_id, $item_name_to_delete, $reason);
+                mysqli_stmt_execute($log_stmt);
+                mysqli_stmt_close($log_stmt);
+            }
             header("Location: index.php?page=items&status=deleted");
             exit;
         } else {
@@ -39,4 +61,4 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     header("Location: index.php?page=items&error=invalid_id");
     exit;
 }
-?> 
+?>

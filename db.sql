@@ -69,4 +69,19 @@ CREATE TABLE `users` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-*/ 
+*/
+
+-- New activity_log table for comprehensive logging
+DROP TABLE IF EXISTS `activity_log`;
+CREATE TABLE `activity_log` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `activity_type` VARCHAR(50) NOT NULL, -- e.g., 'category_added', 'item_added', 'stock_in', 'stock_out', 'category_updated', 'item_updated', 'category_deleted', 'item_deleted'
+  `entity_type` VARCHAR(50) NOT NULL, -- 'category' or 'item'
+  `entity_id` INT(11) DEFAULT NULL, -- ID of the category or item
+  `entity_name` VARCHAR(255) DEFAULT NULL, -- Name of the category or item at the time of activity
+  `quantity_change` INT(11) DEFAULT NULL, -- For stock movements
+  `reason` VARCHAR(255) DEFAULT NULL, -- For stock movements or other reasons
+  `log_date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+  PRIMARY KEY (`id`),
+  KEY `entity_id` (`entity_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

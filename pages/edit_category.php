@@ -27,6 +27,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_category'])) {
             $param_id = $category_id;
 
             if (mysqli_stmt_execute($stmt)) {
+                // Log the activity
+                $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                    $activity_type = 'category_updated';
+                    $entity_type = 'category';
+                    $reason = 'Category details updated';
+                    mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $category_id, $param_name, $reason);
+                    mysqli_stmt_execute($log_stmt);
+                    mysqli_stmt_close($log_stmt);
+                }
+
                 // Redirect to categories page with success message
                 header("Location: index.php?page=categories&status=updated");
                 exit;

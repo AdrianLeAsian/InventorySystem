@@ -53,6 +53,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_item'])) {
             );
 
             if (mysqli_stmt_execute($stmt)) {
+                // Log the activity
+                $last_id = mysqli_insert_id($link);
+                $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                    $activity_type = 'item_added';
+                    $entity_type = 'item';
+                    $reason = 'New item added';
+                    mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $last_id, $item_name, $reason);
+                    mysqli_stmt_execute($log_stmt);
+                    mysqli_stmt_close($log_stmt);
+                }
+
                 header("Location: index.php?page=items&status=added");
                 exit;
             } else {
@@ -227,4 +239,4 @@ if ($result_items = mysqli_query($link, $sql_fetch_items)) {
 
 <script>
 // ... existing JavaScript code ...
-</script> 
+</script>

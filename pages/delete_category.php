@@ -20,6 +20,18 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
         }
     }
 
+    // Fetch category name before deletion for logging
+    $category_name_to_delete = '';
+    $sql_fetch_name = "SELECT name FROM categories WHERE id = ?";
+    if ($stmt_fetch_name = mysqli_prepare($link, $sql_fetch_name)) {
+        mysqli_stmt_bind_param($stmt_fetch_name, "i", $category_id);
+        mysqli_stmt_execute($stmt_fetch_name);
+        mysqli_stmt_bind_result($stmt_fetch_name, $fetched_name);
+        mysqli_stmt_fetch($stmt_fetch_name);
+        $category_name_to_delete = $fetched_name;
+        mysqli_stmt_close($stmt_fetch_name);
+    }
+
     // Prepare a delete statement if no items are associated
     $sql = "DELETE FROM categories WHERE id = ?";
     if ($stmt = mysqli_prepare($link, $sql)) {
@@ -27,6 +39,16 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
         $param_id = $category_id;
 
         if (mysqli_stmt_execute($stmt)) {
+            // Log the activity
+            $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+            if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                $activity_type = 'category_deleted';
+                $entity_type = 'category';
+                $reason = 'Category deleted';
+                mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $category_id, $category_name_to_delete, $reason);
+                mysqli_stmt_execute($log_stmt);
+                mysqli_stmt_close($log_stmt);
+            }
             // Redirect to categories page with success message
             header("Location: index.php?page=categories&status=deleted");
             exit;
@@ -45,4 +67,4 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     header("Location: index.php?page=categories&error=invalid_id_delete");
     exit;
 }
-?> 
+?>
