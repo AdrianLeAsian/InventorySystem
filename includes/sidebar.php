@@ -20,18 +20,6 @@ $current_page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
                     <span>Inventory</span>
                 </a>
             </li>
-            <li class="sidebar__item <?php echo $current_page === 'items' ? 'sidebar__item--active' : ''; ?>">
-                <a href="index.php?page=items" class="sidebar__link">
-                    <i class="fas fa-box-open"></i>
-                    <span>Items</span>
-                </a>
-            </li>
-            <li class="sidebar__item <?php echo $current_page === 'categories' ? 'sidebar__item--active' : ''; ?>">
-                <a href="index.php?page=categories" class="sidebar__link">
-                    <i class="fas fa-tags"></i>
-                    <span>Categories</span>
-                </a>
-            </li>
             <li class="sidebar__item <?php echo $current_page === 'tracking' ? 'sidebar__item--active' : ''; ?>">
                 <a href="index.php?page=tracking" class="sidebar__link">
                     <i class="fas fa-calendar-alt"></i>

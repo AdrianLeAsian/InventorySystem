@@ -209,12 +209,27 @@ body {
 
 .alert--error {
     background-color: var(--danger-color);
-    color: white;
+    color: orange;
 }
 
 .alert--warning {
     background-color: var(--warning-color);
-    color: white;
+    color: orange;
+}
+
+/* Added specific styling for table rows with alert classes */
+.table__row.alert--warning {
+    background-color: #ffecb3; /* Lighter, more vibrant orange */
+    color: var(--primary-color); /* Keep dark text for readability */
+    font-weight: bold;
+    border-left: 4px solid var(--warning-color); /* Add a left border */
+}
+
+.table__row.alert--danger {
+    background-color: #ffcdd2; /* Lighter, more vibrant red */
+    color: var(--primary-color); /* Changed text to dark for readability on lighter background */
+    font-weight: bold;
+    border-left: 4px solid var(--danger-color); /* Add a left border */
 }
 
 /* Grid System */

@@ -44,6 +44,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_category'])) {
         if ($stmt_cat = mysqli_prepare($link, $sql_cat_insert)) {
             mysqli_stmt_bind_param($stmt_cat, "ss", $category_name_form, $category_description_form);
             if (mysqli_stmt_execute($stmt_cat)) {
+                // Log the activity - Copied from categories.php add logic
+                $last_id = mysqli_insert_id($link);
+                $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                    $activity_type = 'category_added';
+                    $entity_type = 'category';
+                    $reason = 'New category added via Inventory page';
+                    mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $last_id, $category_name_form, $reason);
+                    mysqli_stmt_execute($log_stmt);
+                    mysqli_stmt_close($log_stmt);
+                }
+                // End Log
+
                 header("Location: index.php?page=inventory&status=cat_added");
                 exit;
             } else {
@@ -68,8 +81,7 @@ $item_low_stock_threshold_form = 0;
 $item_purchase_price_form = 0.00;
 $item_selling_price_form = 0.00;
 $item_description_form = '';
-// Add new fields for item form if they become part of DB
- $item_location_form = ''; 
+$item_location_form = ''; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_item'])) {
     $item_name_form = trim($_POST['item_name']);
@@ -79,15 +91,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_item'])) {
     $item_unit_form = trim($_POST['item_unit']);
     $item_low_stock_threshold_form = (int)$_POST['item_low_stock_threshold'];
     $item_purchase_price_form = (float)$_POST['item_purchase_price'];
-    // $item_selling_price_form = (float)$_POST['item_selling_price']; // Value field removed
     $item_description_form = trim($_POST['item_description']);
-     $item_location_form = trim($_POST['item_location']);  
+    $item_location_form = trim($_POST['item_location']);  
 
     if (!empty($item_name_form) && $item_category_id_form > 0) {
         // Modify SQL if new fields like 'location' are added to 'items' table
-        $sql_item_insert = "INSERT INTO items (name, category_id, barcode, quantity, unit, low_stock_threshold, description, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql_item_insert = "INSERT INTO items (name, category_id, barcode, quantity, unit, low_stock_threshold, purchase_price, description, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         if ($stmt_item = mysqli_prepare($link, $sql_item_insert)) {
-            // Adjust bind_param if new fields are added: e.g., "sisisiddsS" (add S for location)
+            // Adjusted bind_param to match the updated SQL statement (added location)
             mysqli_stmt_bind_param($stmt_item, "sisisids", 
                 $item_name_form, 
                 $item_category_id_form, 
@@ -96,12 +107,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_item'])) {
                 $item_unit_form, 
                 $item_low_stock_threshold_form, 
                 $item_purchase_price_form,
-                // $item_selling_price_form, // Value field removed
-                $item_description_form,
+                $item_description_form, // Corrected order: description before location
                 $item_location_form
             );
 
             if (mysqli_stmt_execute($stmt_item)) {
+                 // Log the activity - Copied from items.php add logic
+                $last_id = mysqli_insert_id($link);
+                $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                    $activity_type = 'item_added';
+                    $entity_type = 'item';
+                    $reason = 'New item added via Inventory page';
+                    mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $last_id, $item_name_form, $reason);
+                    mysqli_stmt_execute($log_stmt);
+                    mysqli_stmt_close($log_stmt);
+                }
+                // End Log
+
                 header("Location: index.php?page=inventory&status=item_added");
                 exit;
             } else {
@@ -116,7 +139,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_item'])) {
     }
 }
 
-// Fetch all categories for tabs and item form dropdown
+// Fetch all categories for tabs, item form dropdown, and category table
 $all_categories = [];
 $sql_fetch_categories = "SELECT id, name FROM categories ORDER BY name ASC";
 if ($result_categories = mysqli_query($link, $sql_fetch_categories)) {
@@ -131,7 +154,7 @@ if ($result_categories = mysqli_query($link, $sql_fetch_categories)) {
 // Fetch all items to display
 $all_items = [];
 // Fetch `updated_at` for "Last Activity". Add `location` if it gets added to DB
-$sql_fetch_items = "SELECT i.id, i.name, i.category_id, i.barcode, i.quantity, i.unit, i.low_stock_threshold, i.purchase_price, i.description, i.updated_at, c.name as category_name 
+$sql_fetch_items = "SELECT i.id, i.name, i.category_id, i.barcode, i.quantity, i.unit, i.low_stock_threshold, i.purchase_price, i.description, i.updated_at, i.location, c.name as category_name 
                     FROM items i 
                     JOIN categories c ON i.category_id = c.id 
                     ORDER BY i.name ASC";
@@ -143,6 +166,19 @@ if ($result_items = mysqli_query($link, $sql_fetch_items)) {
 } else {
     $message .= "<p class='error'>Error fetching items: " . mysqli_error($link) . "</p>";
 }
+
+// Fetch categories for the category list table display - Copied from categories.php fetch logic
+$categories_list = [];
+$sql_fetch_categories_list = "SELECT id, name, description, created_at FROM categories ORDER BY name ASC";
+if ($result_categories_list = mysqli_query($link, $sql_fetch_categories_list)) {
+    while ($row_cat_list = mysqli_fetch_assoc($result_categories_list)) {
+        $categories_list[] = $row_cat_list;
+    }
+    mysqli_free_result($result_categories_list);
+} else {
+    $message .= "<p class='error'>Error fetching categories for list: " . mysqli_error($link) . "</p>";
+}
+// End Fetch categories for list
 
 // Calculate footer summary data
 $total_items_count = count($all_items);
@@ -174,13 +210,15 @@ function format_last_activity($timestamp) {
 ?>
 
 <link rel="stylesheet" href="css/main.css">
+<!-- Add Font Awesome for icons - Copied from items.php/categories.php -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <div class="container">
     <div class="page">
         <header class="d-flex justify-between align-center mb-4">
             <div>
-                <h2 class="card__title">Inventory Items</h2>
-                <p class="text-muted">Manage and track all your inventory items.</p>
+                <h2 class="card__title">Inventory Overview</h2>
+                <p class="text-muted">Manage your inventory items and categories.</p>
             </div>
             <div class="d-flex gap-2">
                 <button class="btn btn--primary" onclick="document.getElementById('addItemModal').style.display='block'">+ Add Item</button>
@@ -195,13 +233,15 @@ function format_last_activity($timestamp) {
             </div>
         <?php endif; ?>
 
+        <!-- Items Section -->
         <div class="card mb-4">
             <div class="card__body">
+                 <h3 class="card__title mb-3">Inventory Items</h3>
                 <div class="d-flex justify-between align-center mb-3">
                     <div class="category-tabs">
-                        <button class="btn btn--primary" onclick="filterItems('all')">All Items</button>
+                        <button class="btn btn--primary tab-link active" onclick="filterItems('all')">All Items</button>
                         <?php foreach ($all_categories as $category): ?>
-                            <button class="btn btn--secondary" onclick="filterItems('<?php echo htmlspecialchars($category['id']); ?>')">
+                            <button class="btn btn--secondary tab-link" onclick="filterItems('<?php echo htmlspecialchars($category['id']); ?>')">
                                 <?php echo htmlspecialchars($category['name']); ?>
                             </button>
                         <?php endforeach; ?>
@@ -218,9 +258,10 @@ function format_last_activity($timestamp) {
                 </div>
 
                 <div class="table">
-                    <table class="w-100">
+                    <table id="inventoryItemsTable" class="w-100">
                         <thead>
                             <tr class="table__header">
+                                 <th class="table__cell">Barcode</th>
                                 <th class="table__cell">Name</th>
                                 <th class="table__cell">Category</th>
                                 <th class="table__cell">Current Stock</th>
@@ -238,10 +279,15 @@ function format_last_activity($timestamp) {
                                     <?php
                                         $isLowStock = ($item['low_stock_threshold'] > 0 && $item['quantity'] <= $item['low_stock_threshold']);
                                         $isOutStock = ($item['quantity'] == 0);
-                                        $rowClass = $isLowStock ? 'alert alert--warning' : '';
-                                        if ($isOutStock) $rowClass = 'alert alert--error';
+                                        $rowClass = '';
+                                        if ($isOutStock) {
+                                            $rowClass = 'alert alert--danger';
+                                        } elseif ($isLowStock) {
+                                            $rowClass = 'alert alert--warning';
+                                        }
                                     ?>
                                     <tr data-category-id="<?php echo htmlspecialchars($item['category_id']); ?>" class="table__row <?php echo $rowClass; ?>">
+                                         <td class="table__cell"><?php echo htmlspecialchars($item['barcode'] ?? 'N/A'); ?></td>
                                         <td class="table__cell" title="<?php echo htmlspecialchars($item['name']); ?>">
                                             <?php echo htmlspecialchars($item['name']); ?>
                                         </td>
@@ -249,34 +295,41 @@ function format_last_activity($timestamp) {
                                         <td class="table__cell"><?php echo htmlspecialchars($item['quantity']); ?></td>
                                         <td class="table__cell"><?php echo htmlspecialchars($item['low_stock_threshold']); ?></td>
                                         <td class="table__cell"><?php echo htmlspecialchars($item['unit']); ?></td>
-                                        <td class="table__cell"><?php echo 'N/A'; ?></td>
+                                        <!-- Display Location -->
+                                        <td class="table__cell"><?php echo htmlspecialchars($item['location'] ?? 'N/A'); ?></td>
                                         <td class="table__cell"><?php echo format_last_activity($item['updated_at']); ?></td>
                                         <td class="table__cell">
                                             <?php
                                             $status = 'OK';
-                                            $status_class = 'btn btn--success';
-                                            if ($isLowStock) {
-                                                $status = 'Low Stock';
-                                                $status_class = 'btn btn--warning';
-                                            }
+                                            $status_class = 'btn btn--success btn--sm'; // Added btn--sm for smaller status buttons
                                             if ($isOutStock) {
                                                 $status = 'Out of Stock';
-                                                $status_class = 'btn btn--danger';
+                                                $status_class = 'btn btn--danger btn--sm';
+                                            } elseif ($isLowStock) {
+                                                $status = 'Low Stock';
+                                                $status_class = 'btn btn--warning btn--sm';
                                             }
                                             ?>
                                             <span class="<?php echo $status_class; ?>"><?php echo $status; ?></span>
                                         </td>
                                         <td class="table__cell">
                                             <div class="d-flex gap-2">
-                                                <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="btn btn--primary">Edit</a>
-                                                <a href="index.php?page=delete_item&id=<?php echo $item['id']; ?>" class="btn btn--danger" onclick="return confirm('Are you sure you want to delete this item?')">Delete</a>
+                                                <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="btn btn--secondary btn--sm" title="Edit Item">
+                                                     <i class="fas fa-edit"></i>
+                                                </a>
+                                                 <a href="index.php?page=stock_movement&item_id=<?php echo $item['id']; ?>" class="btn btn--info btn--sm" title="Stock In/Out">
+                                                    <i class="fas fa-dolly-flatbed"></i>
+                                                </a>
+                                                <a href="index.php?page=delete_item&id=<?php echo $item['id']; ?>" class="btn btn--danger btn--sm" title="Delete Item" onclick="return confirm('Are you sure you want to delete this item? This action cannot be undone.');">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr class="table__row">
-                                    <td colspan="9" class="table__cell text-center">No items found.</td>
+                                    <td colspan="10" class="table__cell text-center">No items found.</td> <!-- Adjusted colspan -->
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -284,6 +337,54 @@ function format_last_activity($timestamp) {
                 </div>
             </div>
         </div>
+
+        <!-- Categories Section - Copied from categories.php -->
+        <div class="card">
+             <div class="card__body">
+                <h3 class="card__title mb-3">Inventory Categories</h3>
+                <?php if (!empty($categories_list)): ?>
+                    <div class="table">
+                        <table class="w-100">
+                            <thead>
+                                <tr class="table__header">
+                                    <th class="table__cell">ID</th>
+                                    <th class="table__cell">Name</th>
+                                    <th class="table__cell">Description</th>
+                                    <th class="table__cell">Created At</th>
+                                    <th class="table__cell">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($categories_list as $category): ?>
+                                    <tr class="table__row">
+                                        <td class="table__cell"><?php echo htmlspecialchars($category['id']); ?></td>
+                                        <td class="table__cell"><?php echo htmlspecialchars($category['name']); ?></td>
+                                        <td class="table__cell"><?php echo nl2br(htmlspecialchars($category['description'])); ?></td>
+                                        <td class="table__cell"><?php echo htmlspecialchars($category['created_at']); ?></td>
+                                        <td class="table__cell">
+                                            <div class="d-flex gap-2">
+                                                <a href="index.php?page=edit_category&id=<?php echo $category['id']; ?>" class="btn btn--secondary btn--sm" title="Edit Category">
+                                                     <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="index.php?page=delete_category&id=<?php echo $category['id']; ?>"
+                                                   class="btn btn--danger btn--sm"
+                                                   title="Delete Category"
+                                                   onclick="return confirm('Are you sure you want to delete this category? Make sure no items are assigned to it first.');">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <p class="text-center text-muted">No categories found. Please add some.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <!-- End Categories Section -->
     </div>
 </div>
 
@@ -326,9 +427,10 @@ function format_last_activity($timestamp) {
                         <input type="number" name="item_low_stock_threshold" class="form__input" value="0" min="0">
                     </div>
                     <div class="form__group">
-                        <label class="form__label">Purchase Price</label>
-                        <input type="number" name="item_purchase_price" class="form__input" value="0.00" step="0.01" min="0">
+                         <label class="form__label">Purchase Price (Optional)</label> <!-- Added label -->
+                         <input type="number" name="item_purchase_price" class="form__input" value="0.00" step="0.01" min="0">
                     </div>
+                     <!-- Selling Price field removed as per items.php and edit_item.php -->
                     <div class="form__group">
                         <label class="form__label">Description</label>
                         <textarea name="item_description" class="form__input"></textarea>
@@ -346,6 +448,7 @@ function format_last_activity($timestamp) {
         </div>
     </div>
 </div>
+
 
 <!-- Add Category Modal -->
 <div id="addCategoryModal" class="modal" style="display: none;">
@@ -384,6 +487,7 @@ function format_last_activity($timestamp) {
     top: 0;
     width: 100%;
     height: 100%;
+    overflow: auto; /* Added scroll if content overflows */
     background-color: rgba(0,0,0,0.5);
 }
 
@@ -396,6 +500,7 @@ function format_last_activity($timestamp) {
     max-width: 600px;
     border-radius: 8px;
 }
+
 
 /* Additional Utility Classes */
 .gap-2 {
@@ -412,23 +517,31 @@ function format_last_activity($timestamp) {
     gap: 0.5rem;
     flex-wrap: wrap;
 }
+
+/* Added style for smaller buttons in tables */
+.btn--sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Added grid styles for layout if needed, copied from items.php/categories.php */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+.grid--2-cols {
+    grid-template-columns: repeat(2, 1fr);
+}
+.grid--span-2 {
+    grid-column: span 2;
+}
+
 </style>
 
 <script>
 // Get the modals
 var addCategoryModal = document.getElementById('addCategoryModal');
 var addItemModal = document.getElementById('addItemModal');
-
-// Get the <span> elements that close the modals
-var closeButtons = document.getElementsByClassName("close-button");
-
-// When the user clicks on <span> (x), close the modal
-for (let i = 0; i < closeButtons.length; i++) {
-  closeButtons[i].onclick = function() {
-    const modalId = this.closest('.modal').id;
-    document.getElementById(modalId).style.display = "none";
-  }
-}
 
 // When the user clicks anywhere outside of the modal, close it
 window.onclick = function(event) {
@@ -439,17 +552,37 @@ window.onclick = function(event) {
 
 // Tab filtering for items
 function filterItems(categoryId) {
+    // Get the item table explicitly by its ID
     var table = document.getElementById("inventoryItemsTable");
+    if (!table) return; // Added a check in case the table isn't found
     var tr = table.getElementsByTagName("tr");
-    var activeTab = document.querySelector('.category-tabs .tab-link.active');
-    if(activeTab) activeTab.classList.remove('active');
-    
-    var newActiveTab = document.querySelector(".category-tabs .tab-link[onclick*=\"filterItems('" + categoryId + "')\"]");
-    if(newActiveTab) newActiveTab.classList.add('active');
+
+    // Update active tab class
+    var tabs = document.querySelectorAll('.category-tabs .tab-link');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    var activeTab = document.querySelector(".category-tabs .tab-link[onclick*=\"filterItems('" + categoryId + "')\"]");
+    if(activeTab) activeTab.classList.add('active');
+
+    // Update select dropdown value to match tab
+    var categoryFilterSelect = document.getElementById('categoryFilterSelect');
+    if (categoryFilterSelect) {
+        categoryFilterSelect.value = categoryId;
+    }
+
 
     for (var i = 1; i < tr.length; i++) { // Start from 1 to skip header row
         var tdCategory = tr[i].getAttribute('data-category-id');
-        if (categoryId === 'all' || tdCategory === categoryId) {
+        var matchesCategory = (categoryId === 'all' || tdCategory === categoryId);
+
+        // Also consider the current search filter when applying category filter
+        var searchInput = document.getElementById('searchItemsInput');
+        var searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+        var row = tr[i];
+        var nameCell = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
+        var categoryCell = row.cells[2] ? row.cells[2].textContent.toLowerCase() : '';
+        var matchesSearch = nameCell.includes(searchTerm) || categoryCell.includes(searchTerm);
+
+        if (matchesSearch && matchesCategory) {
             tr[i].style.display = "";
         } else {
             tr[i].style.display = "none";
@@ -457,24 +590,27 @@ function filterItems(categoryId) {
     }
 }
 
+// Sync category filter select with tab clicks and apply filter on change
+document.getElementById('categoryFilterSelect').addEventListener('change', function() {
+    filterItems(this.value);
+});
+
+
 // Search items (simple client-side search by name and category for now)
 document.getElementById('searchItemsInput').addEventListener('keyup', function() {
     var searchTerm = this.value.toLowerCase();
     var table = document.getElementById("inventoryItemsTable");
+     if (!table) return; // Added a check
     var tr = table.getElementsByTagName("tr");
-    var currentCategoryFilter = document.querySelector('.category-tabs .tab-link.active');
-    var activeCategoryId = 'all';
-    if (currentCategoryFilter) {
-        // Extract categoryId from the onclick attribute (e.g., "filterItems('1')")
-        var match = currentCategoryFilter.getAttribute('onclick').match(/filterItems\('([^']+)'\)/);
-        if (match) activeCategoryId = match[1];
-    }
 
+    // Get the currently active category filter from the select dropdown
+    var categoryFilterSelect = document.getElementById('categoryFilterSelect');
+    var activeCategoryId = categoryFilterSelect ? categoryFilterSelect.value : 'all';
 
     for (var i = 1; i < tr.length; i++) { // Start from 1 to skip header row
         var row = tr[i];
-        var nameCell = row.cells[0] ? row.cells[0].textContent.toLowerCase() : '';
-        var categoryCell = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
+        var nameCell = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
+        var categoryCell = row.cells[2] ? row.cells[2].textContent.toLowerCase() : '';
         var itemCategoryId = row.getAttribute('data-category-id');
 
         var matchesSearch = nameCell.includes(searchTerm) || categoryCell.includes(searchTerm);
@@ -513,18 +649,20 @@ document.getElementById('exportItemsBtn').addEventListener('click', function() {
     // document.body.removeChild(link);
 });
 
-// Ensure first tab is active on load if categories exist
+// Ensure "All Items" tab/select is active and filter is applied on load
 window.addEventListener('DOMContentLoaded', (event) => {
-    const firstTab = document.querySelector('.category-tabs .tab-link');
-    if(firstTab){
-        // No, this will be handled by the 'all' tab which is hardcoded and active by default.
-        // Let's ensure the "All Items" tab is correctly marked active if it exists.
-        const allItemsTab = document.querySelector(".category-tabs .tab-link[onclick*=\"filterItems('all')\"]");
-        if(allItemsTab) { // Should always exist
-             // It's already set as active in HTML, so this is just a check.
-        }
+    // Find and activate the "All Items" tab
+    const allItemsTab = document.querySelector(".category-tabs .tab-link[onclick*=\"filterItems('all')\"]");
+    if(allItemsTab) {
+        allItemsTab.classList.add('active');
     }
-    // Initial filter display if needed, though default is all items visible.
+    // Set the select dropdown to "All Categories"
+     const categoryFilterSelect = document.getElementById('categoryFilterSelect');
+    if (categoryFilterSelect) {
+        categoryFilterSelect.value = 'all';
+    }
+    // Explicitly call filterItems('all') to ensure initial display consistency
+    filterItems('all');
 });
 
 </script>
