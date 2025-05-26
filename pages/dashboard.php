@@ -71,54 +71,53 @@ if($result_activity = mysqli_query($link, $sql_recent_activity)){
 
 <div class="container">
     <div class="page">
-        <div class="grid grid--4-cols">
-            <div class="card">
-                <div class="card__header">
-                    <h2 class="card__title">Total Items</h2>
-                </div>
+        <div class="grid grid--3-cols">
+            <div class="card card--metric">
                 <div class="card__body">
-                    <h3 class="text-center"><?php echo number_format($total_items_count); ?></h3>
-                    <p class="text-center text-muted">Items in inventory</p>
+                    <div class="metric-indicator metric-indicator--green"></div>
+                    <div>
+                        <h2 class="metric-title">Total Items</h2>
+                        <p class="metric-value"><?php echo number_format($total_items_count); ?></p>
+                        <p class="metric-description text-muted">Items in inventory</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card__header">
-                    <h2 class="card__title">Categories</h2>
-                </div>
+            <div class="card card--metric">
                 <div class="card__body">
-                    <h3 class="text-center"><?php echo number_format($total_categories); ?></h3>
-                    <p class="text-center text-muted">Active categories</p>
+                    <div class="metric-indicator metric-indicator--blue"></div>
+                    <div>
+                        <h2 class="metric-title">Categories</h2>
+                        <p class="metric-value"><?php echo number_format($total_categories); ?></p>
+                        <p class="metric-description text-muted">Active categories</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card__header">
-                    <h2 class="card__title">Total Stock Value</h2>
-                </div>
+            <div class="card card--metric <?php echo ($low_stock_count > 0) ? 'card--warning' : ''; ?>">
                 <div class="card__body">
-                    <h3 class="text-center">$<?php echo number_format($total_stock_value, 2); ?></h3>
-                    <p class="text-center text-muted">Current inventory value</p>
-                </div>
-            </div>
-
-            <div class="card <?php echo ($low_stock_count > 0) ? 'alert alert--warning' : ''; ?>">
-                <div class="card__header">
-                    <h2 class="card__title">Low Stock Alerts</h2>
-                </div>
-                <div class="card__body">
-                    <h3 class="text-center <?php echo ($low_stock_count > 0) ? 'text-danger' : ''; ?>"><?php echo number_format($low_stock_count); ?></h3>
-                    <p class="text-center text-muted">Items need attention</p>
+                    <div class="metric-indicator metric-indicator--red"></div>
+                    <div>
+                        <h2 class="metric-title">Low Stock Alerts</h2>
+                        <p class="metric-value <?php echo ($low_stock_count > 0) ? 'text-white' : ''; ?>"><?php echo number_format($low_stock_count); ?></p>
+                        <p class="metric-description text-muted">Items need attention</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid--2-cols mt-4">
-            <div class="card" id="recent-activity-card">
+        <div class="tabs-container mt-4">
+            <div class="tabs">
+                <button class="tab-button active" data-tab="recent-activity">Recent Activity</button>
+                <button class="tab-button" data-tab="low-stock-items">Low Stock Items</button>
+                <button class="tab-button" data-tab="category-distribution">Category Distribution</button>
+            </div>
+
+            <div id="recent-activity" class="tab-content active card">
                 <div class="card__header">
                     <h2 class="card__title">Recent Activity</h2>
                 </div>
-                <div class="card__body">
+                <div class="card__body card__body--scrollable">
                     <?php if (!empty($recent_activity)): ?>
                     <div class="table">
                         <table class="w-100">
@@ -154,11 +153,45 @@ if($result_activity = mysqli_query($link, $sql_recent_activity)){
                 </div>
             </div>
 
-            <div class="card">
+            <div id="low-stock-items" class="tab-content card">
+                <div class="card__header">
+                    <h2 class="card__title">Low Stock Items</h2>
+                </div>
+                <div class="card__body card__body--scrollable">
+                    <?php if (!empty($low_stock_items)): ?>
+                    <div class="table">
+                        <table class="w-100">
+                            <thead>
+                                <tr class="table__header">
+                                    <th class="table__cell">Item Name</th>
+                                    <th class="table__cell">Quantity</th>
+                                    <th class="table__cell">Threshold</th>
+                                    <th class="table__cell">Unit</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach($low_stock_items as $item): ?>
+                                <tr class="table__row">
+                                    <td class="table__cell"><?php echo htmlspecialchars($item['name']); ?></td>
+                                    <td class="table__cell"><?php echo number_format($item['quantity']); ?></td>
+                                    <td class="table__cell"><?php echo number_format($item['low_stock_threshold']); ?></td>
+                                    <td class="table__cell"><?php echo htmlspecialchars($item['unit']); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php else: ?>
+                    <p class="text-center text-muted">No items currently low in stock.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div id="category-distribution" class="tab-content card">
                 <div class="card__header">
                     <h2 class="card__title">Category Distribution</h2>
                 </div>
-                <div class="card__body">
+                <div class="card__body card__body--scrollable">
                     <?php if (!empty($category_distribution)): ?>
                     <div class="table">
                         <table class="w-100">
@@ -188,22 +221,40 @@ if($result_activity = mysqli_query($link, $sql_recent_activity)){
 </div>
 
 <script>
-// Function to update recent activities
-function updateRecentActivities() {
-    fetch('ajax/get_recent_activities.php')
-        .then(response => response.text())
-        .then(html => {
-            const activitiesContainer = document.querySelector('#recent-activity-card .card__body');
-            if (activitiesContainer) {
-                activitiesContainer.innerHTML = html;
-            }
-        })
-        .catch(error => console.error('Error updating recent activities:', error.message));
-}
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab functionality
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
 
-// Update activities every 30 seconds
-setInterval(updateRecentActivities, 30000);
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // Deactivate all tabs and hide all content
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
 
-// Initial update when page loads
-document.addEventListener('DOMContentLoaded', updateRecentActivities);
+            // Activate clicked tab and show corresponding content
+            button.classList.add('active');
+            document.getElementById(button.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Function to update recent activities (existing functionality)
+    function updateRecentActivities() {
+        fetch('ajax/get_recent_activities.php')
+            .then(response => response.text())
+            .then(html => {
+                const activitiesContainer = document.querySelector('#recent-activity .card__body');
+                if (activitiesContainer) {
+                    activitiesContainer.innerHTML = html;
+                }
+            })
+            .catch(error => console.error('Error updating recent activities:', error.message));
+    }
+
+    // Update activities every 30 seconds
+    setInterval(updateRecentActivities, 30000);
+
+    // Initial update when page loads
+    updateRecentActivities();
+});
 </script>

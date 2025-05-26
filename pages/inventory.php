@@ -44,6 +44,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_category'])) {
         if ($stmt_cat = mysqli_prepare($link, $sql_cat_insert)) {
             mysqli_stmt_bind_param($stmt_cat, "ss", $category_name_form, $category_description_form);
             if (mysqli_stmt_execute($stmt_cat)) {
+                // Log the activity
+                $last_id = mysqli_insert_id($link);
+                $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                    $activity_type = 'category_added';
+                    $entity_type = 'category';
+                    $reason = 'New category added';
+                    mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $last_id, $category_name_form, $reason);
+                    mysqli_stmt_execute($log_stmt);
+                    mysqli_stmt_close($log_stmt);
+                }
                 header("Location: index.php?page=inventory&status=cat_added");
                 exit;
             } else {
@@ -102,6 +113,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_item'])) {
             );
 
             if (mysqli_stmt_execute($stmt_item)) {
+                // Log the activity
+                $last_id = mysqli_insert_id($link);
+                $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                    $activity_type = 'item_added';
+                    $entity_type = 'item';
+                    $reason = 'New item added';
+                    mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $last_id, $item_name_form, $reason);
+                    mysqli_stmt_execute($log_stmt);
+                    mysqli_stmt_close($log_stmt);
+                }
                 header("Location: index.php?page=inventory&status=item_added");
                 exit;
             } else {
@@ -198,89 +220,143 @@ function format_last_activity($timestamp) {
         <div class="card mb-4">
             <div class="card__body">
                 <div class="d-flex justify-between align-center mb-3">
-                    <div class="category-tabs">
-                        <button class="btn btn--primary" onclick="filterItems('all')">All Items</button>
-                        <?php foreach ($all_categories as $category): ?>
-                            <button class="btn btn--secondary" onclick="filterItems('<?php echo htmlspecialchars($category['id']); ?>')">
-                                <?php echo htmlspecialchars($category['name']); ?>
-                            </button>
-                        <?php endforeach; ?>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <select id="categoryFilterSelect" class="form__input">
-                            <option value="all">All Categories</option>
-                            <?php foreach ($all_categories as $category): ?>
-                                <option value="<?php echo htmlspecialchars($category['id']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <input type="text" id="searchItemsInput" class="form__input" placeholder="Search Items...">
+                    <div class="tabs main-tabs">
+                        <button class="tab-button active" data-tab-content="items-content" onclick="showTab('items-content')">Inventory Items</button>
+                        <button class="tab-button" data-tab-content="categories-content" onclick="showTab('categories-content')">Categories</button>
                     </div>
                 </div>
 
-                <div class="table">
-                    <table class="w-100">
-                        <thead>
-                            <tr class="table__header">
-                                <th class="table__cell">Name</th>
-                                <th class="table__cell">Category</th>
-                                <th class="table__cell">Current Stock</th>
-                                <th class="table__cell">Min Stock</th>
-                                <th class="table__cell">Unit</th>
-                                <th class="table__cell">Location</th>
-                                <th class="table__cell">Last Activity</th>
-                                <th class="table__cell">Status</th>
-                                <th class="table__cell">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($all_items)): ?>
-                                <?php foreach ($all_items as $item): ?>
-                                    <?php
-                                        $isLowStock = ($item['low_stock_threshold'] > 0 && $item['quantity'] <= $item['low_stock_threshold']);
-                                        $isOutStock = ($item['quantity'] == 0);
-                                        $rowClass = $isLowStock ? 'alert alert--warning' : '';
-                                        if ($isOutStock) $rowClass = 'alert alert--error';
-                                    ?>
-                                    <tr data-category-id="<?php echo htmlspecialchars($item['category_id']); ?>" class="table__row <?php echo $rowClass; ?>">
-                                        <td class="table__cell" title="<?php echo htmlspecialchars($item['name']); ?>">
-                                            <?php echo htmlspecialchars($item['name']); ?>
-                                        </td>
-                                        <td class="table__cell"><?php echo htmlspecialchars($item['category_name']); ?></td>
-                                        <td class="table__cell"><?php echo htmlspecialchars($item['quantity']); ?></td>
-                                        <td class="table__cell"><?php echo htmlspecialchars($item['low_stock_threshold']); ?></td>
-                                        <td class="table__cell"><?php echo htmlspecialchars($item['unit']); ?></td>
-                                        <td class="table__cell"><?php echo 'N/A'; ?></td>
-                                        <td class="table__cell"><?php echo format_last_activity($item['updated_at']); ?></td>
-                                        <td class="table__cell">
-                                            <?php
-                                            $status = 'OK';
-                                            $status_class = 'btn btn--success';
-                                            if ($isLowStock) {
-                                                $status = 'Low Stock';
-                                                $status_class = 'btn btn--warning';
-                                            }
-                                            if ($isOutStock) {
-                                                $status = 'Out of Stock';
-                                                $status_class = 'btn btn--danger';
-                                            }
-                                            ?>
-                                            <span class="<?php echo $status_class; ?>"><?php echo $status; ?></span>
-                                        </td>
-                                        <td class="table__cell">
-                                            <div class="d-flex gap-2">
-                                                <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="btn btn--primary">Edit</a>
-                                                <a href="index.php?page=delete_item&id=<?php echo $item['id']; ?>" class="btn btn--danger" onclick="return confirm('Are you sure you want to delete this item?')">Delete</a>
-                                            </div>
-                                        </td>
-                                    </tr>
+                <div id="items-content" class="tab-content active">
+                    <div class="d-flex justify-between align-center mb-3">
+                        <div class="tabs category-tabs">
+                            <button class="tab-button active" data-tab="all" onclick="filterItems('all')">All Items</button>
+                            <?php foreach ($all_categories as $category): ?>
+                                <button class="tab-button" data-tab="<?php echo htmlspecialchars($category['id']); ?>" onclick="filterItems('<?php echo htmlspecialchars($category['id']); ?>')">
+                                    <?php echo htmlspecialchars($category['name']); ?>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="d-flex gap-2 align-center">
+                            <select id="categoryFilterSelect" class="form__input">
+                                <option value="all">All Categories</option>
+                                <?php foreach ($all_categories as $category): ?>
+                                    <option value="<?php echo htmlspecialchars($category['id']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
                                 <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr class="table__row">
-                                    <td colspan="9" class="table__cell text-center">No items found.</td>
+                            </select>
+                            <input type="text" id="searchItemsInput" class="form__input" placeholder="Search Items...">
+                        </div>
+                    </div>
+
+                    <div class="table" id="inventoryItemsTable">
+                        <table class="w-100">
+                            <thead>
+                                <tr class="table__header">
+                                    <th class="table__cell">Name</th>
+                                    <th class="table__cell">Category</th>
+                                    <th class="table__cell">Current Stock</th>
+                                    <th class="table__cell">Min Stock</th>
+                                    <th class="table__cell">Unit</th>
+                                    <th class="table__cell">Location</th>
+                                    <th class="table__cell">Last Activity</th>
+                                    <th class="table__cell">Status</th>
+                                    <th class="table__cell">Actions</th>
                                 </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($all_items)): ?>
+                                    <?php foreach ($all_items as $item): ?>
+                                        <?php
+                                            $isLowStock = ($item['low_stock_threshold'] > 0 && $item['quantity'] <= $item['low_stock_threshold']);
+                                            $isOutStock = ($item['quantity'] == 0);
+                                            $rowClass = $isLowStock ? 'alert alert--warning' : '';
+                                            if ($isOutStock) $rowClass = 'alert alert--error';
+                                        ?>
+                                        <tr data-category-id="<?php echo htmlspecialchars($item['category_id']); ?>" class="table__row <?php echo $rowClass; ?>">
+                                            <td class="table__cell" title="<?php echo htmlspecialchars($item['name']); ?>">
+                                                <?php echo htmlspecialchars($item['name']); ?>
+                                            </td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($item['category_name']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($item['quantity']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($item['low_stock_threshold']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($item['unit']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($item['location'] ?? 'N/A'); ?></td>
+                                            <td class="table__cell"><?php echo format_last_activity($item['updated_at']); ?></td>
+                                            <td class="table__cell">
+                                                <?php
+                                                $status = 'OK';
+                                                $status_class = 'btn btn--success';
+                                                if ($isLowStock) {
+                                                    $status = 'Low Stock';
+                                                    $status_class = 'btn btn--warning';
+                                                }
+                                                if ($isOutStock) {
+                                                    $status = 'Out of Stock';
+                                                    $status_class = 'btn btn--danger';
+                                                }
+                                                ?>
+                                                <span class="<?php echo $status_class; ?>"><?php echo $status; ?></span>
+                                            </td>
+                                            <td class="table__cell">
+                                                <div class="d-flex gap-2">
+                                                    <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="btn btn--primary">Edit</a>
+                                                    <a href="index.php?page=delete_item&id=<?php echo $item['id']; ?>" class="btn btn--danger" onclick="return confirm('Are you sure you want to delete this item?')">Delete</a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr class="table__row">
+                                        <td colspan="9" class="table__cell text-center">No items found.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="categories-content" class="tab-content" style="display: none;">
+                    <div class="card">
+                        <div class="card__header">
+                            <h2 class="card__title">Existing Categories</h2>
+                        </div>
+                        <div class="card__body">
+                            <?php if (!empty($all_categories)): ?>
+                                <div class="table">
+                                    <table class="w-100">
+                                        <thead>
+                                            <tr class="table__header">
+                                                <th class="table__cell">ID</th>
+                                                <th class="table__cell">Name</th>
+                                                <th class="table__cell">Description</th>
+                                                <th class="table__cell">Created At</th>
+                                                <th class="table__cell">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($all_categories as $category): ?>
+                                                <tr class="table__row">
+                                                    <td class="table__cell"><?php echo htmlspecialchars($category['id']); ?></td>
+                                                    <td class="table__cell"><?php echo htmlspecialchars($category['name']); ?></td>
+                                                    <td class="table__cell"><?php echo nl2br(htmlspecialchars($category['description'] ?? '')); ?></td>
+                                                    <td class="table__cell"><?php echo htmlspecialchars($category['created_at'] ?? 'N/A'); ?></td>
+                                                    <td class="table__cell">
+                                                        <div class="d-flex gap-2">
+                                                            <a href="index.php?page=edit_category&id=<?php echo $category['id']; ?>" class="btn btn--primary">Edit</a>
+                                                            <a href="index.php?page=delete_category&id=<?php echo $category['id']; ?>" 
+                                                               class="btn btn--danger" 
+                                                               onclick="return confirm('Are you sure you want to delete this category?');">Delete</a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            <?php else: ?>
+                                <p class="text-center text-muted">No categories found. Please add some using the form.</p>
                             <?php endif; ?>
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -437,15 +513,42 @@ window.onclick = function(event) {
   }
 }
 
-// Tab filtering for items
+// Main tab switching logic
+function showTab(tabId) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+    });
+
+    // Deactivate all tab buttons
+    document.querySelectorAll('.main-tabs .tab-button').forEach(button => {
+        button.classList.remove('active');
+    });
+
+    // Show the selected tab content
+    document.getElementById(tabId).style.display = 'block';
+
+    // Activate the clicked tab button
+    document.querySelector(`.main-tabs .tab-button[data-tab-content="${tabId}"]`).classList.add('active');
+
+    // If switching to items tab, ensure "All Items" sub-tab is active and filter is applied
+    if (tabId === 'items-content') {
+        document.querySelectorAll('.category-tabs .tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.category-tabs .tab-button[data-tab="all"]`).classList.add('active');
+        filterItems('all'); // Re-apply filter to show all items
+    }
+}
+
+// Tab filtering for items (within the items-content tab)
 function filterItems(categoryId) {
     var table = document.getElementById("inventoryItemsTable");
+    if (!table) return; // Ensure table exists before trying to access it
+
     var tr = table.getElementsByTagName("tr");
-    var activeTab = document.querySelector('.category-tabs .tab-link.active');
-    if(activeTab) activeTab.classList.remove('active');
     
-    var newActiveTab = document.querySelector(".category-tabs .tab-link[onclick*=\"filterItems('" + categoryId + "')\"]");
-    if(newActiveTab) newActiveTab.classList.add('active');
+    // Update active sub-tab button
+    document.querySelectorAll('.category-tabs .tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.category-tabs .tab-button[data-tab="${categoryId}"]`).classList.add('active');
 
     for (var i = 1; i < tr.length; i++) { // Start from 1 to skip header row
         var tdCategory = tr[i].getAttribute('data-category-id');
@@ -461,14 +564,10 @@ function filterItems(categoryId) {
 document.getElementById('searchItemsInput').addEventListener('keyup', function() {
     var searchTerm = this.value.toLowerCase();
     var table = document.getElementById("inventoryItemsTable");
+    if (!table) return; // Ensure table exists
+
     var tr = table.getElementsByTagName("tr");
-    var currentCategoryFilter = document.querySelector('.category-tabs .tab-link.active');
-    var activeCategoryId = 'all';
-    if (currentCategoryFilter) {
-        // Extract categoryId from the onclick attribute (e.g., "filterItems('1')")
-        var match = currentCategoryFilter.getAttribute('onclick').match(/filterItems\('([^']+)'\)/);
-        if (match) activeCategoryId = match[1];
-    }
+    var activeCategoryId = document.querySelector('.category-tabs .tab-button.active').dataset.tab;
 
 
     for (var i = 1; i < tr.length; i++) { // Start from 1 to skip header row
@@ -491,40 +590,12 @@ document.getElementById('searchItemsInput').addEventListener('keyup', function()
 // Placeholder for Export button functionality
 document.getElementById('exportItemsBtn').addEventListener('click', function() {
     alert('Export functionality to be implemented. This would typically export the currently visible items to CSV.');
-    // Basic CSV export example (can be expanded)
-    // let csvContent = "data:text/csv;charset=utf-8,";
-    // const rows = document.querySelectorAll("#inventoryItemsTable tr");
-    // rows.forEach(function(row) {
-    //     let rowData = [];
-    //     row.querySelectorAll("th, td").forEach(function(cell, index) {
-    //          // Only include visible columns, skip actions
-    //         if (index < row.cells.length -1 && row.style.display !== 'none') {
-    //             rowData.push(\`"\${cell.innerText.replace(/"/g, \'\'\'""\'\'\')}"\`);
-    //         }
-    //     });
-    //     if (rowData.length > 0) csvContent += rowData.join(",") + "\\r\\n";
-    // });
-    // var encodedUri = encodeURI(csvContent);
-    // var link = document.createElement("a");
-    // link.setAttribute("href", encodedUri);
-    // link.setAttribute("download", "inventory_export.csv");
-    // document.body.appendChild(link); 
-    // link.click();
-    // document.body.removeChild(link);
 });
 
-// Ensure first tab is active on load if categories exist
+// Initial setup on page load
 window.addEventListener('DOMContentLoaded', (event) => {
-    const firstTab = document.querySelector('.category-tabs .tab-link');
-    if(firstTab){
-        // No, this will be handled by the 'all' tab which is hardcoded and active by default.
-        // Let's ensure the "All Items" tab is correctly marked active if it exists.
-        const allItemsTab = document.querySelector(".category-tabs .tab-link[onclick*=\"filterItems('all')\"]");
-        if(allItemsTab) { // Should always exist
-             // It's already set as active in HTML, so this is just a check.
-        }
-    }
-    // Initial filter display if needed, though default is all items visible.
+    // Set the default active tab to "Inventory Items"
+    showTab('items-content');
 });
 
 </script>

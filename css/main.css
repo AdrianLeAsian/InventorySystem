@@ -22,17 +22,28 @@ body {
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--light-gray);
+    min-height: 100vh; /* Ensure body takes full viewport height */
+    display: flex;
+    flex-direction: column;
+    padding-top: 70px; /* Add padding to account for fixed header height */
+}
+
+html {
+    height: 100%;
+    overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 /* Layout Components */
 .container {
-    max-width: 1200px;
+    max-width: 1100px; /* Reduced max-width to decrease empty space on the right */
     margin: 0 auto;
     padding: 0 20px;
 }
 
 .page {
     padding: 20px;
+    margin-left: 200px; /* Adjusted for sidebar width to reduce left empty space */
+    flex-grow: 1; /* Allow page to take remaining space */
 }
 
 /* Header Styles */
@@ -59,10 +70,18 @@ body {
 
 /* Responsive header */
 @media (max-width: 768px) {
+    body {
+        padding-top: 56px; /* Adjust padding for smaller header on mobile */
+    }
+
     .header {
         left: 60px;
         height: 56px;
         padding: 0 1rem;
+    }
+
+    .page {
+        margin-left: 50px; /* Adjusted for collapsed sidebar width on mobile */
     }
 
     .header__title {
@@ -101,6 +120,79 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
     margin-bottom: 1rem;
+    height: auto; /* Ensure cards adjust height dynamically */
+    display: flex;
+    flex-direction: column;
+}
+
+.card--metric {
+    height: 150px; /* Keep a smaller fixed height for metric cards */
+    display: flex; /* Make it a flex container */
+    flex-direction: column; /* Stack children vertically (card header, body, etc.) */
+    justify-content: center; /* Center content vertically within the card */
+    padding: 1.5rem;
+}
+
+.card--metric .card__body {
+    flex-grow: 0; /* Do not grow, let content define size */
+    display: flex; /* Make card body a flex container */
+    flex-direction: row; /* Arrange indicator and text side-by-side */
+    align-items: center; /* Align indicator and text to the center vertically */
+    gap: 1rem; /* Add spacing between indicator and text */
+}
+
+.metric-indicator {
+    width: 6px; /* Thinner indicator */
+    height: 60px; /* Shorter indicator */
+    border-radius: 3px; /* Smaller border-radius */
+    margin-right: 1.2rem; /* Increased margin for spacing */
+    flex-shrink: 0; /* Prevent indicator from shrinking */
+}
+
+.metric-indicator--green {
+    background-color: var(--success-color);
+}
+
+.metric-indicator--blue {
+    background-color: var(--secondary-color);
+}
+
+.metric-indicator--red {
+    background-color: var(--danger-color);
+}
+
+.metric-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 0; /* Remove margin to control spacing with gap */
+}
+
+.metric-value {
+    font-size: 2.2rem; /* Slightly smaller font size for value */
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0; /* Remove margin to control spacing with gap */
+}
+
+.metric-description {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 0; /* Remove margin to control spacing with gap */
+}
+
+.card__body--scrollable {
+    flex-grow: 1; /* Allow body to take remaining space */
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+/* Set a fixed height for the tab content cards to match the metric cards */
+.tab-content.card {
+    height: auto; /* Allow height to adjust based on content */
+    min-height: 200px; /* Ensure visibility even with minimal content */
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Allow tab content card to grow */
 }
 
 .card__header {
@@ -114,6 +206,7 @@ body {
     font-weight: 600;
     color: var(--primary-color);
 }
+
 
 /* Form Elements */
 .form {
@@ -147,12 +240,28 @@ body {
 
 /* Buttons */
 .btn {
-    padding: 0.75rem 1.5rem;
+    padding: 0.75rem 1.25rem; /* Increased padding for better clickability */
     border: none;
-    border-radius: 4px;
+    border-radius: 6px; /* Slightly larger border-radius */
     cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.3s;
+    font-weight: 600; /* Bolder font weight */
+    transition: all 0.3s ease; /* Smooth transition for all properties */
+    font-size: 0.9rem; /* Increased font size */
+    display: inline-flex; /* Use inline-flex for better alignment with icons */
+    align-items: center; /* Vertically align content */
+    justify-content: center; /* Horizontally center content */
+    text-decoration: none; /* Remove underline for links acting as buttons */
+    white-space: nowrap; /* Prevent text wrapping for single-line buttons */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+/* Specific styles for buttons within table cells to make them smaller */
+.table__cell .btn {
+    padding: 0.3rem 0.6rem; /* Smaller padding for buttons in tables */
+    font-size: 0.75rem; /* Smaller font size */
+    min-width: unset; /* Remove min-width constraint */
+    width: auto; /* Allow width to adjust to content */
+    display: inline-flex; /* Keep inline-flex */
 }
 
 .btn--primary {
@@ -171,7 +280,27 @@ body {
 }
 
 .btn:hover {
-    opacity: 0.9;
+    transform: translateY(-1px); /* Slight lift effect on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Enhanced shadow on hover */
+}
+
+.btn--secondary {
+    background-color: #6c757d; /* A neutral secondary color */
+    color: white;
+}
+
+.btn--secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Icon spacing for buttons */
+.btn i {
+    margin-right: 0.5rem;
+}
+
+.btn i:last-child {
+    margin-right: 0;
+    margin-left: 0.5rem;
 }
 
 /* Tables */
@@ -179,6 +308,7 @@ body {
     width: 100%;
     border-collapse: collapse;
     margin: 1rem 0;
+    table-layout: fixed; /* Distribute column widths evenly */
 }
 
 .table__header {
@@ -187,8 +317,14 @@ body {
 }
 
 .table__cell {
-    padding: 0.75rem;
+    padding: 0.8rem; /* Adjusted padding for better readability */
     border: 1px solid var(--border-color);
+    word-break: break-word;
+    vertical-align: middle; /* Vertically align content in the middle */
+    overflow: hidden; /* Ensure content doesn't overflow cell */
+    text-overflow: ellipsis; /* Add ellipsis if text is truncated */
+    white-space: normal; /* Allow text to wrap within the cell */
+    font-size: 1rem; /* Increased font size for table cells */
 }
 
 .table__row:nth-child(even) {
@@ -215,6 +351,17 @@ body {
 .alert--warning {
     background-color: var(--warning-color);
     color: white;
+}
+
+.card--warning {
+    background-color: var(--warning-color);
+    color: white; /* Ensure text is readable on warning background */
+}
+
+.card--warning .metric-title,
+.card--warning .metric-value,
+.card--warning .metric-description {
+    color: white; /* Ensure all text elements are white on warning background */
 }
 
 /* Grid System */
@@ -251,6 +398,47 @@ body {
 /* Utility Classes */
 .text-center {
     text-align: center;
+}
+
+/* Tabs Styles */
+.tabs-container {
+    margin-bottom: 1.5rem;
+}
+
+.tabs {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+
+.tab-button {
+    background-color: transparent;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px; /* Counteract border-bottom of tabs container */
+}
+
+.tab-button:hover {
+    color: var(--secondary-color);
+}
+
+.tab-button.active {
+    color: var(--secondary-color);
+    border-bottom-color: var(--secondary-color);
+}
+
+.tab-content {
+    display: none !important; /* Ensure tab content is hidden when not active */
+}
+
+.tab-content.active {
+    display: block !important; /* Change to block to allow tables to render correctly */
 }
 
 .mt-1 { margin-top: 0.5rem; }
@@ -357,8 +545,11 @@ body {
 main.container {
     margin-left: 250px;
     padding: 2rem;
-    min-height: 100vh;
+    min-height: calc(100vh - 70px); /* Adjust for header height */
     padding-top: 80px; /* header height + spacing */
+    flex-grow: 1; /* Allow main content to grow */
+    width: calc(100% - 250px); /* Adjust width for sidebar */
+    box-sizing: border-box; /* Include padding in width calculation */
 }
 
 /* Responsive sidebar */
@@ -381,6 +572,7 @@ main.container {
     main.container {
         margin-left: 60px;
         padding-top: 70px;
+        width: calc(100% - 60px); /* Adjust width for collapsed sidebar */
     }
 }
 
@@ -404,90 +596,72 @@ main.container {
         display: none;
     }
 }
-/* Specific styles for this sidebar */
-.sidebar {
-    background-color: #2b3b61; /* A softer blue color */
-    color: white;
-    padding-top: 30px; /* Adjust padding for the new header */
-}
-
-.sidebar-header {
-    text-align: center;
-    margin-bottom: 20px;
-    padding: 0 10px;
-    flex-direction: column; /* Stack logo and text */
-    gap: 10px;
-    border-bottom: none; /* Remove border below header */
-}
-
-.sidebar-header img {
-    display: block;
-    margin: 0 auto 10px auto; /* Center the logo */
-}
-
-.sidebar-header h2 {
-    font-size: 1.2rem; /* Adjust font size */
-    line-height: 1.4; /* Improve readability */
-    color: white; /* Ensure text is white */
-}
-
-.sidebar-nav ul {
-    border-top: none; /* Remove border above navigation */
-    padding-top: 20px; /* Keep padding */
-    border-bottom: none; /* Ensure no border below navigation */
-}
-
-.sidebar-nav li {
-    margin-bottom: 0;
-}
-
-.sidebar-nav a {
-    padding: 12px 20px; /* Adjust padding */
-    color: #cfd8dc; /* Lighter text color */
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.sidebar-nav a:hover {
-    background-color: rgba(255,255,255,0.1);
-    color: white; /* White text on hover */
-}
-
-.sidebar-nav li.active a {
-    background-color: #3f51b5; /* A slightly lighter blue for active */
-    color: white; /* White text for active */
-}
-
-.sidebar-nav i {
-    margin-right: 15px; /* Adjust spacing for icons */
-    width: 20px;
-    text-align: center;
-}
-
-/* Remove collapse styles */
-.sidebar-footer,
-.sidebar-collapsed .sidebar-header h2,
-.sidebar-collapsed .sidebar-nav span,
-.sidebar-collapsed .sidebar-footer,
-.sidebar-collapsed .sidebar-footer span {
-    display: none !important;
-}
-
-/* Adjustments for collapsed state (if needed, though collapse is removed) */
-.sidebar-collapsed .sidebar {
-    width: 60px;
-}
-
-.sidebar-collapsed .sidebar-nav i {
-    margin-right: 0;
-}
-
-.sidebar-collapsed main.container {
-    margin-left: 60px;
-    width: calc(100% - 60px);
-}
 
 /* Smooth transition */
 .sidebar,
 main.container {
     transition: all 0.3s ease;
+}
+
+/* Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1000; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+    max-width: 700px; /* Max width for larger screens */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.close-button {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Adjustments for smaller screens */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
 }
