@@ -34,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_item'])) {
         // Updated SQL to include location field
         $sql = "UPDATE items SET name = ?, category_id = ?, barcode = ?, unit = ?, low_stock_threshold = ?, description = ?, location = ? WHERE id = ?";
         
-        if ($stmt = mysqli_prepare($link, $sql)) {
+        if ($stmt = mysqli_prepare($conn, $sql)) {
             // Adjusted bind_param to include location
             mysqli_stmt_bind_param($stmt, "sisissis", 
                 $item_name, 
@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_item'])) {
             if (mysqli_stmt_execute($stmt)) {
                 // Log the activity
                 $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
-                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                if ($log_stmt = mysqli_prepare($conn, $log_sql)) {
                     $activity_type = 'item_updated';
                     $entity_type = 'item';
                     $reason = 'Item details updated';
@@ -63,11 +63,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_item'])) {
                 header("Location: index.php?page=inventory&status=item_updated");
                 exit;
             } else {
-                $message = "<p class='error'>Error updating item: " . mysqli_error($link) . "</p>";
+                $message = "<p class='error'>Error updating item: " . mysqli_error($conn) . "</p>";
             }
             mysqli_stmt_close($stmt);
         } else {
-            $message = "<p class='error'>Error preparing update query: " . mysqli_error($link) . "</p>";
+            $message = "<p class='error'>Error preparing update query: " . mysqli_error($conn) . "</p>";
         }
     } else {
         $message = "<p class='error'>Item Name and Category are required.</p>";
@@ -77,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_item'])) {
 // Fetch categories for the dropdown
 $categories_options = [];
 $sql_categories = "SELECT id, name FROM categories ORDER BY name ASC";
-if ($result_cat = mysqli_query($link, $sql_categories)) {
+if ($result_cat = mysqli_query($conn, $sql_categories)) {
     while ($row_cat = mysqli_fetch_assoc($result_cat)) {
         $categories_options[] = $row_cat;
     }
@@ -88,7 +88,7 @@ if ($result_cat = mysqli_query($link, $sql_categories)) {
 if ($item_id) {
     // Updated SQL to include location field
     $sql_fetch = "SELECT name, category_id, barcode, quantity, unit, low_stock_threshold, description, location FROM items WHERE id = ?";
-    if ($stmt_fetch = mysqli_prepare($link, $sql_fetch)) {
+    if ($stmt_fetch = mysqli_prepare($conn, $sql_fetch)) {
         mysqli_stmt_bind_param($stmt_fetch, "i", $item_id);
         if (mysqli_stmt_execute($stmt_fetch)) {
             mysqli_stmt_store_result($stmt_fetch);
@@ -111,11 +111,11 @@ if ($item_id) {
                 exit;
             }
         } else {
-            $message = "<p class='error'>Error fetching item details: " . mysqli_error($link) . "</p>";
+            $message = "<p class='error'>Error fetching item details: " . mysqli_error($conn) . "</p>";
         }
         mysqli_stmt_close($stmt_fetch);
     } else {
-         $message = "<p class='error'>Error preparing item fetch query: " . mysqli_error($link) . "</p>";
+         $message = "<p class='error'>Error preparing item fetch query: " . mysqli_error($conn) . "</p>";
     }
 }
 

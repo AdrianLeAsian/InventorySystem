@@ -24,7 +24,7 @@ $sql_daily_report = "SELECT
                      GROUP BY i.id, i.name, DATE(il.log_date)
                      ORDER BY i.name ASC";
 
-if ($stmt_daily = mysqli_prepare($link, $sql_daily_report)) {
+if ($stmt_daily = mysqli_prepare($conn, $sql_daily_report)) {
     mysqli_stmt_bind_param($stmt_daily, "s", $report_date);
     if (mysqli_stmt_execute($stmt_daily)) {
         $result_daily = mysqli_stmt_get_result($stmt_daily);
@@ -33,11 +33,11 @@ if ($stmt_daily = mysqli_prepare($link, $sql_daily_report)) {
         }
         mysqli_free_result($result_daily);
     } else {
-        $message .= "<p class='error'>Error executing daily report query: " . mysqli_error($link) . "</p>";
+        $message .= "<p class='error'>Error executing daily report query: " . mysqli_error($conn) . "</p>";
     }
     mysqli_stmt_close($stmt_daily);
 } else {
-    $message .= "<p class='error'>Error preparing daily report query: " . mysqli_error($link) . "</p>";
+    $message .= "<p class='error'>Error preparing daily report query: " . mysqli_error($conn) . "</p>";
 }
 
 // Determine trend period
@@ -88,7 +88,7 @@ $sql_usage = "SELECT
              GROUP BY $group_by_sql, i.id, i.name
              ORDER BY $group_by_sql ASC, item_name ASC";
 
-if ($result_usage = mysqli_query($link, $sql_usage)) {
+if ($result_usage = mysqli_query($conn, $sql_usage)) {
     while ($row = mysqli_fetch_assoc($result_usage)) {
         $usage_data[] = $row;
     }
@@ -236,13 +236,13 @@ if (!empty($usage_data)) {
                     <?php
                     $stock_overview_data = [];
                     $sql_stock_overview = "SELECT name, quantity, barcode FROM items ORDER BY name ASC";
-                    if ($result_stock_overview = mysqli_query($link, $sql_stock_overview)) {
+                    if ($result_stock_overview = mysqli_query($conn, $sql_stock_overview)) {
                         while ($row = mysqli_fetch_assoc($result_stock_overview)) {
                             $stock_overview_data[] = $row;
                         }
                         mysqli_free_result($result_stock_overview);
                     } else {
-                        $message .= "<p class='error'>Error fetching stock overview data: " . mysqli_error($link) . "</p>";
+                        $message .= "<p class='error'>Error fetching stock overview data: " . mysqli_error($conn) . "</p>";
                     }
                     ?>
                     <?php if (!empty($stock_overview_data)): ?>
@@ -284,13 +284,13 @@ if (!empty($usage_data)) {
                     <?php
                     $low_stock_data = [];
                     $sql_low_stock = "SELECT name, quantity, low_stock_threshold, barcode FROM items WHERE quantity <= low_stock_threshold ORDER BY name ASC";
-                    if ($result_low_stock = mysqli_query($link, $sql_low_stock)) {
+                    if ($result_low_stock = mysqli_query($conn, $sql_low_stock)) {
                         while ($row = mysqli_fetch_assoc($result_low_stock)) {
                             $low_stock_data[] = $row;
                         }
                         mysqli_free_result($result_low_stock);
                     } else {
-                        $message .= "<p class='error'>Error fetching low stock data: " . mysqli_error($link) . "</p>";
+                        $message .= "<p class='error'>Error fetching low stock data: " . mysqli_error($conn) . "</p>";
                     }
                     ?>
                     <?php if (!empty($low_stock_data)): ?>
@@ -341,7 +341,7 @@ if (!empty($usage_data)) {
                                          JOIN items i ON c.id = i.category_id
                                          GROUP BY c.name
                                          ORDER BY c.name ASC";
-                if ($result_category_summary = mysqli_query($link, $sql_category_summary)) {
+                if ($result_category_summary = mysqli_query($conn, $sql_category_summary)) {
                     while ($row = mysqli_fetch_assoc($result_category_summary)) {
                         $category_summary_data[] = $row;
                     }

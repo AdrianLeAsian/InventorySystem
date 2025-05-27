@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_category'])) {
 
     if (!empty($category_name)) {
         $sql = "UPDATE categories SET name = ?, description = ? WHERE id = ?";
-        if ($stmt = mysqli_prepare($link, $sql)) {
+        if ($stmt = mysqli_prepare($conn, $sql)) {
             mysqli_stmt_bind_param($stmt, "ssi", $param_name, $param_description, $param_id);
             $param_name = $category_name;
             $param_description = $category_description;
@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_category'])) {
             if (mysqli_stmt_execute($stmt)) {
                 // Log the activity
                 $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
-                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                if ($log_stmt = mysqli_prepare($conn, $log_sql)) {
                     $activity_type = 'category_updated';
                     $entity_type = 'category';
                     $reason = 'Category details updated';
@@ -42,11 +42,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_category'])) {
                 header("Location: index.php?page=inventory&status=cat_updated");
                 exit;
             } else {
-                $message = "<p class='error'>Error updating category: " . mysqli_error($link) . "</p>";
+                $message = "<p class='error'>Error updating category: " . mysqli_error($conn) . "</p>";
             }
             mysqli_stmt_close($stmt);
         } else {
-            $message = "<p class='error'>Error preparing update query: " . mysqli_error($link) . "</p>";
+            $message = "<p class='error'>Error preparing update query: " . mysqli_error($conn) . "</p>";
         }
     } else {
         $message = "<p class='error'>Category name cannot be empty.</p>";
@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_category'])) {
 // Fetch the category details for pre-filling the form
 if ($category_id) {
     $sql_fetch = "SELECT name, description FROM categories WHERE id = ?";
-    if ($stmt_fetch = mysqli_prepare($link, $sql_fetch)) {
+    if ($stmt_fetch = mysqli_prepare($conn, $sql_fetch)) {
         mysqli_stmt_bind_param($stmt_fetch, "i", $param_id_fetch);
         $param_id_fetch = $category_id;
 
@@ -73,11 +73,11 @@ if ($category_id) {
                 exit;
             }
         } else {
-            $message = "<p class='error'>Error fetching category details: " . mysqli_error($link) . "</p>";
+            $message = "<p class='error'>Error fetching category details: " . mysqli_error($conn) . "</p>";
         }
         mysqli_stmt_close($stmt_fetch);
     } else {
-         $message = "<p class='error'>Error preparing fetch query: " . mysqli_error($link) . "</p>";
+         $message = "<p class='error'>Error preparing fetch query: " . mysqli_error($conn) . "</p>";
     }
 }
 

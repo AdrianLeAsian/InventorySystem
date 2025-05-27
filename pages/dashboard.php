@@ -4,7 +4,7 @@
 // Total Items
 $total_items_count = 0;
 $sql_total_items = "SELECT COUNT(*) as count FROM items";
-if ($result_total = mysqli_query($link, $sql_total_items)) {
+if ($result_total = mysqli_query($conn, $sql_total_items)) {
     $total_items_count = mysqli_fetch_assoc($result_total)['count'];
     mysqli_free_result($result_total);
 }
@@ -12,7 +12,7 @@ if ($result_total = mysqli_query($link, $sql_total_items)) {
 // Total Categories
 $total_categories = 0;
 $sql_categories = "SELECT COUNT(*) as count FROM categories";
-if ($result_categories = mysqli_query($link, $sql_categories)) {
+if ($result_categories = mysqli_query($conn, $sql_categories)) {
     $total_categories = mysqli_fetch_assoc($result_categories)['count'];
     mysqli_free_result($result_categories);
 }
@@ -21,7 +21,7 @@ if ($result_categories = mysqli_query($link, $sql_categories)) {
 // Low Stock Items
 $low_stock_items = [];
 $sql_low_stock = "SELECT id, name, quantity, unit, low_stock_threshold FROM items WHERE quantity <= low_stock_threshold AND low_stock_threshold > 0 ORDER BY name ASC";
-if ($result_low_stock = mysqli_query($link, $sql_low_stock)) {
+if ($result_low_stock = mysqli_query($conn, $sql_low_stock)) {
     while ($row_low = mysqli_fetch_assoc($result_low_stock)) {
         $low_stock_items[] = $row_low;
     }
@@ -36,7 +36,7 @@ $sql_cat_dist = "SELECT c.name, COUNT(i.id) as item_count
                  LEFT JOIN items i ON c.id = i.category_id 
                  GROUP BY c.id, c.name 
                  ORDER BY item_count DESC";
-if ($result_cat = mysqli_query($link, $sql_cat_dist)) {
+if ($result_cat = mysqli_query($conn, $sql_cat_dist)) {
     while ($row_cat = mysqli_fetch_assoc($result_cat)) {
         $category_distribution[] = $row_cat;
     }
@@ -49,7 +49,7 @@ $sql_recent_activity = "SELECT il.id, i.name as item_name, il.type, il.quantity_
                         FROM inventory_log il
                         JOIN items i ON il.item_id = i.id
                         ORDER BY il.log_date DESC LIMIT 5";
-if($result_activity = mysqli_query($link, $sql_recent_activity)){
+if($result_activity = mysqli_query($conn, $sql_recent_activity)){
     while($row_activity = mysqli_fetch_assoc($result_activity)){
         $recent_activity[] = $row_activity;
     }
@@ -62,7 +62,7 @@ $sql_stock_activity_log = "SELECT il.id, i.name as item_name, il.type, il.quanti
                            FROM inventory_log il
                            JOIN items i ON il.item_id = i.id
                            ORDER BY il.log_date DESC";
-if($result_stock_activity_log = mysqli_query($link, $sql_stock_activity_log)){
+if($result_stock_activity_log = mysqli_query($conn, $sql_stock_activity_log)){
     while($row_stock_activity = mysqli_fetch_assoc($result_stock_activity_log)){
         $stock_activity_log[] = $row_stock_activity;
     }
@@ -107,10 +107,12 @@ if($result_stock_activity_log = mysqli_query($link, $sql_stock_activity_log)){
                         <h2 class="metric-title">Low Stock Alerts</h2>
                         <p class="metric-value <?php echo ($low_stock_count > 0) ? 'text-white' : ''; ?>"><?php echo number_format($low_stock_count); ?></p>
                         <p class="metric-description text-muted">Items need attention</p>
-                    </div>
-                </div>
             </div>
         </div>
+    </div>
+</div>
+
+<script src="js/dashboard_tabs.js"></script>
 
         <div class="tabs-container mt-4">
             <div class="tabs">
@@ -266,5 +268,3 @@ if($result_stock_activity_log = mysqli_query($link, $sql_stock_activity_log)){
         </div>
     </div>
 </div>
-
-<script src="js/dashboard.js"></script>

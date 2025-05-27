@@ -69,7 +69,6 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 */
 
--- New activity_log table for comprehensive logging
 DROP TABLE IF EXISTS `activity_log`;
 CREATE TABLE `activity_log` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,

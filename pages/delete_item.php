@@ -6,7 +6,7 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     // If it does, it might be better to prevent deletion to maintain historical data integrity.
     // Alternatively, you could implement a soft delete (archiving) feature later.
     $sql_check_logs = "SELECT COUNT(*) as log_count FROM inventory_log WHERE item_id = ?";
-    if ($stmt_check = mysqli_prepare($link, $sql_check_logs)) {
+    if ($stmt_check = mysqli_prepare($conn, $sql_check_logs)) {
         mysqli_stmt_bind_param($stmt_check, "i", $item_id);
         mysqli_stmt_execute($stmt_check);
         mysqli_stmt_bind_result($stmt_check, $log_count);
@@ -22,7 +22,7 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     // Fetch item name before deletion for logging
     $item_name_to_delete = '';
     $sql_fetch_name = "SELECT name FROM items WHERE id = ?";
-    if ($stmt_fetch_name = mysqli_prepare($link, $sql_fetch_name)) {
+    if ($stmt_fetch_name = mysqli_prepare($conn, $sql_fetch_name)) {
         mysqli_stmt_bind_param($stmt_fetch_name, "i", $item_id);
         mysqli_stmt_execute($stmt_fetch_name);
         mysqli_stmt_bind_result($stmt_fetch_name, $fetched_name);
@@ -33,12 +33,12 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
 
     // Proceed with deletion if no logs are found
     $sql = "DELETE FROM items WHERE id = ?";
-    if ($stmt = mysqli_prepare($link, $sql)) {
+    if ($stmt = mysqli_prepare($conn, $sql)) {
         mysqli_stmt_bind_param($stmt, "i", $item_id);
         if (mysqli_stmt_execute($stmt)) {
             // Log the activity
             $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
-            if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+            if ($log_stmt = mysqli_prepare($conn, $log_sql)) {
                 $activity_type = 'item_deleted';
                 $entity_type = 'item';
                 $reason = 'Item deleted';

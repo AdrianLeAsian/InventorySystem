@@ -7,7 +7,7 @@ $sql_recent_activity = "SELECT id, activity_type, entity_type, entity_id, entity
                         FROM activity_log
                         ORDER BY log_date DESC LIMIT 5";
 
-if($result_activity = mysqli_query($link, $sql_recent_activity)){
+if($result_activity = mysqli_query($conn, $sql_recent_activity)){
     while($row_activity = mysqli_fetch_assoc($result_activity)){
         $recent_activity[] = $row_activity;
     }

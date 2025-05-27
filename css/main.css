@@ -536,5 +536,5 @@ textarea.form__input {
 }
 
 .is-hidden {
-    display: none !important;
+    display: none;
 }

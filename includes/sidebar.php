@@ -26,6 +26,12 @@ $current_page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
                     <span>Reports</span>
                 </a>
             </li>
+            <li class="sidebar__item <?php echo $current_page === 'debug' ? 'sidebar__item--active' : ''; ?>">
+                <a href="index.php?page=debug" class="sidebar__link sidebar__button">
+                    <i class="fas fa-bug"></i>
+                    <span>Debug</span>
+                </a>
+            </li>
         </ul>
     </nav>
 </div>
