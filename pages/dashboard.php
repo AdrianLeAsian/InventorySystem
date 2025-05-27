@@ -17,14 +17,6 @@ if ($result_categories = mysqli_query($link, $sql_categories)) {
     mysqli_free_result($result_categories);
 }
 
-// Total Stock Value
-$total_stock_value = 0;
-$sql_stock_value = "SELECT SUM(quantity * purchase_price) as total FROM items";
-if ($result_stock = mysqli_query($link, $sql_stock_value)) {
-    $total_stock_value = mysqli_fetch_assoc($result_stock)['total'] ?? 0;
-    mysqli_free_result($result_stock);
-}
-
 // Low Stock Items
 $low_stock_items = [];
 $sql_low_stock = "SELECT id, name, quantity, unit, low_stock_threshold FROM items WHERE quantity <= low_stock_threshold AND low_stock_threshold > 0 ORDER BY name ASC";
@@ -89,16 +81,6 @@ if($result_activity = mysqli_query($link, $sql_recent_activity)){
                 <div class="card__body">
                     <h3 class="text-center"><?php echo number_format($total_categories); ?></h3>
                     <p class="text-center text-muted">Active categories</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card__header">
-                    <h2 class="card__title">Total Stock Value</h2>
-                </div>
-                <div class="card__body">
-                    <h3 class="text-center">$<?php echo number_format($total_stock_value, 2); ?></h3>
-                    <p class="text-center text-muted">Current inventory value</p>
                 </div>
             </div>
 

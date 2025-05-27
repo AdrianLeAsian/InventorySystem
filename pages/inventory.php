@@ -78,8 +78,6 @@ $item_barcode_form = '';
 $item_quantity_form = 0;
 $item_unit_form = 'pcs';
 $item_low_stock_threshold_form = 0;
-$item_purchase_price_form = 0.00;
-$item_selling_price_form = 0.00;
 $item_description_form = '';
 $item_location_form = '';
 
@@ -90,24 +88,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_item'])) {
     $item_quantity_form = (int)$_POST['item_quantity'];
     $item_unit_form = trim($_POST['item_unit']);
     $item_low_stock_threshold_form = (int)$_POST['item_low_stock_threshold'];
-    $item_purchase_price_form = (float)$_POST['item_purchase_price'];
     $item_description_form = trim($_POST['item_description']);
     $item_location_form = trim($_POST['item_location']);
 
     if (!empty($item_name_form) && $item_category_id_form > 0) {
-        // SQL query has 9 placeholders: name, category_id, barcode, quantity, unit, low_stock_threshold, purchase_price, description, location
-        $sql_item_insert = "INSERT INTO items (name, category_id, barcode, quantity, unit, low_stock_threshold, purchase_price, description, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // SQL query has 9 placeholders: name, category_id, barcode, quantity, unit, low_stock_threshold, description, location
+        $sql_item_insert = "INSERT INTO items (name, category_id, barcode, quantity, unit, low_stock_threshold, description, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         if ($stmt_item = mysqli_prepare($link, $sql_item_insert)) {
             // Corrected bind_param type string ("sisisidss") and variable list to match 9 placeholders/variables.
-            // Types: s (name), i (category_id), s (barcode), i (quantity), s (unit), i (low_stock_threshold), d (purchase_price), s (description), s (location)
-            mysqli_stmt_bind_param($stmt_item, "sisisidss",
+            // Types: s (name), i (category_id), s (barcode), i (quantity), s (unit), i (low_stock_threshold), s (description), s (location)
+            mysqli_stmt_bind_param($stmt_item, "sisisiss",
                 $item_name_form,          // s
                 $item_category_id_form,   // i
                 $item_barcode_form,       // s
                 $item_quantity_form,      // i
                 $item_unit_form,          // s
                 $item_low_stock_threshold_form, // i
-                $item_purchase_price_form,// d (This was missing in the error trace variable list)
                 $item_description_form,   // s
                 $item_location_form       // s
             );
@@ -155,7 +151,7 @@ if ($result_categories = mysqli_query($link, $sql_fetch_categories)) {
 // Fetch all items to display
 $all_items = [];
 // Fetch `updated_at` for "Last Activity". Add `location` if it gets added to DB
-$sql_fetch_items = "SELECT i.id, i.name, i.category_id, i.barcode, i.quantity, i.unit, i.low_stock_threshold, i.purchase_price, i.description, i.updated_at, i.location, c.name as category_name 
+$sql_fetch_items = "SELECT i.id, i.name, i.category_id, i.barcode, i.quantity, i.unit, i.low_stock_threshold, i.description, i.updated_at, i.location, c.name as category_name 
                     FROM items i 
                     JOIN categories c ON i.category_id = c.id 
                     ORDER BY i.name ASC";
@@ -424,11 +420,6 @@ function format_last_activity($timestamp) {
                         <label class="form__label">Low Stock Threshold</label>
                         <input type="number" name="item_low_stock_threshold" class="form__input" value="0" min="0">
                     </div>
-                    <div class="form__group">
-                         <label class="form__label">Purchase Price (Optional)</label> <!-- Added label -->
-                         <input type="number" name="item_purchase_price" class="form__input" value="0.00" step="0.01" min="0">
-                    </div>
-                     <!-- Selling Price field removed as per items.php and edit_item.php -->
                     <div class="form__group">
                         <label class="form__label">Description</label>
                         <textarea name="item_description" class="form__input"></textarea>
