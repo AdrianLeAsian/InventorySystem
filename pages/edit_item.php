@@ -56,7 +56,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_item'])) {
         if ($stmt = mysqli_prepare($link, $sql)) {
             // Corrected bind_param types and order to match the SQL query and variable types (8 parameters)
             // Types: s (name), i (category_id), s (barcode), s (unit), i (low_stock_threshold), s (description), s (location), i (id)
-            mysqli_stmt_bind_param($stmt, "sisissis",
+            mysqli_stmt_bind_param($stmt, "sississi", // Corrected type string again
                 $item_name,
                 $item_category_id,
                 $item_barcode,

@@ -39,36 +39,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_category'])) {
     $category_name_form = trim($_POST['category_name']);
     $category_description_form = trim($_POST['category_description']);
 
-    if (!empty($category_name_form)) {
-        $sql_cat_insert = "INSERT INTO categories (name, description) VALUES (?, ?)";
-        if ($stmt_cat = mysqli_prepare($link, $sql_cat_insert)) {
-            mysqli_stmt_bind_param($stmt_cat, "ss", $category_name_form, $category_description_form);
-            if (mysqli_stmt_execute($stmt_cat)) {
-                // Log the activity - Copied from categories.php add logic
-                $last_id = mysqli_insert_id($link);
-                $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
-                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
-                    $activity_type = 'category_added';
-                    $entity_type = 'category';
-                    $reason = 'New category added via Inventory page';
-                    mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $last_id, $category_name_form, $reason);
-                    mysqli_stmt_execute($log_stmt);
-                    mysqli_stmt_close($log_stmt);
-                }
-                // End Log
-
-                header("Location: index.php?page=inventory&status=cat_added");
-                exit;
-            } else {
-                $message .= "<p class='error'>Error adding category: " . mysqli_error($link) . "</p>";
-            }
-            mysqli_stmt_close($stmt_cat);
-        } else {
-            $message .= "<p class='error'>Error preparing category query: " . mysqli_error($link) . "</p>";
-        }
-    } else {
+    if (empty($category_name_form)) {
         $message .= "<p class='error'>Category name cannot be empty.</p>";
+        goto end_category_logic;
     }
+
+    $sql_cat_insert = "INSERT INTO categories (name, description) VALUES (?, ?)";
+    if ($stmt_cat = mysqli_prepare($link, $sql_cat_insert)) {
+        mysqli_stmt_bind_param($stmt_cat, "ss", $category_name_form, $category_description_form);
+        if (mysqli_stmt_execute($stmt_cat)) {
+            // Log the activity - Copied from categories.php add logic
+            $last_id = mysqli_insert_id($link);
+            $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+            if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                $activity_type = 'category_added';
+                $entity_type = 'category';
+                $reason = 'New category added via Inventory page';
+                mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $last_id, $category_name_form, $reason);
+                mysqli_stmt_execute($log_stmt);
+                mysqli_stmt_close($log_stmt);
+            }
+            // End Log
+
+            header("Location: index.php?page=inventory&status=cat_added");
+            exit;
+        } else {
+            $message .= "<p class='error'>Error adding category: " . mysqli_error($link) . "</p>";
+        }
+        mysqli_stmt_close($stmt_cat);
+    } else {
+        $message .= "<p class='error'>Error preparing category query: " . mysqli_error($link) . "</p>";
+    }
+    end_category_logic:;
 }
 
 // --- ITEM LOGIC (Add Item Modal Submission) ---
@@ -91,49 +93,84 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_item'])) {
     $item_description_form = trim($_POST['item_description']);
     $item_location_form = trim($_POST['item_location']);
 
-    if (!empty($item_name_form) && $item_category_id_form > 0) {
-        // SQL query has 9 placeholders: name, category_id, barcode, quantity, unit, low_stock_threshold, description, location
-        $sql_item_insert = "INSERT INTO items (name, category_id, barcode, quantity, unit, low_stock_threshold, description, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        if ($stmt_item = mysqli_prepare($link, $sql_item_insert)) {
-            // Corrected bind_param type string ("sisisidss") and variable list to match 9 placeholders/variables.
-            // Types: s (name), i (category_id), s (barcode), i (quantity), s (unit), i (low_stock_threshold), s (description), s (location)
-            mysqli_stmt_bind_param($stmt_item, "sisisiss",
-                $item_name_form,          // s
-                $item_category_id_form,   // i
-                $item_barcode_form,       // s
-                $item_quantity_form,      // i
-                $item_unit_form,          // s
-                $item_low_stock_threshold_form, // i
-                $item_description_form,   // s
-                $item_location_form       // s
-            );
-
-            if (mysqli_stmt_execute($stmt_item)) {
-                 // Log the activity - Copied from items.php add logic
-                $last_id = mysqli_insert_id($link);
-                $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
-                if ($log_stmt = mysqli_prepare($link, $log_sql)) {
-                    $activity_type = 'item_added';
-                    $entity_type = 'item';
-                    $reason = 'New item added via Inventory page';
-                    mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $last_id, $item_name_form, $reason);
-                    mysqli_stmt_execute($log_stmt);
-                    mysqli_stmt_close($log_stmt);
-                }
-                // End Log
-
-                header("Location: index.php?page=inventory&status=item_added");
-                exit;
-            } else {
-                $message .= "<p class='error'>Error adding item: " . mysqli_error($link) . "</p>";
-            }
-            mysqli_stmt_close($stmt_item);
-        } else {
-            $message .= "<p class='error'>Error preparing item query: " . mysqli_error($link) . "</p>";
-        }
-    } else {
-        $message .= "<p class='error'>Item Name and Category are required.</p>";
+    // Basic validation
+    if (empty($item_name_form)) {
+        $message .= "<p class='error'>Item Name is required.</p>";
+        goto end_item_logic;
     }
+    if ($item_category_id_form <= 0) {
+        $message .= "<p class='error'>Please select a valid Category.</p>";
+        goto end_item_logic;
+    }
+    if (!is_numeric($item_quantity_form) || $item_quantity_form < 0) {
+        $message .= "<p class='error'>Quantity must be a non-negative number.</p>";
+        goto end_item_logic;
+    }
+    if (!is_numeric($item_low_stock_threshold_form) || $item_low_stock_threshold_form < 0) {
+        $message .= "<p class='error'>Low Stock Threshold must be a non-negative number.</p>";
+        goto end_item_logic;
+    }
+
+    // Check for barcode uniqueness if barcode is provided
+    if (!empty($item_barcode_form)) {
+        $sql_check_barcode = "SELECT id FROM items WHERE barcode = ?";
+        if ($stmt_check_barcode = mysqli_prepare($link, $sql_check_barcode)) {
+            mysqli_stmt_bind_param($stmt_check_barcode, "s", $item_barcode_form);
+            mysqli_stmt_execute($stmt_check_barcode);
+            mysqli_stmt_store_result($stmt_check_barcode);
+            if (mysqli_stmt_num_rows($stmt_check_barcode) > 0) {
+                $message .= "<p class='error'>Error: Barcode '{$item_barcode_form}' already exists. Please use a unique barcode.</p>";
+                mysqli_stmt_close($stmt_check_barcode);
+                // Do not proceed with item insertion
+                goto end_item_logic;
+            }
+            mysqli_stmt_close($stmt_check_barcode);
+        } else {
+            $message .= "<p class='error'>Error preparing barcode check query: " . mysqli_error($link) . "</p>";
+            goto end_item_logic;
+        }
+    }
+
+    // SQL query has 9 placeholders: name, category_id, barcode, quantity, unit, low_stock_threshold, description, location
+    $sql_item_insert = "INSERT INTO items (name, category_id, barcode, quantity, unit, low_stock_threshold, description, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    if ($stmt_item = mysqli_prepare($link, $sql_item_insert)) {
+        // Corrected bind_param type string ("sisisidss") and variable list to match 9 placeholders/variables.
+        // Types: s (name), i (category_id), s (barcode), i (quantity), s (unit), i (low_stock_threshold), s (description), s (location)
+        mysqli_stmt_bind_param($stmt_item, "sisisiss",
+            $item_name_form,          // s
+            $item_category_id_form,   // i
+            $item_barcode_form,       // s
+            $item_quantity_form,      // i
+            $item_unit_form,          // s
+            $item_low_stock_threshold_form, // i
+            $item_description_form,   // s
+            $item_location_form       // s
+        );
+
+        if (mysqli_stmt_execute($stmt_item)) {
+             // Log the activity - Copied from items.php add logic
+            $last_id = mysqli_insert_id($link);
+            $log_sql = "INSERT INTO activity_log (activity_type, entity_type, entity_id, entity_name, reason) VALUES (?, ?, ?, ?, ?)";
+            if ($log_stmt = mysqli_prepare($link, $log_sql)) {
+                $activity_type = 'item_added';
+                $entity_type = 'item';
+                $reason = 'New item added via Inventory page';
+                mysqli_stmt_bind_param($log_stmt, "ssiss", $activity_type, $entity_type, $last_id, $item_name_form, $reason);
+                mysqli_stmt_execute($log_stmt);
+                mysqli_stmt_close($log_stmt);
+            }
+            // End Log
+
+            header("Location: index.php?page=inventory&status=item_added");
+            exit;
+        } else {
+            $message .= "<p class='error'>Error adding item: " . mysqli_error($link) . "</p>";
+        }
+        mysqli_stmt_close($stmt_item);
+    } else {
+        $message .= "<p class='error'>Error preparing item query: " . mysqli_error($link) . "</p>";
+    }
+    end_item_logic:; // Label for goto statement
 }
 
 // Fetch all categories for tabs, item form dropdown, and category table
@@ -244,12 +281,6 @@ function format_last_activity($timestamp) {
                         <?php endforeach; ?>
                     </div>
                     <div class="d-flex gap-2">
-                        <select id="categoryFilterSelect" class="form__input">
-                            <option value="all">All Categories</option>
-                            <?php foreach ($all_categories as $category): ?>
-                                <option value="<?php echo htmlspecialchars($category['id']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
                         <input type="text" id="searchItemsInput" class="form__input" placeholder="Search Items...">
                     </div>
                 </div>
@@ -546,17 +577,19 @@ function filterItems(categoryId) {
     if (!table) return; // Added a check in case the table isn't found
     var tr = table.getElementsByTagName("tr");
 
-    // Update active tab class
+    // Update active tab class and button styles
     var tabs = document.querySelectorAll('.category-tabs .tab-link');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    var activeTab = document.querySelector(".category-tabs .tab-link[onclick*=\"filterItems('" + categoryId + "')\"]");
-    if(activeTab) activeTab.classList.add('active');
+    tabs.forEach(tab => {
+        tab.classList.remove('active', 'btn--primary');
+        tab.classList.add('btn--secondary');
+    });
 
-    // Update select dropdown value to match tab
-    var categoryFilterSelect = document.getElementById('categoryFilterSelect');
-    if (categoryFilterSelect) {
-        categoryFilterSelect.value = categoryId;
+    var activeTab = document.querySelector(".category-tabs .tab-link[onclick*=\"filterItems('" + categoryId + "')\"]");
+    if(activeTab) {
+        activeTab.classList.add('active', 'btn--primary');
+        activeTab.classList.remove('btn--secondary');
     }
+
 
 
     for (var i = 1; i < tr.length; i++) { // Start from 1 to skip header row
@@ -579,10 +612,6 @@ function filterItems(categoryId) {
     }
 }
 
-// Sync category filter select with tab clicks and apply filter on change
-document.getElementById('categoryFilterSelect').addEventListener('change', function() {
-    filterItems(this.value);
-});
 
 
 // Search items (simple client-side search by name and category for now)
@@ -592,9 +621,8 @@ document.getElementById('searchItemsInput').addEventListener('keyup', function()
      if (!table) return; // Added a check
     var tr = table.getElementsByTagName("tr");
 
-    // Get the currently active category filter from the select dropdown
-    var categoryFilterSelect = document.getElementById('categoryFilterSelect');
-    var activeCategoryId = categoryFilterSelect ? categoryFilterSelect.value : 'all';
+    // The category filter is now solely managed by the tabs
+    var activeCategoryId = document.querySelector('.category-tabs .tab-link.active').getAttribute('onclick').match(/filterItems\('([^']+)'\)/)[1];
 
     for (var i = 1; i < tr.length; i++) { // Start from 1 to skip header row
         var row = tr[i];
@@ -615,27 +643,8 @@ document.getElementById('searchItemsInput').addEventListener('keyup', function()
 
 // Placeholder for Export button functionality
 document.getElementById('exportItemsBtn').addEventListener('click', function() {
-    alert('Export functionality to be implemented. This would typically export the currently visible items to CSV.');
-    // Basic CSV export example (can be expanded)
-    // let csvContent = "data:text/csv;charset=utf-8,";
-    // const rows = document.querySelectorAll("#inventoryItemsTable tr");
-    // rows.forEach(function(row) {
-    //     let rowData = [];
-    //     row.querySelectorAll("th, td").forEach(function(cell, index) {
-    //          // Only include visible columns, skip actions
-    //         if (index < row.cells.length -1 && row.style.display !== 'none') {
-    //             rowData.push(\`"\${cell.innerText.replace(/"/g, \'\'\'""\'\'\')}"\`);
-    //         }
-    //     });
-    //     if (rowData.length > 0) csvContent += rowData.join(",") + "\\r\\n";
-    // });
-    // var encodedUri = encodeURI(csvContent);
-    // var link = document.createElement("a");
-    // link.setAttribute("href", encodedUri);
-    // link.setAttribute("download", "inventory_export.csv");
-    // document.body.appendChild(link); 
-    // link.click();
-    // document.body.removeChild(link);
+    // Redirect to export.php to download the CSV
+    window.location.href = 'export.php?type=items_csv';
 });
 
 // Ensure "All Items" tab/select is active and filter is applied on load
@@ -644,11 +653,6 @@ window.addEventListener('DOMContentLoaded', (event) => {
     const allItemsTab = document.querySelector(".category-tabs .tab-link[onclick*=\"filterItems('all')\"]");
     if(allItemsTab) {
         allItemsTab.classList.add('active');
-    }
-    // Set the select dropdown to "All Categories"
-     const categoryFilterSelect = document.getElementById('categoryFilterSelect');
-    if (categoryFilterSelect) {
-        categoryFilterSelect.value = 'all';
     }
     // Explicitly call filterItems('all') to ensure initial display consistency
     filterItems('all');
