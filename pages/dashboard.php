@@ -17,13 +17,6 @@ if ($result_categories = mysqli_query($link, $sql_categories)) {
     mysqli_free_result($result_categories);
 }
 
-// Total Stock Value
-$total_stock_value = 0;
-$sql_stock_value = "SELECT SUM(quantity * purchase_price) as total FROM items";
-if ($result_stock = mysqli_query($link, $sql_stock_value)) {
-    $total_stock_value = mysqli_fetch_assoc($result_stock)['total'] ?? 0;
-    mysqli_free_result($result_stock);
-}
 
 // Low Stock Items
 $low_stock_items = [];
@@ -61,6 +54,19 @@ if($result_activity = mysqli_query($link, $sql_recent_activity)){
         $recent_activity[] = $row_activity;
     }
     mysqli_free_result($result_activity);
+}
+
+// Stock Activity Log (all entries)
+$stock_activity_log = [];
+$sql_stock_activity_log = "SELECT il.id, i.name as item_name, il.type, il.quantity_change, il.reason, DATE_FORMAT(il.log_date, '%Y-%m-%d %H:%i') as log_date 
+                           FROM inventory_log il
+                           JOIN items i ON il.item_id = i.id
+                           ORDER BY il.log_date DESC";
+if($result_stock_activity_log = mysqli_query($link, $sql_stock_activity_log)){
+    while($row_stock_activity = mysqli_fetch_assoc($result_stock_activity_log)){
+        $stock_activity_log[] = $row_stock_activity;
+    }
+    mysqli_free_result($result_stock_activity_log);
 }
 ?>
 
@@ -111,6 +117,7 @@ if($result_activity = mysqli_query($link, $sql_recent_activity)){
                 <button class="tab-button active" data-tab="recent-activity">Recent Activity</button>
                 <button class="tab-button" data-tab="low-stock-items">Low Stock Items</button>
                 <button class="tab-button" data-tab="category-distribution">Category Distribution</button>
+                <button class="tab-button" data-tab="stock-activity">Stock Activity</button>
             </div>
 
             <div id="recent-activity" class="tab-content active card">
@@ -216,45 +223,48 @@ if($result_activity = mysqli_query($link, $sql_recent_activity)){
                     <?php endif; ?>
                 </div>
             </div>
+
+            <div id="stock-activity" class="tab-content card">
+                <div class="card__header">
+                    <h2 class="card__title">Stock Activity Log</h2>
+                </div>
+                <div class="card__body card__body--scrollable">
+                    <?php if (!empty($stock_activity_log)): ?>
+                    <div class="table">
+                        <table class="w-100">
+                            <thead>
+                                <tr class="table__header">
+                                    <th class="table__cell">Item</th>
+                                    <th class="table__cell">Type</th>
+                                    <th class="table__cell">Quantity</th>
+                                    <th class="table__cell">Reason</th>
+                                    <th class="table__cell">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach($stock_activity_log as $activity): ?>
+                                <tr class="table__row">
+                                    <td class="table__cell"><?php echo htmlspecialchars($activity['item_name']); ?></td>
+                                    <td class="table__cell">
+                                        <span class="btn btn--<?php echo $activity['type'] == 'in' ? 'success' : ($activity['type'] == 'out' ? 'danger' : 'primary'); ?>">
+                                            <?php echo htmlspecialchars(ucfirst($activity['type'])); ?>
+                                        </span>
+                                    </td>
+                                    <td class="table__cell"><?php echo htmlspecialchars($activity['quantity_change']); ?></td>
+                                    <td class="table__cell"><?php echo htmlspecialchars($activity['reason'] ?? 'N/A'); ?></td>
+                                    <td class="table__cell"><?php echo htmlspecialchars($activity['log_date']); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php else: ?>
+                    <p class="text-center text-muted">No stock activity recorded.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Tab functionality
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // Deactivate all tabs and hide all content
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-
-            // Activate clicked tab and show corresponding content
-            button.classList.add('active');
-            document.getElementById(button.dataset.tab).classList.add('active');
-        });
-    });
-
-    // Function to update recent activities (existing functionality)
-    function updateRecentActivities() {
-        fetch('ajax/get_recent_activities.php')
-            .then(response => response.text())
-            .then(html => {
-                const activitiesContainer = document.querySelector('#recent-activity .card__body');
-                if (activitiesContainer) {
-                    activitiesContainer.innerHTML = html;
-                }
-            })
-            .catch(error => console.error('Error updating recent activities:', error.message));
-    }
-
-    // Update activities every 30 seconds
-    setInterval(updateRecentActivities, 30000);
-
-    // Initial update when page loads
-    updateRecentActivities();
-});
-</script>
+<script src="js/dashboard.js"></script>

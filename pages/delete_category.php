@@ -15,7 +15,7 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
 
         if ($item_count > 0) {
             // Redirect to categories page with an error message
-            header("Location: index.php?page=categories&error=has_items&cat_id=" . $category_id);
+            header("Location: index.php?page=inventory&error=cat_has_items&cat_id=" . $category_id);
             exit;
         }
     }
@@ -49,22 +49,22 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                 mysqli_stmt_execute($log_stmt);
                 mysqli_stmt_close($log_stmt);
             }
-            // Redirect to categories page with success message
-            header("Location: index.php?page=categories&status=deleted");
+            // Redirect to inventory page with success message
+            header("Location: index.php?page=inventory&status=cat_deleted");
             exit;
         } else {
-            // Redirect to categories page with error message
-            header("Location: index.php?page=categories&error=delete_failed");
+            // Redirect to inventory page with error message
+            header("Location: index.php?page=inventory&error=cat_delete_failed");
             exit;
         }
         mysqli_stmt_close($stmt);
     } else {
-        header("Location: index.php?page=categories&error=prepare_failed");
+        header("Location: index.php?page=inventory&error=cat_prepare_failed");
         exit;
     }
 } else {
-    // Redirect to categories page if ID is missing or invalid
-    header("Location: index.php?page=categories&error=invalid_id_delete");
+    // Redirect to inventory page if ID is missing or invalid
+    header("Location: index.php?page=inventory&error=cat_invalid_id_delete");
     exit;
 }
 ?>

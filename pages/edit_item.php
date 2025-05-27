@@ -28,20 +28,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_item'])) {
     $item_unit = trim($_POST['item_unit']);
     $item_low_stock_threshold = (int)$_POST['item_low_stock_threshold'];
     $item_description = trim($_POST['item_description']);
+    $item_location = trim($_POST['item_location']); // Get location from form
 
     if (!empty($item_name) && $item_category_id > 0) {
-        // Updated SQL to remove location field
-        $sql = "UPDATE items SET name = ?, category_id = ?, barcode = ?, unit = ?, low_stock_threshold = ?, description = ? WHERE id = ?";
+        // Updated SQL to include location field
+        $sql = "UPDATE items SET name = ?, category_id = ?, barcode = ?, unit = ?, low_stock_threshold = ?, description = ?, location = ? WHERE id = ?";
         
         if ($stmt = mysqli_prepare($link, $sql)) {
-            // Adjusted bind_param to remove location
-            mysqli_stmt_bind_param($stmt, "sisissi", 
+            // Adjusted bind_param to include location
+            mysqli_stmt_bind_param($stmt, "sisissis", 
                 $item_name, 
                 $item_category_id, 
                 $item_barcode, 
                 $item_unit, 
                 $item_low_stock_threshold, 
                 $item_description,
+                $item_location, // Bind location
                 $item_id
             );
 
@@ -84,15 +86,15 @@ if ($result_cat = mysqli_query($link, $sql_categories)) {
 
 // Fetch the item details for pre-filling the form
 if ($item_id) {
-    // Updated SQL to remove location field
-    $sql_fetch = "SELECT name, category_id, barcode, quantity, unit, low_stock_threshold, description FROM items WHERE id = ?";
+    // Updated SQL to include location field
+    $sql_fetch = "SELECT name, category_id, barcode, quantity, unit, low_stock_threshold, description, location FROM items WHERE id = ?";
     if ($stmt_fetch = mysqli_prepare($link, $sql_fetch)) {
         mysqli_stmt_bind_param($stmt_fetch, "i", $item_id);
         if (mysqli_stmt_execute($stmt_fetch)) {
             mysqli_stmt_store_result($stmt_fetch);
             if (mysqli_stmt_num_rows($stmt_fetch) == 1) {
-                // Adjusted bind_result to remove location
-                mysqli_stmt_bind_result($stmt_fetch, $fetched_name, $fetched_cat_id, $fetched_barcode, $fetched_qty, $fetched_unit, $fetched_low_stock, $fetched_desc);
+                // Adjusted bind_result to include location
+                mysqli_stmt_bind_result($stmt_fetch, $fetched_name, $fetched_cat_id, $fetched_barcode, $fetched_qty, $fetched_unit, $fetched_low_stock, $fetched_desc, $fetched_location);
                 if (mysqli_stmt_fetch($stmt_fetch)) {
                     $item_name = $fetched_name;
                     $item_category_id = $fetched_cat_id;
@@ -101,6 +103,7 @@ if ($item_id) {
                     $item_unit = $fetched_unit;
                     $item_low_stock_threshold = $fetched_low_stock;
                     $item_description = $fetched_desc;
+                    $item_location = $fetched_location; // Assign fetched location
                 }
             } else {
                 // Redirect to the main inventory page if item not found
@@ -182,6 +185,11 @@ if ($item_id) {
                     <div class="form__group">
                         <label class="form__label">Description</label>
                         <textarea name="item_description" class="form__input" rows="3"><?php echo htmlspecialchars($item_description); ?></textarea>
+                    </div>
+
+                    <div class="form__group">
+                        <label class="form__label">Location</label>
+                        <input type="text" name="item_location" class="form__input" value="<?php echo htmlspecialchars($item_location); ?>">
                     </div>
 
                     <div class="d-flex justify-between mt-4">

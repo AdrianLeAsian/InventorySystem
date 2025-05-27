@@ -82,10 +82,78 @@ if (isset($_GET['type'])) {
         $headers = ['Item Name', 'Total Stock In on ' . $report_date, 'Total Stock Out on ' . $report_date];
         output_csv('daily_in_out_' . $report_date . '.csv', $daily_data, $headers);
 
+    } elseif ($type == 'stock_overview_csv') {
+        $sql = "SELECT name, quantity, barcode FROM items ORDER BY name ASC";
+        $result = mysqli_query($link, $sql);
+        $stock_overview_data = [];
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $stock_overview_data[] = $row;
+            }
+            mysqli_free_result($result);
+        }
+        $headers = ['Item Name', 'Current Stock', 'Barcode'];
+        output_csv('stock_overview_' . date('Y-m-d') . '.csv', $stock_overview_data, $headers);
+
+    } elseif ($type == 'low_stock_csv') {
+        $sql = "SELECT name, quantity, reorder_level, barcode FROM items WHERE quantity <= reorder_level ORDER BY name ASC";
+        $result = mysqli_query($link, $sql);
+        $low_stock_data = [];
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $low_stock_data[] = $row;
+            }
+            mysqli_free_result($result);
+        }
+        $headers = ['Item Name', 'Current Stock', 'Reorder Level', 'Barcode'];
+        output_csv('low_stock_items_' . date('Y-m-d') . '.csv', $low_stock_data, $headers);
+
+    } elseif ($type == 'category_summary_csv') {
+        $sql = "SELECT 
+                    c.name as category_name,
+                    SUM(i.quantity) as total_quantity
+                 FROM categories c
+                 JOIN items i ON c.id = i.category_id
+                 GROUP BY c.name
+                 ORDER BY c.name ASC";
+        $result = mysqli_query($link, $sql);
+        $category_summary_data = [];
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $category_summary_data[] = $row;
+            }
+            mysqli_free_result($result);
+        }
+        $headers = ['Category Name', 'Total Stock'];
+        output_csv('category_stock_summary_' . date('Y-m-d') . '.csv', $category_summary_data, $headers);
+
+    } elseif ($type == 'all_logs_csv') {
+        $sql = "SELECT 
+                    il.id, 
+                    i.name as item_name, 
+                    il.type, 
+                    il.quantity_change, 
+                    il.current_quantity, 
+                    il.log_date, 
+                    il.remarks 
+                FROM inventory_log il
+                JOIN items i ON il.item_id = i.id
+                ORDER BY il.log_date DESC";
+        $result = mysqli_query($link, $sql);
+        $all_logs_data = [];
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $all_logs_data[] = $row;
+            }
+            mysqli_free_result($result);
+        }
+        $headers = ['Log ID', 'Item Name', 'Type', 'Quantity Change', 'Current Quantity', 'Log Date', 'Remarks'];
+        output_csv('all_inventory_logs_' . date('Y-m-d') . '.csv', $all_logs_data, $headers);
+
     } else {
         echo "Invalid export type or missing parameters.";
     }
 } else {
     echo "No export type specified.";
 }
-?> 
+?>

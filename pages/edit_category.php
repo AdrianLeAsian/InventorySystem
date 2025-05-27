@@ -9,7 +9,7 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
     $category_id = (int)$_GET['id'];
 } else {
     // Redirect to categories page if ID is missing or invalid
-    header("Location: index.php?page=categories&error=invalid_id");
+    header("Location: index.php?page=inventory&error=cat_invalid_id");
     exit;
 }
 
@@ -38,8 +38,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_category'])) {
                     mysqli_stmt_close($log_stmt);
                 }
 
-                // Redirect to categories page with success message
-                header("Location: index.php?page=categories&status=updated");
+                // Redirect to inventory page with success message
+                header("Location: index.php?page=inventory&status=cat_updated");
                 exit;
             } else {
                 $message = "<p class='error'>Error updating category: " . mysqli_error($link) . "</p>";
@@ -69,7 +69,7 @@ if ($category_id) {
                     $category_description = $fetched_description;
                 }
             } else {
-                header("Location: index.php?page=categories&error=notfound");
+                header("Location: index.php?page=inventory&error=cat_notfound");
                 exit;
             }
         } else {
@@ -92,7 +92,7 @@ if ($category_id) {
                 <h2 class="card__title">Edit Category</h2>
                 <p class="text-muted">Update category information.</p>
             </div>
-            <a href="index.php?page=categories" class="btn btn--secondary">Back to Categories</a>
+            <a href="index.php?page=inventory" class="btn btn--secondary">Back to Inventory</a>
         </header>
 
         <?php if (!empty($message)): ?>
@@ -117,7 +117,7 @@ if ($category_id) {
                     </div>
                     <div class="d-flex justify-between mt-4">
                         <button type="submit" name="update_category" class="btn btn--primary">Update Category</button>
-                        <a href="index.php?page=categories" class="btn btn--secondary">Cancel</a>
+                        <a href="index.php?page=inventory" class="btn btn--secondary">Cancel</a>
                     </div>
                 </form>
             </div>

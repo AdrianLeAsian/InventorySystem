@@ -14,7 +14,7 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
         mysqli_stmt_close($stmt_check);
 
         if ($log_count > 0) {
-            header("Location: index.php?page=items&error=has_logs&item_id=" . $item_id);
+            header("Location: index.php?page=inventory&error=item_has_logs");
             exit;
         }
     }
@@ -46,19 +46,19 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                 mysqli_stmt_execute($log_stmt);
                 mysqli_stmt_close($log_stmt);
             }
-            header("Location: index.php?page=items&status=deleted");
+            header("Location: index.php?page=inventory&status=item_deleted");
             exit;
         } else {
-            header("Location: index.php?page=items&error=delete_failed");
+            header("Location: index.php?page=inventory&error=item_delete_failed");
             exit;
         }
         mysqli_stmt_close($stmt);
     } else {
-        header("Location: index.php?page=items&error=prepare_failed");
+        header("Location: index.php?page=inventory&error=item_prepare_failed");
         exit;
     }
 } else {
-    header("Location: index.php?page=items&error=invalid_id");
+    header("Location: index.php?page=inventory&error=item_invalid_id");
     exit;
 }
 ?>

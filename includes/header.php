@@ -10,14 +10,15 @@
 </head>
 <body>
     <?php include 'sidebar.php'; ?>
-    <div class="header">
-        <div class="container">
-            <h1 class="header__title">
-                <?php 
-                    $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
-                    echo ucfirst($page);
-                ?>
-            </h1>
+    <div class="content-wrapper">
+        <div class="header">
+            <div class="container">
+                <h1 class="header__title">
+                    <?php 
+                        $page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
+                        echo ucfirst($page);
+                    ?>
+                </h1>
+            </div>
         </div>
-    </div>
-    <main class="container" id="main-content">
+        <main class="container" id="main-content">

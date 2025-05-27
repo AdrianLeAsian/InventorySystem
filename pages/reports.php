@@ -40,47 +40,85 @@ if ($stmt_daily = mysqli_prepare($link, $sql_daily_report)) {
     $message .= "<p class='error'>Error preparing daily report query: " . mysqli_error($link) . "</p>";
 }
 
-// Fetch Monthly Usage Data (last 12 months for 'out' transactions)
-$monthly_usage_data = [];
-$sql_monthly_usage = "SELECT 
-                        DATE_FORMAT(il.log_date, '%Y-%m') as month_year,
-                        i.name as item_name,
-                        SUM(il.quantity_change) as total_out_quantity
-                     FROM inventory_log il
-                     JOIN items i ON il.item_id = i.id
-                     WHERE il.type = 'out' AND il.log_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-                     GROUP BY month_year, i.id, i.name
-                     ORDER BY month_year ASC, item_name ASC";
+// Determine trend period
+$trend_period = isset($_GET['trend_period']) ? $_GET['trend_period'] : 'monthly'; // Default to monthly
 
-if ($result_monthly = mysqli_query($link, $sql_monthly_usage)) {
-    while ($row = mysqli_fetch_assoc($result_monthly)) {
-        $monthly_usage_data[] = $row;
-    }
-    mysqli_free_result($result_monthly);
-} else {
-    $message .= "<p class='error'>Error fetching monthly usage data: " . mysqli_error($link) . "</p>";
+$date_format_sql = '%Y-%m'; // Default for monthly
+$group_by_sql = 'month_year';
+$interval_sql = 'INTERVAL 12 MONTH';
+$chart_x_axis_label = 'Month';
+
+switch ($trend_period) {
+    case 'daily':
+        $date_format_sql = '%Y-%m-%d';
+        $group_by_sql = 'movement_date';
+        $interval_sql = 'INTERVAL 30 DAY'; // Last 30 days for daily
+        $chart_x_axis_label = 'Day';
+        break;
+    case 'weekly':
+        $date_format_sql = '%Y-%u'; // Year-Week number
+        $group_by_sql = 'week_year';
+        $interval_sql = 'INTERVAL 12 WEEK'; // Last 12 weeks for weekly
+        $chart_x_axis_label = 'Week';
+        break;
+    case 'yearly':
+        $date_format_sql = '%Y';
+        $group_by_sql = 'year';
+        $interval_sql = 'INTERVAL 5 YEAR'; // Last 5 years for yearly
+        $chart_x_axis_label = 'Year';
+        break;
+    case 'monthly':
+    default:
+        $date_format_sql = '%Y-%m';
+        $group_by_sql = 'month_year';
+        $interval_sql = 'INTERVAL 12 MONTH';
+        $chart_x_axis_label = 'Month';
+        break;
 }
+
+// Fetch Usage Data based on selected period
+$usage_data = [];
+$sql_usage = "SELECT 
+                DATE_FORMAT(il.log_date, '$date_format_sql') as $group_by_sql,
+                i.name as item_name,
+                SUM(CASE WHEN il.type = 'in' THEN il.quantity_change ELSE -il.quantity_change END) as total_net_change
+             FROM inventory_log il
+             JOIN items i ON il.item_id = i.id
+             WHERE il.log_date >= DATE_SUB(CURDATE(), $interval_sql)
+             GROUP BY $group_by_sql, i.id, i.name
+             ORDER BY $group_by_sql ASC, item_name ASC";
+
+if ($result_usage = mysqli_query($link, $sql_usage)) {
+    while ($row = mysqli_fetch_assoc($result_usage)) {
+        $usage_data[] = $row;
+    }
+    mysqli_free_result($result_usage);
+} else {
+    $message .= "<p class='error'>Error fetching usage data: " . mysqli_error($link) . "</p>";
+}
+
 // Prepare data for Chart.js
 $chart_labels = [];
 $chart_datasets = [];
 
-if (!empty($monthly_usage_data)) {
-    $item_monthly_data = [];
-    foreach ($monthly_usage_data as $record) {
-        if (!in_array($record['month_year'], $chart_labels)) {
-            $chart_labels[] = $record['month_year'];
+if (!empty($usage_data)) {
+    $item_data_by_period = [];
+    foreach ($usage_data as $record) {
+        $period_label = $record[$group_by_sql];
+        if (!in_array($period_label, $chart_labels)) {
+            $chart_labels[] = $period_label;
         }
-        $item_monthly_data[$record['item_name']][$record['month_year']] = (int)$record['total_out_quantity'];
+        $item_data_by_period[$record['item_name']][$period_label] = (int)$record['total_net_change'];
     }
-    sort($chart_labels); // Ensure months are sorted
+    sort($chart_labels); // Ensure periods are sorted
 
     $colors = ['rgba(255, 99, 132, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)', 'rgba(75, 192, 192, 0.8)', 'rgba(153, 102, 255, 0.8)', 'rgba(255, 159, 64, 0.8)'];
     $color_index = 0;
 
-    foreach ($item_monthly_data as $item_name => $months) {
+    foreach ($item_data_by_period as $item_name => $periods) {
         $data_points = [];
-        foreach ($chart_labels as $label_month) {
-            $data_points[] = isset($months[$label_month]) ? $months[$label_month] : 0;
+        foreach ($chart_labels as $label_period) {
+            $data_points[] = isset($periods[$label_period]) ? $periods[$label_period] : 0;
         }
         $chart_datasets[] = [
             'label' => $item_name,
@@ -113,7 +151,7 @@ if (!empty($monthly_usage_data)) {
             </div>
         <?php endif; ?>
 
-        <div class="grid grid--2-cols gap-4">
+        <div class="grid grid--2-cols gap-4 mb-4">
             <div class="card">
                 <div class="card__header">
                     <h2 class="card__title">Daily Items In/Out Report</h2>
@@ -164,28 +202,192 @@ if (!empty($monthly_usage_data)) {
             </div>
 
             <div class="card">
-                <div class="card__header">
-                    <h2 class="card__title">Monthly Usage Trends</h2>
-                    <p class="text-muted">Last 12 Months - Stock Out</p>
+                <div class="card__header d-flex justify-between align-center">
+                    <h2 class="card__title">Usage Trends</h2>
+                    <form action="index.php" method="get" class="form d-flex gap-2 align-center">
+                        <input type="hidden" name="page" value="reports">
+                        <label for="trend_period" class="form__label mb-0">Period:</label>
+                        <select id="trend_period" name="trend_period" class="form__input" onchange="this.form.submit()">
+                            <option value="daily" <?php echo ($trend_period == 'daily') ? 'selected' : ''; ?>>Daily (Last 30 Days)</option>
+                            <option value="weekly" <?php echo ($trend_period == 'weekly') ? 'selected' : ''; ?>>Weekly (Last 12 Weeks)</option>
+                            <option value="monthly" <?php echo ($trend_period == 'monthly') ? 'selected' : ''; ?>>Monthly (Last 12 Months)</option>
+                            <option value="yearly" <?php echo ($trend_period == 'yearly') ? 'selected' : ''; ?>>Yearly (Last 5 Years)</option>
+                        </select>
+                    </form>
                 </div>
                 <div class="card__body">
                     <?php if (!empty($chart_datasets)): ?>
                         <canvas id="monthlyUsageChart" width="400" height="200"></canvas>
                     <?php else: ?>
-                        <p class="text-center text-muted">No 'stock out' data available for the last 12 months to display usage trends.</p>
+                        <p class="text-center text-muted">No 'stock out' data available for the selected period to display usage trends.</p>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
 
-        <div class="card mt-4">
+        <!-- New Sections for Reports -->
+        <div class="grid grid--2-cols gap-4 mb-4">
+            <div class="card">
+                <div class="card__header">
+                    <h2 class="card__title">Current Stock Levels Overview</h2>
+                    <p class="text-muted">All items and their current quantities.</p>
+                </div>
+                <div class="card__body">
+                    <?php
+                    $stock_overview_data = [];
+                    $sql_stock_overview = "SELECT name, quantity, barcode FROM items ORDER BY name ASC";
+                    if ($result_stock_overview = mysqli_query($link, $sql_stock_overview)) {
+                        while ($row = mysqli_fetch_assoc($result_stock_overview)) {
+                            $stock_overview_data[] = $row;
+                        }
+                        mysqli_free_result($result_stock_overview);
+                    } else {
+                        $message .= "<p class='error'>Error fetching stock overview data: " . mysqli_error($link) . "</p>";
+                    }
+                    ?>
+                    <?php if (!empty($stock_overview_data)): ?>
+                        <div class="table">
+                            <table class="w-100">
+                                <thead>
+                                    <tr class="table__header">
+                                        <th class="table__cell">Item Name</th>
+                                        <th class="table__cell">Barcode</th>
+                                        <th class="table__cell">Current Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($stock_overview_data as $record): ?>
+                                        <tr class="table__row">
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['name']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['barcode']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['quantity']); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-end mt-3">
+                            <a href="export.php?type=stock_overview_csv" class="btn btn--secondary">Export CSV</a>
+                        </div>
+                    <?php else: ?>
+                        <p class="text-center text-muted">No items found in inventory.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card__header">
+                    <h2 class="card__title">Low Stock Items</h2>
+                    <p class="text-muted">Items nearing their reorder level.</p>
+                </div>
+                <div class="card__body">
+                    <?php
+                    $low_stock_data = [];
+                    $sql_low_stock = "SELECT name, quantity, low_stock_threshold, barcode FROM items WHERE quantity <= low_stock_threshold ORDER BY name ASC";
+                    if ($result_low_stock = mysqli_query($link, $sql_low_stock)) {
+                        while ($row = mysqli_fetch_assoc($result_low_stock)) {
+                            $low_stock_data[] = $row;
+                        }
+                        mysqli_free_result($result_low_stock);
+                    } else {
+                        $message .= "<p class='error'>Error fetching low stock data: " . mysqli_error($link) . "</p>";
+                    }
+                    ?>
+                    <?php if (!empty($low_stock_data)): ?>
+                        <div class="table">
+                            <table class="w-100">
+                                <thead>
+                                    <tr class="table__header">
+                                        <th class="table__cell">Item Name</th>
+                                        <th class="table__cell">Barcode</th>
+                                        <th class="table__cell">Current Stock</th>
+                                        <th class="table__cell">Low Stock Threshold</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($low_stock_data as $record): ?>
+                                        <tr class="table__row">
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['name']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['barcode']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['quantity']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['low_stock_threshold']); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-end mt-3">
+                            <a href="export.php?type=low_stock_csv" class="btn btn--secondary">Export CSV</a>
+                        </div>
+                    <?php else: ?>
+                        <p class="text-center text-muted">No items currently in low stock.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
             <div class="card__header">
-                <h2 class="card__title">Export Data</h2>
+                <h2 class="card__title">Category-wise Stock Summary</h2>
+                <p class="text-muted">Total stock quantity per category.</p>
             </div>
             <div class="card__body">
-                <div class="d-flex gap-2">
+                <?php
+                $category_summary_data = [];
+                $sql_category_summary = "SELECT 
+                                            c.name as category_name,
+                                            SUM(i.quantity) as total_quantity
+                                         FROM categories c
+                                         JOIN items i ON c.id = i.category_id
+                                         GROUP BY c.name
+                                         ORDER BY c.name ASC";
+                if ($result_category_summary = mysqli_query($link, $sql_category_summary)) {
+                    while ($row = mysqli_fetch_assoc($result_category_summary)) {
+                        $category_summary_data[] = $row;
+                    }
+                    mysqli_free_result($result_category_summary);
+                } else {
+                    $message .= "<p class='error'>Error fetching category-wise stock summary: " . mysqli_error($link) . "</p>";
+                }
+                ?>
+                <?php if (!empty($category_summary_data)): ?>
+                    <div class="table">
+                        <table class="w-100">
+                            <thead>
+                                <tr class="table__header">
+                                    <th class="table__cell">Category Name</th>
+                                    <th class="table__cell">Total Stock</th>
+                                </tr>
+                            </thead>
+                                <tbody>
+                                    <?php foreach ($category_summary_data as $record): ?>
+                                        <tr class="table__row">
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['category_name']); ?></td>
+                                            <td class="table__cell"><?php echo htmlspecialchars($record['total_quantity']); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-end mt-3">
+                            <a href="export.php?type=category_summary_csv" class="btn btn--secondary">Export CSV</a>
+                        </div>
+                    <?php else: ?>
+                        <p class="text-center text-muted">No categories found or no stock in categories.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+        <div class="card">
+            <div class="card__header">
+                <h2 class="card__title">Export All Data</h2>
+                <p class="text-muted">Download comprehensive reports.</p>
+            </div>
+            <div class="card__body">
+                <div class="d-flex gap-2 flex-wrap">
                     <a href="export.php?type=items_csv" class="btn btn--secondary">Export All Items (CSV)</a>
                     <a href="export.php?type=categories_csv" class="btn btn--secondary">Export All Categories (CSV)</a>
+                    <a href="export.php?type=all_logs_csv" class="btn btn--secondary">Export All Inventory Logs (CSV)</a>
                 </div>
             </div>
         </div>
@@ -217,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     x: {
                          title: {
                             display: true,
-                            text: 'Month'
+                            text: '<?php echo $chart_x_axis_label; ?>'
                         }
                     }
                 },
@@ -227,11 +429,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     title: {
                         display: true,
-                        text: 'Monthly Item Usage (Stock Out)'
+                        text: 'Item Usage (Stock Out)'
                     }
                 }
             }
         });
     }
 });
-</script> 
+</script>
