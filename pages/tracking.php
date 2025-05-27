@@ -112,7 +112,15 @@ if ($result_items_opt = mysqli_query($link, $sql_items)) {
 
 // Fetch recent activity logs to display from the new activity_log table
 $inventory_logs = []; // Renamed from $inventory_logs to $activity_logs for clarity, but keeping original variable name for minimal changes
-$sql_fetch_logs = "SELECT id, activity_type, entity_type, entity_id, entity_name, quantity_change, reason, DATE_FORMAT(log_date, '%Y-%m-%d %H:%i:%s') as log_date 
+$sql_fetch_logs = "SELECT 
+                        id, 
+                        activity_type as type,  -- Alias activity_type to 'type'
+                        entity_type, 
+                        entity_id, 
+                        entity_name as item_name, -- Alias entity_name to 'item_name'
+                        quantity_change, 
+                        reason, 
+                        DATE_FORMAT(log_date, '%Y-%m-%d %H:%i:%s') as log_date 
                      FROM activity_log 
                      WHERE entity_type = 'item' AND (activity_type = 'stock_in' OR activity_type = 'stock_out')
                      ORDER BY log_date DESC LIMIT 20";

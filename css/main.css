@@ -52,7 +52,7 @@ body {
 
 .header__title {
     font-size: 1.5rem;
-    font-weight: 600;
+    font-weight: bold;
     color: var(--primary-color);
     margin: 0;
 }
@@ -111,7 +111,7 @@ body {
 
 .card__title {
     font-size: 1.25rem;
-    font-weight: 600;
+    font-weight: bold;
     color: var(--primary-color);
 }
 
@@ -129,7 +129,7 @@ body {
 }
 
 .form__label {
-    font-weight: 500;
+    font-weight: bold;
     color: var(--primary-color);
 }
 
@@ -151,8 +151,11 @@ body {
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-weight: 500;
+    font-weight: bold;
     transition: background-color 0.3s;
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
 }
 
 .btn--primary {
@@ -168,6 +171,11 @@ body {
 .btn--success {
     background-color: var(--success-color);
     color: white;
+}
+
+.btn--warning {
+    background-color: var(--warning-color);
+    color: var(--primary-color);
 }
 
 .btn:hover {
@@ -189,6 +197,7 @@ body {
 .table__cell {
     padding: 0.75rem;
     border: 1px solid var(--border-color);
+    text-align: center;
 }
 
 .table__row:nth-child(even) {
@@ -209,27 +218,27 @@ body {
 
 .alert--error {
     background-color: var(--danger-color);
-    color: orange;
+    color: white;
 }
 
 .alert--warning {
     background-color: var(--warning-color);
-    color: orange;
+    color: var(--primary-color);
 }
 
 /* Added specific styling for table rows with alert classes */
 .table__row.alert--warning {
-    background-color: #ffecb3; /* Lighter, more vibrant orange */
-    color: var(--primary-color); /* Keep dark text for readability */
+    background-color: ora;
+    color: var(--primary-color);
     font-weight: bold;
-    border-left: 4px solid var(--warning-color); /* Add a left border */
+    border-left: 4px solid var(--warning-color);
 }
 
 .table__row.alert--danger {
-    background-color: #ffcdd2; /* Lighter, more vibrant red */
-    color: var(--primary-color); /* Changed text to dark for readability on lighter background */
+    background-color: orange
+    color: var(--primary-color);
     font-weight: bold;
-    border-left: 4px solid var(--danger-color); /* Add a left border */
+    border-left: 4px solid var(--danger-color);
 }
 
 /* Grid System */
@@ -323,7 +332,7 @@ body {
 
 .sidebar__title {
     font-size: 1.2rem;
-    font-weight: 600;
+    font-weight: bold;
     color: white;
     margin: 0;
 }

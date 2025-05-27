@@ -28,8 +28,6 @@ CREATE TABLE `items` (
   `quantity` int(11) NOT NULL DEFAULT 0,
   `unit` VARCHAR(50) DEFAULT 'pcs', -- e.g., pcs, kg, L, pack
   `low_stock_threshold` int(11) DEFAULT 0,
-  `purchase_price` DECIMAL(10, 2) DEFAULT 0.00,
-  `selling_price` DECIMAL(10, 2) DEFAULT 0.00, -- Optional, if you sell items
   `description` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),

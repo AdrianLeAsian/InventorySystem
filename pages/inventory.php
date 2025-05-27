@@ -81,7 +81,7 @@ $item_low_stock_threshold_form = 0;
 $item_purchase_price_form = 0.00;
 $item_selling_price_form = 0.00;
 $item_description_form = '';
-$item_location_form = ''; 
+$item_location_form = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_item'])) {
     $item_name_form = trim($_POST['item_name']);
@@ -92,23 +92,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_item'])) {
     $item_low_stock_threshold_form = (int)$_POST['item_low_stock_threshold'];
     $item_purchase_price_form = (float)$_POST['item_purchase_price'];
     $item_description_form = trim($_POST['item_description']);
-    $item_location_form = trim($_POST['item_location']);  
+    $item_location_form = trim($_POST['item_location']);
 
     if (!empty($item_name_form) && $item_category_id_form > 0) {
-        // Modify SQL if new fields like 'location' are added to 'items' table
+        // SQL query has 9 placeholders: name, category_id, barcode, quantity, unit, low_stock_threshold, purchase_price, description, location
         $sql_item_insert = "INSERT INTO items (name, category_id, barcode, quantity, unit, low_stock_threshold, purchase_price, description, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         if ($stmt_item = mysqli_prepare($link, $sql_item_insert)) {
-            // Adjusted bind_param to match the updated SQL statement (added location)
-            mysqli_stmt_bind_param($stmt_item, "sisisids", 
-                $item_name_form, 
-                $item_category_id_form, 
-                $item_barcode_form, 
-                $item_quantity_form, 
-                $item_unit_form, 
-                $item_low_stock_threshold_form, 
-                $item_purchase_price_form,
-                $item_description_form, // Corrected order: description before location
-                $item_location_form
+            // Corrected bind_param type string ("sisisidss") and variable list to match 9 placeholders/variables.
+            // Types: s (name), i (category_id), s (barcode), i (quantity), s (unit), i (low_stock_threshold), d (purchase_price), s (description), s (location)
+            mysqli_stmt_bind_param($stmt_item, "sisisidss",
+                $item_name_form,          // s
+                $item_category_id_form,   // i
+                $item_barcode_form,       // s
+                $item_quantity_form,      // i
+                $item_unit_form,          // s
+                $item_low_stock_threshold_form, // i
+                $item_purchase_price_form,// d (This was missing in the error trace variable list)
+                $item_description_form,   // s
+                $item_location_form       // s
             );
 
             if (mysqli_stmt_execute($stmt_item)) {
@@ -316,9 +317,6 @@ function format_last_activity($timestamp) {
                                             <div class="d-flex gap-2">
                                                 <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="btn btn--secondary btn--sm" title="Edit Item">
                                                      <i class="fas fa-edit"></i>
-                                                </a>
-                                                 <a href="index.php?page=stock_movement&item_id=<?php echo $item['id']; ?>" class="btn btn--info btn--sm" title="Stock In/Out">
-                                                    <i class="fas fa-dolly-flatbed"></i>
                                                 </a>
                                                 <a href="index.php?page=delete_item&id=<?php echo $item['id']; ?>" class="btn btn--danger btn--sm" title="Delete Item" onclick="return confirm('Are you sure you want to delete this item? This action cannot be undone.');">
                                                     <i class="fas fa-trash-alt"></i>
