@@ -183,7 +183,7 @@ body {
 
 .btn--warning {
     background-color: var(--warning-color);
-    color: var(--primary-color);
+    color: white;
 }
 
 .btn:hover {
