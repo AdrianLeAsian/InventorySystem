@@ -233,16 +233,14 @@ body {
 
 /* Added specific styling for table rows with alert classes */
 .table__row.alert--warning {
-    background-color: var(--warning-color); /* Changed 'ora' to 'var(--warning-color)' for consistency and correctness */
-    color: var(--primary-color);
-    font-weight: bold;
-    border-left: 4px solid var(--warning-color);
+    /* Removed background-color and font-weight to remove highlight */
+    color: var(--text-color); /* Revert to default text color */
+    border-left: 4px solid var(--warning-color); /* Keep the border color consistent with the warning theme */
 }
 
 .table__row.alert--danger {
-    background-color: var(--danger-color); /* Changed 'orange' to 'var(--danger-color)' for consistency and correctness */
-    color: white; /* Changed to white for better visibility on danger background */
-    font-weight: bold;
+    /* Removed background-color and font-weight to remove highlight */
+    color: var(--text-color); /* Revert to default text color */
     border-left: 4px solid var(--danger-color);
 }
 
