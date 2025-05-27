@@ -215,7 +215,7 @@ function format_last_activity($timestamp) {
                                             $rowClass = $isLowStock ? 'alert alert--warning' : '';
                                             if ($isOutStock) $rowClass = 'alert alert--error';
                                         ?>
-                                        <tr data-category-id="<?php echo htmlspecialchars($item['category_id']); ?>" class="table__row <?php echo $rowClass; ?>">
+                                        <tr data-item-id="<?php echo htmlspecialchars($item['id']); ?>" data-category-id="<?php echo htmlspecialchars($item['category_id']); ?>" class="table__row <?php echo $rowClass; ?>">
                                             <td class="table__cell" title="<?php echo htmlspecialchars($item['name']); ?>">
                                                 <?php echo htmlspecialchars($item['name']); ?>
                                             </td>
@@ -282,11 +282,11 @@ function format_last_activity($timestamp) {
                                                     <td class="table__cell"><?php echo htmlspecialchars($category['id']); ?></td>
                                                     <td class="table__cell"><?php echo htmlspecialchars($category['name']); ?></td>
                                                     <td class="table__cell"><?php echo nl2br(htmlspecialchars($category['description'] ?? '')); ?></td>
-                                                    <td class="table__cell"><?php echo htmlspecialchars($category['created_at'] ?? 'N/A'); ?></td>
-                                                    <td class="table__cell">
-                                                        <div class="d-flex gap-2">
-                                                            <a href="index.php?page=edit_category&id=<?php echo $category['id']; ?>" class="btn btn--primary">Edit</a>
-                                                            <a href="index.php?page=delete_category&id=<?php echo $category['id']; ?>" 
+                                            <td class="table__cell"><?php echo htmlspecialchars($category['created_at'] ?? 'N/A'); ?></td>
+                                            <td class="table__cell">
+                                                <div class="d-flex gap-2">
+                                                    <a href="index.php?page=edit_category&id=<?php echo $category['id']; ?>" class="btn btn--primary">Edit</a>
+                                                    <a href="index.php?page=delete_category&id=<?php echo $category['id']; ?>" 
                                                                class="btn btn--danger" 
                                                                onclick="return confirm('Are you sure you want to delete this category?');">Delete</a>
                                                         </div>
@@ -356,5 +356,5 @@ function format_last_activity($timestamp) {
 <?php include 'includes/add_category_modal.php'; ?>
 <?php include 'includes/log_stock_modal.php'; ?>
 
-<script src="js/dashboard.js"></script>
+<script src="js/inventory.js"></script>
 <script src="js/inventory_tabs.js"></script>

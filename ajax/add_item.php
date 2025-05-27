@@ -55,8 +55,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_stmt_bind_param($stmt, "sisissis", $itemName, $categoryId, $barcodeForDb, $quantity, $unit, $lowStockThreshold, $description, $location);
 
         if (mysqli_stmt_execute($stmt)) {
-            $response['success'] = true;
-            $response['message'] = 'Item added successfully!';
+            $newItemId = mysqli_insert_id($conn); // Get the ID of the newly inserted item
+
+            // Fetch the newly added item's full details, including category name
+            $sql_fetch_new_item = "SELECT i.id, i.name, i.category_id, i.barcode, i.quantity, i.unit, i.low_stock_threshold, i.description, i.updated_at, c.name as category_name, i.location
+                                   FROM items i
+                                   JOIN categories c ON i.category_id = c.id
+                                   WHERE i.id = ?";
+            if ($stmt_fetch = mysqli_prepare($conn, $sql_fetch_new_item)) {
+                mysqli_stmt_bind_param($stmt_fetch, "i", $newItemId);
+                mysqli_stmt_execute($stmt_fetch);
+                $result_fetch = mysqli_stmt_get_result($stmt_fetch);
+                $newItem = mysqli_fetch_assoc($result_fetch);
+                mysqli_stmt_close($stmt_fetch);
+
+                // Format updated_at for client-side display
+                if ($newItem && isset($newItem['updated_at'])) {
+                    $date = new DateTime($newItem['updated_at']);
+                    $now = new DateTime();
+                    $interval = $now->diff($date);
+
+                    if ($interval->d == 0 && $interval->h < 24) { // Today
+                        $newItem['formatted_updated_at'] = "Today, " . $date->format('g:i A');
+                    } elseif ($interval->d == 1) { // Yesterday
+                        $newItem['formatted_updated_at'] = "Yesterday, " . $date->format('g:i A');
+                    } elseif ($interval->days < 7) { // Within a week
+                        $newItem['formatted_updated_at'] = $interval->days . " days ago";
+                    } else {
+                        $newItem['formatted_updated_at'] = $date->format('M j, Y');
+                    }
+                } else {
+                    $newItem['formatted_updated_at'] = 'N/A';
+                }
+
+                $response['success'] = true;
+                $response['message'] = 'Item added successfully!';
+                $response['item'] = $newItem; // Include the new item data in the response
+            } else {
+                $response['message'] = 'Error fetching new item details: ' . mysqli_error($conn);
+            }
         } else {
             $errorMessage = 'Error adding item: ' . mysqli_stmt_error($stmt);
             $response['message'] = $errorMessage;
