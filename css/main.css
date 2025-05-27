@@ -101,6 +101,9 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
     margin-bottom: 1rem;
+    display: flex; /* Make card a flex container */
+    flex-direction: column; /* Stack children vertically */
+    height: 100%; /* Ensure card takes full height of grid cell */
 }
 
 .card__header {
@@ -292,6 +295,7 @@ body {
 
 .d-flex {
     display: flex;
+    flex-wrap: wrap;
 }
 
 .justify-between {
@@ -304,6 +308,10 @@ body {
 
 .w-100 {
     width: 100%;
+}
+
+.gap-2 {
+    gap: 1rem;
 }
 
 /* Sidebar Styles */

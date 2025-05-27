@@ -6,9 +6,6 @@ function output_csv($filename, $data, $headers) {
     header('Content-Disposition: attachment; filename=' . $filename);
     $output = fopen('php://output', 'w');
     
-    // Add BOM for UTF-8 Excel compatibility (optional, but good for special characters)
-    // fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-    
     // Add headers
     fputcsv($output, $headers);
     
@@ -17,75 +14,85 @@ function output_csv($filename, $data, $headers) {
         fputcsv($output, $row);
     }
     fclose($output);
-    exit;
+    exit; // Important: Exit after sending the CSV to prevent further HTML output
 }
 
 if (isset($_GET['type'])) {
-    $type = $_GET['type'];
-
-    if ($type == 'items_csv') {
-        $sql = "SELECT i.id, i.name, c.name as category_name, i.barcode, i.quantity, i.unit, i.low_stock_threshold, i.purchase_price, i.selling_price, i.description, i.created_at, i.updated_at 
+    if ($_GET['type'] === 'all_data') {
+        // Fetch all data from the 'items' table, joining with categories for category name
+        // and formatting dates for readability.
+        $sql = "SELECT 
+                    i.id, 
+                    c.name AS category_name, 
+                    i.barcode, 
+                    i.quantity, 
+                    i.unit, 
+                    i.description, 
+                    DATE_FORMAT(i.created_at, '%Y-%m-%d %H:%i:%s') AS created_at, 
+                    DATE_FORMAT(i.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at, 
+                    i.location 
                 FROM items i 
-                JOIN categories c ON i.category_id = c.id 
-                ORDER BY i.name ASC";
-        $result = mysqli_query($link, $sql);
-        $items_data = [];
-        if ($result) {
-            while ($row = mysqli_fetch_assoc($result)) {
-                $items_data[] = $row;
-            }
-            mysqli_free_result($result);
-        }
-        $headers = ['ID', 'Item Name', 'Category', 'Barcode', 'Quantity', 'Unit', 'Low Stock At', 'Purchase Price', 'Selling Price', 'Description', 'Created At', 'Updated At'];
-        output_csv('inventory_items_' . date('Y-m-d') . '.csv', $items_data, $headers);
+                LEFT JOIN categories c ON i.category_id = c.id"; // Use LEFT JOIN to include items without a category
 
-    } elseif ($type == 'categories_csv') {
-        $sql = "SELECT id, name, description, created_at, updated_at FROM categories ORDER BY name ASC";
-        $result = mysqli_query($link, $sql);
-        $categories_data = [];
-        if ($result) {
-            while ($row = mysqli_fetch_assoc($result)) {
-                $categories_data[] = $row;
-            }
-            mysqli_free_result($result);
-        }
-        $headers = ['ID', 'Category Name', 'Description', 'Created At', 'Updated At'];
-        output_csv('inventory_categories_' . date('Y-m-d') . '.csv', $categories_data, $headers);
-    
-    } elseif ($type == 'daily_in_out_csv' && isset($_GET['date'])) {
-        $report_date = $_GET['date'];
-        // Validate date format YYYY-MM-DD
-        if (DateTime::createFromFormat('Y-m-d', $report_date) === false) {
-            die('Invalid date format for export.');
-        }
+        $result = $link->query($sql);
 
-        $sql_daily_report = "SELECT 
-                                i.name as item_name,
-                                SUM(CASE WHEN il.type = 'in' THEN il.quantity_change ELSE 0 END) as total_in,
-                                SUM(CASE WHEN il.type = 'out' THEN il.quantity_change ELSE 0 END) as total_out
-                             FROM inventory_log il
-                             JOIN items i ON il.item_id = i.id
-                             WHERE DATE(il.log_date) = ?
-                             GROUP BY i.id, i.name
-                             ORDER BY i.name ASC";
-        $daily_data = [];
-        if ($stmt_daily = mysqli_prepare($link, $sql_daily_report)) {
-            mysqli_stmt_bind_param($stmt_daily, "s", $report_date);
-            mysqli_stmt_execute($stmt_daily);
-            $result_daily_export = mysqli_stmt_get_result($stmt_daily);
-            while ($row_export = mysqli_fetch_assoc($result_daily_export)) {
-                $daily_data[] = $row_export;
-            }
-            mysqli_free_result($result_daily_export);
-            mysqli_stmt_close($stmt_daily);
-        }
-        $headers = ['Item Name', 'Total Stock In on ' . $report_date, 'Total Stock Out on ' . $report_date];
-        output_csv('daily_in_out_' . $report_date . '.csv', $daily_data, $headers);
+        if ($result->num_rows > 0) {
+            $data = [];
+            // Explicitly define headers to ensure correct names and order
+            $headers = [
+                'ID', 
+                'Category Name', 
+                'Barcode', 
+                'Quantity', 
+                'Unit', 
+                'Description', 
+                'Created At', 
+                'Updated At', 
+                'Location'
+            ];
 
+            while ($row = $result->fetch_assoc()) {
+                // Ensure the order of values matches the defined headers
+                $ordered_row = [
+                    $row['id'],
+                    $row['category_name'],
+                    $row['barcode'],
+                    $row['quantity'],
+                    $row['unit'],
+                    $row['description'],
+                    $row['created_at'], // Already formatted by SQL
+                    $row['updated_at'], // Already formatted by SQL
+                    $row['location']
+                ];
+                $data[] = $ordered_row;
+            }
+            output_csv('all_inventory_data.csv', $data, $headers);
+        } else {
+            // If no data, still exit after message to prevent HTML output
+            echo "No data found to export.";
+            exit; 
+        }
     } else {
-        echo "Invalid export type or missing parameters.";
+        echo "Invalid export type specified.";
+        exit; // Exit for invalid type as well
     }
 } else {
-    echo "No export type specified.";
+    // Only include header and display HTML form if not exporting CSV
+    include_once 'includes/header.php'; 
+    ?>
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-header">
+                Export Data
+            </div>
+            <div class="card-body">
+                <form action="export.php" method="GET">
+                    <input type="hidden" name="type" value="all_data">
+                    <button type="submit" class="btn btn-primary">Export All Data as CSV</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <?php
 }
-?> 
+?>
