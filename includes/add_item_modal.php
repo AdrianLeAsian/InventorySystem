@@ -1,6 +1,6 @@
 <!-- Add Item Modal -->
-<div id="addItemModal" class="modal is-hidden">
-    <div class="modal-content">
+<div id="addItemModal" class="modal is-hidden" style="display: none;">
+    <div class="modal-content" style="z-index: 1000;">
         <div class="card">
             <div class="card__header">
                 <h2 class="card__title">Add New Item</h2>

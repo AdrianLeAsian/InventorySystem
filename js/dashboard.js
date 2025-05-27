@@ -1,23 +1,25 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Function to toggle modal visibility using the 'is-hidden' class
-    function toggleModal(modalId, show) {
-        console.log(`[toggleModal] Attempting to toggle: ${modalId}, show: ${show}`);
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            if (show) {
-                modal.classList.remove('is-hidden');
-                modal.style.visibility = 'visible'; // Ensure visibility
-                console.log(`[toggleModal] ${modalId} class 'is-hidden' removed, visibility set to visible. ClassList: ${modal.classList}`);
-            } else {
-                modal.classList.add('is-hidden');
-                modal.style.visibility = 'hidden'; // Ensure hidden visibility
-                console.log(`[toggleModal] ${modalId} class 'is-hidden' added, visibility set to hidden. ClassList: ${modal.classList}`);
-            }
+// Function to toggle modal visibility using the 'is-hidden' class
+function toggleModal(modalId, show) {
+    console.log(`[toggleModal] Attempting to toggle: ${modalId}, show: ${show}`);
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        if (show) {
+            modal.classList.remove('is-hidden');
+            modal.style.display = 'block'; // Explicitly set display to block
+            modal.style.visibility = 'visible'; // Ensure visibility
+            console.log(`[toggleModal] ${modalId} class 'is-hidden' removed, display set to block, visibility set to visible. ClassList: ${modal.classList}`);
         } else {
-            console.error(`[toggleModal] Error: Modal with ID ${modalId} not found.`);
+            modal.classList.add('is-hidden');
+            modal.style.display = 'none'; // Explicitly set display to none
+            modal.style.visibility = 'hidden'; // Ensure hidden visibility
+            console.log(`[toggleModal] ${modalId} class 'is-hidden' added, display set to none, visibility set to hidden. ClassList: ${modal.classList}`);
         }
+    } else {
+        console.error(`[toggleModal] Error: Modal with ID ${modalId} not found.`);
     }
+}
 
+document.addEventListener('DOMContentLoaded', function() {
     // Main tab switching logic
     function showTab(tabId) {
         console.log(`Attempting to show tab: ${tabId}`); // Debug log

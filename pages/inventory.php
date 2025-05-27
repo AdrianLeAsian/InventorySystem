@@ -156,10 +156,10 @@ function format_last_activity($timestamp) {
                     </div>
                     <div class="d-flex gap-2" id="tab-buttons-container">
                         <div id="items-buttons" class="tab-buttons">
-                            <button class="btn btn--primary" id="addItemBtn">+ Add Item</button>
+                            <button class="btn btn--primary" id="addItemBtn" onclick="toggleModal('addItemModal', true)">+ Add Item</button>
                         </div>
                         <div id="categories-buttons" class="tab-buttons" style="display: none;">
-                            <button class="btn btn--secondary" id="addCategoryBtn">+ Add Category</button>
+                            <button class="btn btn--secondary" id="addCategoryBtn" onclick="toggleModal('addCategoryModal', true)">+ Add Category</button>
                         </div>
                         <div id="tracking-buttons" class="tab-buttons" style="display: none;">
                             <button class="btn btn--primary" id="logStockBtn">+ Log Stock Movement</button>
