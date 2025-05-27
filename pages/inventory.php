@@ -342,9 +342,9 @@ function format_last_activity($timestamp) {
                                         </td>
                                         <td class="table__cell">
                                             <div class="d-flex gap-2">
-                                                <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="btn btn--secondary btn--sm" title="Edit Item">
+                                                <button class="btn btn--secondary btn--sm edit-item-btn" data-id="<?php echo $item['id']; ?>" title="Edit Item">
                                                      <i class="fas fa-edit"></i>
-                                                </a>
+                                                </button>
                                                 <a href="index.php?page=delete_item&id=<?php echo $item['id']; ?>" class="btn btn--danger btn--sm" title="Delete Item" onclick="return confirm('Are you sure you want to delete this item? This action cannot be undone.');">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </a>
@@ -469,6 +469,14 @@ function format_last_activity($timestamp) {
     </div>
 </div>
 
+<!-- Edit Item Modal -->
+<div id="editItemModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <!-- Content will be loaded here via AJAX -->
+        <div id="editItemModalContent"></div>
+    </div>
+</div>
+
 
 <!-- Add Category Modal -->
 <div id="addCategoryModal" class="modal" style="display: none;">
@@ -562,6 +570,7 @@ function format_last_activity($timestamp) {
 // Get the modals
 var addCategoryModal = document.getElementById('addCategoryModal');
 var addItemModal = document.getElementById('addItemModal');
+var editItemModal = document.getElementById('editItemModal'); // Get the new edit modal
 
 // When the user clicks anywhere outside of the modal, close it
 window.onclick = function(event) {
@@ -569,6 +578,100 @@ window.onclick = function(event) {
     event.target.style.display = "none";
   }
 }
+
+// Function to close the edit item modal
+function closeEditItemModal() {
+    editItemModal.style.display = 'none';
+    document.getElementById('editItemModalContent').innerHTML = ''; // Clear content
+}
+
+// Function to open the edit item modal and load content
+function openEditItemModal(itemId) {
+    const modalContent = document.getElementById('editItemModalContent');
+    modalContent.innerHTML = 'Loading...'; // Show loading message
+    editItemModal.style.display = 'block';
+
+    fetch(`pages/edit_item.php?id=${itemId}`)
+        .then(response => {
+            // Check if the response is JSON (for errors) or HTML (for form)
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                return response.json().then(data => {
+                    modalContent.innerHTML = `<div class="alert alert--error mb-4">${data.message}</div>`;
+                });
+            } else {
+                return response.text();
+            }
+        })
+        .then(html => {
+            if (typeof html === 'string') { // Only update if it's HTML
+                modalContent.innerHTML = html;
+                // Attach event listener to the form inside the modal
+                const form = modalContent.querySelector('#editItemForm');
+                if (form) {
+                    form.addEventListener('submit', handleEditItemFormSubmit);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading edit item form:', error);
+            modalContent.innerHTML = `<div class="alert alert--error mb-4">Failed to load item details.</div>`;
+        });
+}
+
+// Function to handle the submission of the edit item form via AJAX
+function handleEditItemFormSubmit(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const form = event.target;
+    const formData = new FormData(form);
+    formData.append('update_item', '1'); // Add the update_item flag for PHP
+
+    fetch('pages/edit_item.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const messageDiv = form.closest('.card__body').querySelector('.alert'); // Find the alert div
+        if (messageDiv) {
+            messageDiv.remove(); // Remove existing message
+        }
+
+        const newAlert = document.createElement('div');
+        newAlert.classList.add('alert', 'mb-4');
+        if (data.status === 'success') {
+            newAlert.classList.add('alert--success');
+            // Optionally, refresh the table row or the entire page
+            // For simplicity, let's reload the page to reflect changes
+            location.reload();
+        } else if (data.status === 'info') {
+            newAlert.classList.add('alert--info');
+        } else {
+            newAlert.classList.add('alert--error');
+        }
+        newAlert.innerHTML = data.message;
+        form.closest('.card__body').prepend(newAlert); // Add new message
+
+        if (data.status === 'success') {
+            // Close modal after a short delay to allow user to see message
+            setTimeout(() => {
+                closeEditItemModal();
+                // Reload the page to reflect the updated item data in the table
+                location.reload();
+            }, 1500);
+        }
+    })
+    .catch(error => {
+        console.error('Error submitting edit item form:', error);
+        const formBody = form.closest('.card__body');
+        const errorAlert = formBody.querySelector('.alert--error') || document.createElement('div');
+        errorAlert.classList.add('alert', 'alert--error', 'mb-4');
+        errorAlert.innerHTML = 'An unexpected error occurred during submission.';
+        formBody.prepend(errorAlert);
+    });
+}
+
 
 // Tab filtering for items
 function filterItems(categoryId) {
@@ -656,6 +759,14 @@ window.addEventListener('DOMContentLoaded', (event) => {
     }
     // Explicitly call filterItems('all') to ensure initial display consistency
     filterItems('all');
+
+    // Attach event listeners to all "Edit Item" buttons
+    document.querySelectorAll('.edit-item-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.dataset.id;
+            openEditItemModal(itemId);
+        });
+    });
 });
 
 </script>

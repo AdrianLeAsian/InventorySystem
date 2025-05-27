@@ -168,6 +168,11 @@ body {
     color: white;
 }
 
+.btn--secondary {
+    background-color: var(--primary-color); /* Darker shade for visibility */
+    color: white; /* Ensure text is visible on dark background */
+}
+
 .btn--success {
     background-color: var(--success-color);
     color: white;
@@ -228,15 +233,15 @@ body {
 
 /* Added specific styling for table rows with alert classes */
 .table__row.alert--warning {
-    background-color: ora;
+    background-color: var(--warning-color); /* Changed 'ora' to 'var(--warning-color)' for consistency and correctness */
     color: var(--primary-color);
     font-weight: bold;
     border-left: 4px solid var(--warning-color);
 }
 
 .table__row.alert--danger {
-    background-color: orange
-    color: var(--primary-color);
+    background-color: var(--danger-color); /* Changed 'orange' to 'var(--danger-color)' for consistency and correctness */
+    color: white; /* Changed to white for better visibility on danger background */
     font-weight: bold;
     border-left: 4px solid var(--danger-color);
 }
@@ -515,4 +520,3 @@ main.container {
 main.container {
     transition: all 0.3s ease;
 }
-.
