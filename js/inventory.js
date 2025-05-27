@@ -264,6 +264,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     displayGUIMessage(data.message, 'success');
                     toggleModal('addCategoryModal', false);
+                    if (data.category) { // Check if category data is returned
+                        addOrUpdateCategoryRow(data.category);
+                    }
                     // location.reload(); // Reload page to show new category - Temporarily commented out for debugging
                 } else {
                     displayGUIMessage('Error: ' + data.message, 'error');
@@ -295,7 +298,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     displayGUIMessage(data.message, 'success');
                     toggleModal('logStockModal', false);
-                    // location.reload(); // Reload page to show updated stock and logs - Temporarily commented out for debugging
+                    if (data.updated_item && data.new_log) {
+                        updateItemStockAndLogActivity(data.updated_item, data.new_log);
+                    }
                 } else {
                     displayGUIMessage('Error: ' + data.message, 'error');
                 }
@@ -410,4 +415,89 @@ function addOrUpdateItemRow(item) {
         searchItemsInput.dispatchEvent(new Event('keyup'));
     }
     console.log('[addOrUpdateItemRow] Filters and search re-applied.');
+}
+
+// Function to add or update a category row in the categories table
+function addOrUpdateCategoryRow(category) {
+    console.log('[addOrUpdateCategoryRow] Called with category:', category);
+    const tableBody = document.querySelector('#inventoryCategoriesTable tbody');
+    if (!tableBody) {
+        console.error('[addOrUpdateCategoryRow] Categories table body not found.');
+        return;
+    }
+    console.log('[addOrUpdateCategoryRow] Categories table body found:', tableBody);
+
+    let existingRow = document.querySelector(`tr[data-category-id="${category.id}"]`);
+    if (existingRow) {
+        console.log('[addOrUpdateCategoryRow] Updating existing category row:', existingRow);
+        existingRow.cells[0].textContent = category.id;
+        existingRow.cells[1].textContent = category.name;
+        existingRow.cells[2].innerHTML = category.description ? category.description.replace(/\n/g, '<br>') : ''; // Handle newlines
+        existingRow.cells[3].textContent = category.created_at || 'N/A';
+    } else {
+        console.log('[addOrUpdateCategoryRow] Creating new category row for category:', category.name);
+        const newRow = document.createElement('tr');
+        newRow.classList.add('table__row');
+        newRow.setAttribute('data-category-id', category.id);
+
+        newRow.innerHTML = `
+            <td class="table__cell">${category.id}</td>
+            <td class="table__cell">${category.name}</td>
+            <td class="table__cell">${category.description ? category.description.replace(/\n/g, '<br>') : ''}</td>
+            <td class="table__cell">${category.created_at || 'N/A'}</td>
+            <td class="table__cell">
+                <div class="d-flex gap-2">
+                    <a href="index.php?page=edit_category&id=${category.id}" class="btn btn--primary">Edit</a>
+                    <a href="index.php?page=delete_category&id=${category.id}" class="btn btn--danger" onclick="return confirm('Are you sure you want to delete this category?');">Delete</a>
+                </div>
+            </td>
+        `;
+        console.log('[addOrUpdateCategoryRow] Appending new category row to table body.');
+        tableBody.appendChild(newRow);
+        console.log('[addOrUpdateCategoryRow] New category row appended. Current table body children count:', tableBody.children.length);
+    }
+}
+
+// Function to update item stock in inventory table and add new log entry to tracking table
+function updateItemStockAndLogActivity(updatedItem, newLog) {
+    console.log('[updateItemStockAndLogActivity] Called with updatedItem:', updatedItem, 'and newLog:', newLog);
+
+    // 1. Update item in inventoryItemsTable
+    addOrUpdateItemRow(updatedItem); // Reuse existing function to update item row
+
+    // 2. Add new log entry to inventoryTrackingTable
+    const trackingTableBody = document.querySelector('#inventoryTrackingTable tbody');
+    if (!trackingTableBody) {
+        console.error('[updateItemStockAndLogActivity] Tracking table body not found.');
+        return;
+    }
+    console.log('[updateItemStockAndLogActivity] Tracking table body found:', trackingTableBody);
+
+    const newLogRow = document.createElement('tr');
+    newLogRow.classList.add('table__row');
+    newLogRow.setAttribute('data-log-id', newLog.id);
+
+    const logTypeClass = (newLog.activity_type === 'stock_in') ? 'success' : 'danger';
+    const formattedLogType = newLog.activity_type.replace('stock_', '').replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
+    newLogRow.innerHTML = `
+        <td class="table__cell">${newLog.id}</td>
+        <td class="table__cell">${newLog.entity_name || 'N/A'}</td>
+        <td class="table__cell">
+            <span class="btn btn--${logTypeClass}">
+                ${formattedLogType}
+            </span>
+        </td>
+        <td class="table__cell">${newLog.quantity_change}</td>
+        <td class="table__cell">${newLog.reason}</td>
+        <td class="table__cell">${newLog.log_date}</td>
+    `;
+
+    // Add the new log row to the top of the table (most recent first)
+    if (trackingTableBody.firstChild && trackingTableBody.firstChild.tagName === 'TR') {
+        trackingTableBody.insertBefore(newLogRow, trackingTableBody.firstChild);
+    } else {
+        trackingTableBody.appendChild(newLogRow);
+    }
+    console.log('[updateItemStockAndLogActivity] New log row appended. Current tracking table body children count:', trackingTableBody.children.length);
 }

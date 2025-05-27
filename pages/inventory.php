@@ -266,7 +266,7 @@ function format_last_activity($timestamp) {
                         <div class="card__body">
                             <?php if (!empty($all_categories)): ?>
                                 <div class="table">
-                                    <table class="w-100">
+                                    <table class="w-100" id="inventoryCategoriesTable">
                                         <thead>
                                             <tr class="table__header">
                                                 <th class="table__cell">ID</th>
@@ -278,7 +278,7 @@ function format_last_activity($timestamp) {
                                         </thead>
                                         <tbody>
                                             <?php foreach ($all_categories as $category): ?>
-                                                <tr class="table__row">
+                                                <tr class="table__row" data-category-id="<?php echo htmlspecialchars($category['id']); ?>">
                                                     <td class="table__cell"><?php echo htmlspecialchars($category['id']); ?></td>
                                                     <td class="table__cell"><?php echo htmlspecialchars($category['name']); ?></td>
                                                     <td class="table__cell"><?php echo nl2br(htmlspecialchars($category['description'] ?? '')); ?></td>
@@ -312,7 +312,7 @@ function format_last_activity($timestamp) {
                         <div class="card__body">
                             <?php if (!empty($inventory_logs)): ?>
                                 <div class="table">
-                                    <table class="w-100">
+                                    <table class="w-100" id="inventoryTrackingTable">
                                         <thead>
                                             <tr class="table__header">
                                                 <th class="table__cell">Log ID</th>
@@ -325,7 +325,7 @@ function format_last_activity($timestamp) {
                                         </thead>
                                         <tbody>
                                             <?php foreach ($inventory_logs as $log): ?>
-                                                <tr class="table__row">
+                                                <tr class="table__row" data-log-id="<?php echo htmlspecialchars($log['id']); ?>">
                                                     <td class="table__cell"><?php echo htmlspecialchars($log['id']); ?></td>
                                                     <td class="table__cell"><?php echo htmlspecialchars($log['entity_name'] ?? 'N/A'); ?></td>
                                                     <td class="table__cell">
