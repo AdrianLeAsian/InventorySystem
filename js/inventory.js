@@ -42,24 +42,24 @@ function displayGUIMessage(message, type) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Tab filtering for items (within the items-content tab)
-    function filterItems(categoryId) {
-        var table = document.getElementById("inventoryItemsTable");
-        if (!table) return; // Ensure table exists before trying to access it
+// Tab filtering for items (within the items-content tab)
+function filterItems(categoryId) {
+    var table = document.getElementById("inventoryItemsTable");
+    if (!table) return; // Ensure table exists before trying to access it
 
-        var tr = table.getElementsByTagName("tr");
-        
-        for (var i = 1; i < tr.length; i++) { // Start from 1 to skip header row
-            var tdCategory = tr[i].getAttribute('data-category-id');
-            if (categoryId === 'all' || tdCategory === categoryId) {
-                tr[i].style.display = "";
-            } else {
-                tr[i].style.display = "none";
-            }
+    var tr = table.getElementsByTagName("tr");
+    
+    for (var i = 1; i < tr.length; i++) { // Start from 1 to skip header row
+        var tdCategory = tr[i].getAttribute('data-category-id');
+        if (categoryId === 'all' || tdCategory === categoryId) {
+            tr[i].style.display = "";
+        } else {
+            tr[i].style.display = "none";
         }
     }
+}
 
+document.addEventListener('DOMContentLoaded', function() {
     // Event listener for category filter select
     const categoryFilterSelect = document.getElementById('categoryFilterSelect');
     if (categoryFilterSelect) {
@@ -267,7 +267,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.category) { // Check if category data is returned
                         addOrUpdateCategoryRow(data.category);
                     }
-                    // location.reload(); // Reload page to show new category - Temporarily commented out for debugging
                 } else {
                     displayGUIMessage('Error: ' + data.message, 'error');
                 }
@@ -378,10 +377,9 @@ function addOrUpdateItemRow(item) {
             status_class = 'btn btn--danger';
         }
 
-        let rowClass = '';
-        if (isLowStock) rowClass = 'alert alert--warning';
-        if (isOutStock) rowClass = 'alert alert--error';
-        newRow.classList.add('table__row', rowClass);
+        newRow.classList.add('table__row');
+        if (isLowStock) newRow.classList.add('alert', 'alert--warning');
+        if (isOutStock) newRow.classList.add('alert', 'alert--error');
 
         newRow.innerHTML = `
             <td class="table__cell" title="${item.name}">${item.name}</td>

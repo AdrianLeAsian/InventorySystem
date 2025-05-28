@@ -12,6 +12,7 @@
     <?php include 'sidebar.php'; ?>
     <div class="content-wrapper">
         <div class="header">
+            <i class="fas fa-bars menu-toggle"></i> <!-- Hamburger icon for mobile -->
             <div class="container">
                 <h1 class="header__title">
                     <?php 
@@ -22,3 +23,4 @@
             </div>
         </div>
         <main class="container" id="main-content">
+    <script src="js/main.js"></script>

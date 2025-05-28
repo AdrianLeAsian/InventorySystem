@@ -12,13 +12,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stockType = $_POST['stock_type'] ?? ''; // 'stock_in' or 'stock_out'
 
     // Basic validation
-    if (empty($itemId) || empty($quantityChange) || empty($reason) || !in_array($stockType, ['stock_in', 'stock_out'])) {
+    if (empty($itemId) || empty($reason) || !in_array($stockType, ['stock_in', 'stock_out'])) {
         $response['message'] = 'Item, Quantity Change, Reason, and Stock Type are required.';
         echo json_encode($response);
         exit();
     }
 
     $quantityChange = (int)$quantityChange; // Ensure integer
+    if ($quantityChange <= 0) {
+        $response['message'] = 'Quantity Change must be a positive number.';
+        echo json_encode($response);
+        exit();
+    }
 
     // Start transaction
     mysqli_begin_transaction($conn);

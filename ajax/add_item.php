@@ -15,6 +15,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $quantity = $_POST['item_quantity'] ?? 0;
     $unit = $_POST['item_unit'] ?? 'pcs';
     $lowStockThreshold = $_POST['item_low_stock_threshold'] ?? 0;
+    // Ensure low_stock_threshold is at least 1 if it's 0 or not provided
+    if ($lowStockThreshold <= 0) {
+        $lowStockThreshold = 10; // Set a default low stock threshold
+    }
     $description = $_POST['item_description'] ?? '';
     $location = $_POST['item_location'] ?? '';
 
@@ -97,7 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $errorMessage = 'Error adding item: ' . mysqli_stmt_error($stmt);
             $response['message'] = $errorMessage;
-            error_log($errorMessage . "\n", 3, "../logs/debug.log"); // Log to file
         }
         mysqli_stmt_close($stmt);
     } else {

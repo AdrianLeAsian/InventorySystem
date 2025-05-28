@@ -38,7 +38,7 @@
                         <input type="text" name="reason" class="form__input" placeholder="e.g., New Shipment, Used for X, Spoilage" required>
                     </div>
 
-                    <div class="d-flex justify-between mt-4">
+                    <div class="d-flex modal-buttons mt-4">
                         <button type="submit" class="btn btn--success" name="stock_type" value="stock_in">Stock In</button>
                         <button type="submit" class="btn btn--danger" name="stock_type" value="stock_out">Stock Out</button>
                         <button type="button" class="btn btn--secondary cancel-modal-btn" data-modal-id="logStockModal">Cancel</button>

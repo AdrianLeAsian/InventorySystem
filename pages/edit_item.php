@@ -27,6 +27,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_item'])) {
     $item_barcode = trim($_POST['item_barcode']);
     $item_unit = trim($_POST['item_unit']);
     $item_low_stock_threshold = (int)$_POST['item_low_stock_threshold'];
+    // Ensure low_stock_threshold is at least 1 if it's 0 or not provided
+    if ($item_low_stock_threshold <= 0) {
+        $item_low_stock_threshold = 1; // Set a minimum low stock threshold
+    }
     $item_description = trim($_POST['item_description']);
     $item_location = trim($_POST['item_location']); // Get location from form
 

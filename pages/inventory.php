@@ -131,10 +131,6 @@ function format_last_activity($timestamp) {
 <div class="container">
     <div class="page">
         <header class="d-flex justify-between align-center mb-4">
-            <div>
-                <h2 class="card__title">Inventory Items</h2>
-                <p class="text-muted">Manage and track all your inventory items.</p>
-            </div>
             <div class="d-flex gap-2">
             </div>
         </header>
@@ -168,93 +164,96 @@ function format_last_activity($timestamp) {
                 </div>
 
                 <div id="items-content" class="tab-content active">
-                    <div class="d-flex justify-between align-center mb-3">
-                        <div class="d-flex gap-2 align-center">
-                            <select id="categoryFilterSelect" class="form__input">
-                                <option value="all">All Categories</option>
-                                <?php foreach ($all_categories as $category): ?>
-                                    <option value="<?php echo htmlspecialchars($category['id']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <input type="text" id="searchItemsInput" class="form__input" placeholder="Search Items...">
-                        </div>
-                    </div>
-
-                    <div class="table" id="inventoryItemsTable">
-                        <table class="w-100">
-                            <colgroup>
-                                <col style="width: 15%;"> <!-- Name -->
-                                <col style="width: 15%;"> <!-- Category -->
-                                <col style="width: 10%;"> <!-- Current Stock -->
-                                <col style="width: 10%;"> <!-- Min Stock -->
-                                <col style="width: 8%;">  <!-- Unit -->
-                                <col style="width: 12%;"> <!-- Location -->
-                                <col style="width: 15%;"> <!-- Last Activity -->
-                                <col style="width: 8%;">  <!-- Status -->
-                                <col style="width: 7%;">  <!-- Actions -->
-                            </colgroup>
-                            <thead>
-                                <tr class="table__header">
-                                    <th class="table__cell">Name</th>
-                                    <th class="table__cell">Category</th>
-                                    <th class="table__cell">Current Stock</th>
-                                    <th class="table__cell">Min Stock</th>
-                                    <th class="table__cell">Unit</th>
-                                    <th class="table__cell">Location</th>
-                                    <th class="table__cell">Last Activity</th>
-                                    <th class="table__cell">Status</th>
-                                    <th class="table__cell">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (!empty($all_items)): ?>
-                                    <?php foreach ($all_items as $item): ?>
-                                        <?php
-                                            $isLowStock = ($item['low_stock_threshold'] > 0 && $item['quantity'] <= $item['low_stock_threshold']);
-                                            $isOutStock = ($item['quantity'] == 0);
-                                            $rowClass = $isLowStock ? 'alert alert--warning' : '';
-                                            if ($isOutStock) $rowClass = 'alert alert--error';
-                                        ?>
-                                        <tr data-item-id="<?php echo htmlspecialchars($item['id']); ?>" data-category-id="<?php echo htmlspecialchars($item['category_id']); ?>" class="table__row <?php echo $rowClass; ?>">
-                                            <td class="table__cell" title="<?php echo htmlspecialchars($item['name']); ?>">
-                                                <?php echo htmlspecialchars($item['name']); ?>
-                                            </td>
-                                            <td class="table__cell"><?php echo htmlspecialchars($item['category_name']); ?></td>
-                                            <td class="table__cell"><?php echo htmlspecialchars($item['quantity']); ?></td>
-                                            <td class="table__cell"><?php echo htmlspecialchars($item['low_stock_threshold']); ?></td>
-                                            <td class="table__cell"><?php echo htmlspecialchars($item['unit']); ?></td>
-                                            <td class="table__cell"><?php echo htmlspecialchars($item['location'] ?? 'N/A'); ?></td>
-                                            <td class="table__cell"><?php echo format_last_activity($item['updated_at']); ?></td>
-                                            <td class="table__cell">
-                                                <?php
-                                                $status = 'OK';
-                                                $status_class = 'btn btn--success';
-                                                if ($isLowStock) {
-                                                    $status = 'Low Stock';
-                                                    $status_class = 'btn btn--warning';
-                                                }
-                                                if ($isOutStock) {
-                                                    $status = 'Out of Stock';
-                                                    $status_class = 'btn btn--danger';
-                                                }
-                                                ?>
-                                                <span class="<?php echo $status_class; ?>"><?php echo $status; ?></span>
-                                            </td>
-                                            <td class="table__cell">
-                                                <div class="d-flex gap-2">
-                                                    <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="btn btn--primary">Edit</a>
-                                                    <a href="index.php?page=delete_item&id=<?php echo $item['id']; ?>" class="btn btn--danger" onclick="return confirm('Are you sure you want to delete this item?')">Delete</a>
-                                                </div>
-                                            </td>
-                                        </tr>
+                    <div class="card">
+                        <div class="card__header">
+                            <h2 class="card__title">All Inventory Items</h2>
+                            <div class="d-flex gap-2 align-center">
+                                <select id="categoryFilterSelect" class="form__input">
+                                    <option value="all">All Categories</option>
+                                    <?php foreach ($all_categories as $category): ?>
+                                        <option value="<?php echo htmlspecialchars($category['id']); ?>"><?php echo htmlspecialchars($category['name']); ?></option>
                                     <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr class="table__row">
-                                        <td colspan="9" class="table__cell text-center">No items found.</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+                                </select>
+                                <input type="text" id="searchItemsInput" class="form__input" placeholder="Search Items...">
+                            </div>
+                        </div>
+                        <div class="card__body">
+                            <div class="table" id="inventoryItemsTable">
+                                <table class="w-100">
+                                    <colgroup>
+                                        <col style="width: 15%;"> <!-- Name -->
+                                        <col style="width: 15%;"> <!-- Category -->
+                                        <col style="width: 10%;"> <!-- Current Stock -->
+                                        <col style="width: 10%;"> <!-- Min Stock -->
+                                        <col style="width: 8%;">  <!-- Unit -->
+                                        <col style="width: 12%;"> <!-- Location -->
+                                        <col style="width: 15%;"> <!-- Last Activity -->
+                                        <col style="width: 8%;">  <!-- Status -->
+                                        <col style="width: 7%;">  <!-- Actions -->
+                                    </colgroup>
+                                    <thead>
+                                        <tr class="table__header">
+                                            <th class="table__cell">Name</th>
+                                            <th class="table__cell">Category</th>
+                                            <th class="table__cell">Current Stock</th>
+                                            <th class="table__cell">Min Stock</th>
+                                            <th class="table__cell">Unit</th>
+                                            <th class="table__cell">Location</th>
+                                            <th class="table__cell">Last Activity</th>
+                                            <th class="table__cell">Status</th>
+                                            <th class="table__cell">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php if (!empty($all_items)): ?>
+                                            <?php foreach ($all_items as $item): ?>
+                                                <?php
+                                                    $isLowStock = ($item['low_stock_threshold'] > 0 && $item['quantity'] <= $item['low_stock_threshold']);
+                                                    $isOutStock = ($item['quantity'] == 0);
+                                                    $rowClass = ''; // Removed conditional highlighting
+                                                ?>
+                                                <tr data-item-id="<?php echo htmlspecialchars($item['id']); ?>" data-category-id="<?php echo htmlspecialchars($item['category_id']); ?>" class="table__row">
+                                                    <td class="table__cell" title="<?php echo htmlspecialchars($item['name']); ?>">
+                                                        <?php echo htmlspecialchars($item['name']); ?>
+                                                    </td>
+                                                    <td class="table__cell"><?php echo htmlspecialchars($item['category_name']); ?></td>
+                                                    <td class="table__cell"><?php echo htmlspecialchars($item['quantity']); ?></td>
+                                                    <td class="table__cell"><?php echo htmlspecialchars($item['low_stock_threshold']); ?></td>
+                                                    <td class="table__cell"><?php echo htmlspecialchars($item['unit']); ?></td>
+                                                    <td class="table__cell"><?php echo htmlspecialchars($item['location'] ?? 'N/A'); ?></td>
+                                                    <td class="table__cell"><?php echo format_last_activity($item['updated_at']); ?></td>
+                                                    <td class="table__cell">
+                                                        <?php
+                                                        $status = 'OK';
+                                                        $status_class = 'btn btn--success';
+                                                        if ($isLowStock) {
+                                                            $status = 'Low Stock';
+                                                            $status_class = 'btn btn--warning';
+                                                        }
+                                                        if ($isOutStock) {
+                                                            $status = 'Out of Stock';
+                                                            $status_class = 'btn btn--danger';
+                                                        }
+                                                        ?>
+                                                        <span class="<?php echo $status_class; ?>"><?php echo $status; ?></span>
+                                                    </td>
+                                                    <td class="table__cell">
+                                                        <div class="d-flex gap-2">
+                                                            <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="btn btn--primary">Edit</a>
+                                                            <a href="index.php?page=delete_item&id=<?php echo $item['id']; ?>" class="btn btn--danger" onclick="return confirm('Are you sure you want to delete this item?')">Delete</a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <tr class="table__row">
+                                                <td colspan="9" class="table__cell text-center">No items found.</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

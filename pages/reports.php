@@ -139,10 +139,6 @@ if (!empty($usage_data)) {
 <div class="container">
     <div class="page">
         <header class="d-flex justify-between align-center mb-4">
-            <div>
-                <h2 class="card__title">Inventory Reports</h2>
-                <p class="text-muted">View and analyze inventory data and trends.</p>
-            </div>
         </header>
 
         <?php if (!empty($message)): ?>

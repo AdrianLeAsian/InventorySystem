@@ -103,42 +103,36 @@ body {
     color: white;
 }
 
-.sidebar__link.sidebar__item--active {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-left: 5px solid var(--secondary-color);
+.sidebar__link.sidebar__item--active,
+.sidebar__button.sidebar__item--active {
+    background-color: rgba(255, 255, 255, 0.25); /* Unified active state */
     color: white;
     font-weight: 700;
+    border-left: 5px solid var(--secondary-color); /* Keep the border for active state */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Add shadow for active button */
 }
 
 .sidebar__button {
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* Align content to the start */
-    width: calc(100% - (2 * var(--spacing-md))); /* Adjust width to account for padding */
-    margin: 5px var(--spacing-md); /* Add margin for button-like spacing */
-    padding: 10px 15px; /* Adjust padding for button feel */
-    border-radius: var(--border-radius-sm); /* Rounded corners for buttons */
-    background-color: transparent; /* Default transparent background */
-    border: none; /* No border */
+    justify-content: flex-start;
+    width: 100%; /* Make buttons full width */
+    margin: 0; /* Remove margin to allow full width */
+    padding: 12px var(--spacing-md); /* Consistent padding */
+    border-radius: 0; /* Remove rounded corners for full width */
+    background-color: transparent;
+    border: none;
     cursor: pointer;
     color: rgba(255, 255, 255, 0.8);
-    transition: background-color 0.3s ease, color 0.3s ease, transform 0.1s ease;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Remove transform for now */
     font-weight: 500;
-    text-align: left; /* Ensure text aligns left */
+    text-align: left;
 }
 
 .sidebar__button:hover {
-    background-color: rgba(255, 255, 255, 0.15); /* Slightly more prominent hover */
+    background-color: rgba(255, 255, 255, 0.1); /* Subtle hover */
     color: white;
-    transform: translateY(-1px); /* Subtle lift effect */
-}
-
-.sidebar__button.sidebar__item--active {
-    background-color: rgba(255, 255, 255, 0.25); /* More prominent active state */
-    border-left: none; /* Remove border-left from button style */
-    color: white;
-    font-weight: 700;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Add shadow for active button */
+    transform: none; /* Remove lift effect */
 }
 
 .sidebar__button i {
@@ -222,6 +216,15 @@ body {
 .card__body--scrollable {
     max-height: 300px;
     overflow-y: auto;
+}
+
+/* Card Modifier for Warning State */
+.card--warning {
+    /* Low stock alerts maintain the same color as others */
+}
+
+.card--warning .metric-indicator {
+    background-color: var(--danger-color); /* Change dot indicator color for low stock */
 }
 
 /* Metric Card Specific Styling */
@@ -485,18 +488,23 @@ textarea.form__input {
 
 .modal-content {
     background-color: var(--bg-white);
-    margin: auto;
     padding: 0;
     border-radius: var(--border-radius-md);
-    width: 90%;
-    max-width: 600px;
+    width: 80%; /* Adjusted width */
+    max-width: 500px; /* Adjusted max-width to give more space for buttons */
+    max-height: 80vh; /* Added max-height */
+    overflow-y: auto; /* Added overflow-y */
     box-shadow: var(--shadow-medium);
     animation: fadeIn 0.3s ease-out;
+    position: absolute; /* Added for centering */
+    top: 50%; /* Added for centering */
+    left: 50%; /* Added for centering */
+    transform: translate(-50%, -50%); /* Added for centering */
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); } /* Start centered and slightly smaller */
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); } /* End centered and full size */
 }
 
 .modal .card__header {
@@ -506,6 +514,15 @@ textarea.form__input {
 
 .modal .card__body {
     padding: var(--spacing-md);
+}
+
+.modal-buttons {
+    display: flex; /* Ensure it's a flex container */
+    justify-content: center; /* Center buttons */
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm); /* Ensure consistent spacing */
+    padding: var(--spacing-md); /* Add padding around buttons */
 }
 
 /* Alert Messages */
@@ -537,4 +554,199 @@ textarea.form__input {
 
 .is-hidden {
     display: none;
+}
+
+/* Responsive Adjustments */
+
+/* For screens smaller than 1200px (e.g., large tablets, smaller desktops) */
+@media (max-width: 1200px) {
+    .container {
+        max-width: 960px;
+    }
+
+    .grid--3-cols {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+}
+
+/* For screens smaller than 992px (e.g., tablets) */
+@media (max-width: 992px) {
+    :root {
+        --sidebar-width: 250px; /* Slightly smaller sidebar */
+        --header-height: 70px;
+        --spacing-md: 15px;
+    }
+
+    .sidebar {
+        width: var(--sidebar-width);
+    }
+
+    .content-wrapper {
+        margin-left: var(--sidebar-width);
+        width: calc(100% - var(--sidebar-width));
+    }
+
+    .header {
+        width: calc(100% - var(--sidebar-width));
+        left: var(--sidebar-width);
+    }
+
+    .grid--3-cols {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .card__header, .card__body {
+        padding: var(--spacing-sm);
+    }
+
+    table th, table td {
+        padding: 10px 12px;
+    }
+
+    .btn {
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+}
+
+/* For screens smaller than 768px (e.g., portrait tablets, larger phones) */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column; /* Stack sidebar and content */
+    }
+
+    .sidebar {
+        position: fixed; /* Keep sidebar fixed */
+        top: 0;
+        left: -100%; /* Hide sidebar off-screen */
+        height: 100%;
+        width: 280px; /* Fixed width for mobile sidebar */
+        transition: left 0.3s ease;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+        z-index: 10000; /* Ensure it's on top when active */
+    }
+
+    .sidebar.active {
+        left: 0; /* Show sidebar */
+    }
+
+    .content-wrapper {
+        margin-left: 0; /* No offset for content */
+        width: 100%; /* Full width */
+    }
+
+    .header {
+        width: 100%; /* Full width */
+        left: 0; /* No offset */
+        position: sticky; /* Stick to top when scrolling */
+        top: 0;
+        z-index: 999; /* Below sidebar */
+    }
+
+    #main-content {
+        margin-top: var(--header-height); /* Still offset for header */
+        padding: var(--spacing-sm);
+    }
+
+    .container {
+        padding: 0 var(--spacing-sm);
+    }
+
+    .grid {
+        grid-template-columns: 1fr; /* Stack all cards on small screens */
+    }
+
+    .header__title {
+        font-size: 1.4em;
+    }
+
+    .modal-content {
+        width: 85%; /* Adjusted width for responsive */
+    }
+
+    /* Hamburger icon for mobile navigation */
+    .menu-toggle {
+        display: none; /* Hidden by default */
+        position: absolute;
+        left: var(--spacing-md);
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.5em;
+        color: var(--text-color-dark);
+        cursor: pointer;
+        z-index: 1001; /* Above header content */
+    }
+}
+
+/* Show hamburger icon only on screens smaller than 768px */
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: block;
+    }
+}
+
+/* For screens smaller than 480px (e.g., mobile phones) */
+@media (max-width: 480px) {
+    :root {
+        --spacing-sm: 8px;
+        --spacing-md: 12px;
+    }
+
+    .header__title {
+        font-size: 1.2em;
+    }
+
+    .card__header, .card__body {
+        padding: var(--spacing-sm);
+    }
+
+    table th, table td {
+        padding: 8px 10px;
+        font-size: 0.9em;
+    }
+
+    .btn {
+        padding: 6px 12px;
+        font-size: 0.85em;
+    }
+
+    .form__label {
+        font-size: 0.9em;
+    }
+
+    .form__input {
+        padding: 8px 10px;
+        font-size: 0.9em;
+    }
+}
+
+/* Specific support for 1920x1080 resolution */
+@media (min-width: 1920px) {
+    .container {
+        max-width: 1600px; /* Allow content to spread out more */
+    }
+
+    .grid--3-cols {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Larger cards */
+    }
+
+    .header__title {
+        font-size: 1.8em;
+    }
+
+    .metric-value {
+        font-size: 2.5em; /* Larger metrics */
+    }
+
+    table th, table td {
+        padding: 15px 20px; /* More spacious tables */
+        font-size: 1em;
+    }
+}
+
+/* Hide menu-toggle on screens wider than 768px (PC) */
+@media (min-width: 769px) {
+    .menu-toggle {
+        display: none !important;
+    }
 }

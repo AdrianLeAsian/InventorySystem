@@ -1,6 +1,12 @@
 <?php
 // Fetch data for dashboard widgets
 
+// Check database connection status
+$db_connected = false;
+if (isset($conn) && $conn) {
+    $db_connected = mysqli_ping($conn);
+}
+
 // Total Items
 $total_items_count = 0;
 $sql_total_items = "SELECT COUNT(*) as count FROM items";
@@ -56,24 +62,13 @@ if($result_activity = mysqli_query($conn, $sql_recent_activity)){
     mysqli_free_result($result_activity);
 }
 
-// Stock Activity Log (all entries)
-$stock_activity_log = [];
-$sql_stock_activity_log = "SELECT il.id, i.name as item_name, il.type, il.quantity_change, il.reason, DATE_FORMAT(il.log_date, '%Y-%m-%d %H:%i') as log_date 
-                           FROM inventory_log il
-                           JOIN items i ON il.item_id = i.id
-                           ORDER BY il.log_date DESC";
-if($result_stock_activity_log = mysqli_query($conn, $sql_stock_activity_log)){
-    while($row_stock_activity = mysqli_fetch_assoc($result_stock_activity_log)){
-        $stock_activity_log[] = $row_stock_activity;
-    }
-    mysqli_free_result($result_stock_activity_log);
-}
+
 ?>
 
 <!-- Removed inline dashboard CSS, now in assets/css/dashboard.css -->
 
 <!-- Add CSS link in the head section -->
-<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="../css/main.css">
 
 <div class="container">
     <div class="page">
@@ -91,7 +86,7 @@ if($result_stock_activity_log = mysqli_query($conn, $sql_stock_activity_log)){
 
             <div class="card card--metric">
                 <div class="card__body">
-                    <div class="metric-indicator metric-indicator--blue"></div>
+                    <div class="metric-indicator <?php echo $db_connected ? 'metric-indicator--green' : 'metric-indicator--red'; ?>"></div>
                     <div>
                         <h2 class="metric-title">Categories</h2>
                         <p class="metric-value"><?php echo number_format($total_categories); ?></p>
@@ -102,10 +97,10 @@ if($result_stock_activity_log = mysqli_query($conn, $sql_stock_activity_log)){
 
             <div class="card card--metric <?php echo ($low_stock_count > 0) ? 'card--warning' : ''; ?>">
                 <div class="card__body">
-                    <div class="metric-indicator metric-indicator--red"></div>
+                    <div class="metric-indicator <?php echo ($low_stock_count > 0) ? 'metric-indicator--red' : 'metric-indicator--green'; ?>"></div>
                     <div>
                         <h2 class="metric-title">Low Stock Alerts</h2>
-                        <p class="metric-value <?php echo ($low_stock_count > 0) ? 'text-white' : ''; ?>"><?php echo number_format($low_stock_count); ?></p>
+                        <p class="metric-value"><?php echo number_format($low_stock_count); ?></p>
                         <p class="metric-description text-muted">Items need attention</p>
             </div>
         </div>
@@ -119,7 +114,6 @@ if($result_stock_activity_log = mysqli_query($conn, $sql_stock_activity_log)){
                 <button class="tab-button active" data-tab="recent-activity">Recent Activity</button>
                 <button class="tab-button" data-tab="low-stock-items">Low Stock Items</button>
                 <button class="tab-button" data-tab="category-distribution">Category Distribution</button>
-                <button class="tab-button" data-tab="stock-activity">Stock Activity</button>
             </div>
 
             <div id="recent-activity" class="tab-content active card">
@@ -136,7 +130,7 @@ if($result_stock_activity_log = mysqli_query($conn, $sql_stock_activity_log)){
                                     <th class="table__cell">Type</th>
                                     <th class="table__cell">Quantity</th>
                                     <th class="table__cell">Reason</th>
-                                    <th class="table__cell">Date</th>
+                                    <th class__cell">Date</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -222,46 +216,6 @@ if($result_stock_activity_log = mysqli_query($conn, $sql_stock_activity_log)){
                     </div>
                     <?php else: ?>
                     <p class="text-center text-muted">No categories found.</p>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-            <div id="stock-activity" class="tab-content card">
-                <div class="card__header">
-                    <h2 class="card__title">Stock Activity Log</h2>
-                </div>
-                <div class="card__body card__body--scrollable">
-                    <?php if (!empty($stock_activity_log)): ?>
-                    <div class="table">
-                        <table class="w-100">
-                            <thead>
-                                <tr class="table__header">
-                                    <th class="table__cell">Item</th>
-                                    <th class="table__cell">Type</th>
-                                    <th class="table__cell">Quantity</th>
-                                    <th class="table__cell">Reason</th>
-                                    <th class="table__cell">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach($stock_activity_log as $activity): ?>
-                                <tr class="table__row">
-                                    <td class="table__cell"><?php echo htmlspecialchars($activity['item_name']); ?></td>
-                                    <td class="table__cell">
-                                        <span class="btn btn--<?php echo $activity['type'] == 'in' ? 'success' : ($activity['type'] == 'out' ? 'danger' : 'primary'); ?>">
-                                            <?php echo htmlspecialchars(ucfirst($activity['type'])); ?>
-                                        </span>
-                                    </td>
-                                    <td class="table__cell"><?php echo htmlspecialchars($activity['quantity_change']); ?></td>
-                                    <td class="table__cell"><?php echo htmlspecialchars($activity['reason'] ?? 'N/A'); ?></td>
-                                    <td class="table__cell"><?php echo htmlspecialchars($activity['log_date']); ?></td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                    <?php else: ?>
-                    <p class="text-center text-muted">No stock activity recorded.</p>
                     <?php endif; ?>
                 </div>
             </div>
