@@ -15,22 +15,24 @@
                 </div>
 
                 <form class="form" id="logStockForm">
-                    <div class="form__group">
-                        <label class="form__label">Select Item</label>
-                        <select name="item_id" class="form__input" required>
-                            <option value="">-- Select Item --</option>
-                            <?php foreach ($items_options as $item_opt): ?>
-                                <option value="<?php echo $item_opt['id']; ?>">
-                                    <?php echo htmlspecialchars($item_opt['name']); ?> 
-                                    (Current Stock: <?php echo htmlspecialchars($item_opt['quantity']); ?> <?php htmlspecialchars($item_opt['unit']); ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                    <div class="form__row">
+                        <div class="form__group">
+                            <label class="form__label">Select Item</label>
+                            <select name="item_id" class="form__input" required>
+                                <option value="">-- Select Item --</option>
+                                <?php foreach ($items_options as $item_opt): ?>
+                                    <option value="<?php echo $item_opt['id']; ?>">
+                                        <?php echo htmlspecialchars($item_opt['name']); ?> 
+                                        (Current Stock: <?php echo htmlspecialchars($item_opt['quantity']); ?> <?php htmlspecialchars($item_opt['unit']); ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
 
-                    <div class="form__group">
-                        <label class="form__label">Quantity Change</label>
-                        <input type="number" name="quantity_change" class="form__input" min="1" required>
+                        <div class="form__group">
+                            <label class="form__label">Quantity Change</label>
+                            <input type="number" name="quantity_change" class="form__input" min="1" required>
+                        </div>
                     </div>
 
                     <div class="form__group">

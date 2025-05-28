@@ -239,7 +239,7 @@ function format_last_activity($timestamp) {
                                                     </td>
                                                     <td class="table__cell">
                                                         <div class="d-flex gap-2">
-                                                            <a href="index.php?page=edit_item&id=<?php echo $item['id']; ?>" class="btn btn--primary">Edit</a>
+                                                            <button class="btn btn--primary" onclick="openEditItemModal(<?php echo $item['id']; ?>)">Edit</button>
                                                             <a href="index.php?page=delete_item&id=<?php echo $item['id']; ?>" class="btn btn--danger" onclick="return confirm('Are you sure you want to delete this item?')">Delete</a>
                                                         </div>
                                                     </td>
@@ -284,7 +284,7 @@ function format_last_activity($timestamp) {
                                             <td class="table__cell"><?php echo htmlspecialchars($category['created_at'] ?? 'N/A'); ?></td>
                                             <td class="table__cell">
                                                 <div class="d-flex gap-2">
-                                                    <a href="index.php?page=edit_category&id=<?php echo $category['id']; ?>" class="btn btn--primary">Edit</a>
+                                                    <button class="btn btn--primary" onclick="openEditCategoryModal(<?php echo $category['id']; ?>)">Edit</button>
                                                     <a href="index.php?page=delete_category&id=<?php echo $category['id']; ?>" 
                                                                class="btn btn--danger" 
                                                                onclick="return confirm('Are you sure you want to delete this category?');">Delete</a>
@@ -354,6 +354,8 @@ function format_last_activity($timestamp) {
 <?php include 'includes/add_item_modal.php'; ?>
 <?php include 'includes/add_category_modal.php'; ?>
 <?php include 'includes/log_stock_modal.php'; ?>
+<?php include 'includes/edit_item_modal.php'; ?>
+<?php include 'includes/edit_category_modal.php'; ?>
 
 <script src="js/inventory.js"></script>
 <script src="js/inventory_tabs.js"></script>

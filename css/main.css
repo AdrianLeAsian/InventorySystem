@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 /* Variables for consistent styling */
 :root {
     --sidebar-width: 300px;
@@ -30,7 +32,7 @@ html, body {
     margin: 0;
     padding: 0;
     height: 100%;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* More modern font */
+    font-family: 'Poppins', sans-serif; /* Poppins font */
     color: var(--text-color-dark);
     background-color: var(--bg-light);
 }
@@ -460,6 +462,23 @@ table tbody tr:hover {
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* New form layout classes */
+.form__row {
+    display: flex;
+    gap: var(--spacing-md); /* Gap between columns */
+    margin-bottom: var(--spacing-md); /* Consistent with form__group margin */
+}
+
+.form__row .form__group {
+    flex: 1; /* Each group takes equal space */
+    margin-bottom: 0; /* Remove individual group margin as row handles it */
+}
+
+/* Adjust form__group margin for the last group if it's not part of a row */
+.form__group:last-of-type:not(.form__row .form__group) {
+    margin-bottom: 0;
+}
+
 .form__input:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.2);
@@ -488,41 +507,60 @@ textarea.form__input {
 
 .modal-content {
     background-color: var(--bg-white);
-    padding: 0;
+    padding: 0; /* Card handles internal padding */
     border-radius: var(--border-radius-md);
-    width: 80%; /* Adjusted width */
-    max-width: 500px; /* Adjusted max-width to give more space for buttons */
-    max-height: 80vh; /* Added max-height */
-    overflow-y: auto; /* Added overflow-y */
+    width: 90%; /* Slightly wider for better form layout */
+    max-width: 550px; /* Increased max-width */
+    max-height: 90vh; /* Increased max-height for more content */
+    /* Removed overflow-y: auto; from here */
     box-shadow: var(--shadow-medium);
     animation: fadeIn 0.3s ease-out;
-    position: absolute; /* Added for centering */
-    top: 50%; /* Added for centering */
-    left: 50%; /* Added for centering */
-    transform: translate(-50%, -50%); /* Added for centering */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex; /* Use flex to stack header, body, and footer */
+    flex-direction: column;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); } /* Start centered and slightly smaller */
-    to { opacity: 1; transform: translate(-50%, -50%) scale(1); } /* End centered and full size */
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .modal .card__header {
     border-bottom: 1px solid var(--border-color);
     padding: 15px var(--spacing-md);
+    flex-shrink: 0; /* Prevent header from shrinking */
 }
 
 .modal .card__body {
     padding: var(--spacing-md);
+    flex-grow: 1; /* Allow body to take available space */
+    display: flex; /* Make card body a flex container for its content */
+    flex-direction: column;
+}
+
+.modal .card__body .form { /* Target form specifically within modal card body */
+    flex-grow: 1;
+    overflow-y: auto; /* Allow form content to scroll */
+    max-height: calc(90vh - var(--header-height) - var(--spacing-md) * 2 - 60px); /* Calculate max-height for form to fit within modal, adjust 60px as needed for button area */
 }
 
 .modal-buttons {
-    display: flex; /* Ensure it's a flex container */
-    justify-content: center; /* Center buttons */
+    display: flex;
+    justify-content: center; /* Reverted to center alignment for buttons */
     flex-wrap: wrap;
     align-items: center;
-    gap: var(--spacing-sm); /* Ensure consistent spacing */
-    padding: var(--spacing-md); /* Add padding around buttons */
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--border-color); /* Add a subtle border to separate from form */
+    flex-shrink: 0; /* Prevent buttons section from shrinking */
+}
+
+.modal-buttons .btn {
+    flex-grow: 0; /* Prevent buttons from growing to fill space */
+    flex-basis: auto; /* Reset flex-basis */
 }
 
 /* Alert Messages */

@@ -312,6 +312,119 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Function to open the Edit Item Modal and populate it with data
+function openEditItemModal(itemId) {
+    console.log(`[openEditItemModal] Opening modal for item ID: ${itemId}`);
+    fetch(`ajax/get_item.php?id=${itemId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.item) {
+                const item = data.item;
+                document.getElementById('edit_item_id').value = item.id;
+                document.getElementById('edit_item_name').value = item.name;
+                document.getElementById('edit_item_category_id').value = item.category_id;
+                document.getElementById('edit_item_barcode').value = item.barcode;
+                document.getElementById('edit_item_quantity').value = item.quantity;
+                document.getElementById('edit_item_unit').value = item.unit;
+                document.getElementById('edit_item_low_stock_threshold').value = item.low_stock_threshold;
+                document.getElementById('edit_item_description').value = item.description;
+                document.getElementById('edit_item_location').value = item.location;
+                toggleModal('editItemModal', true);
+            } else {
+                displayGUIMessage('Error fetching item data: ' + data.message, 'error');
+                console.error('Error fetching item data:', data.message);
+            }
+        })
+        .catch(error => {
+            displayGUIMessage('An error occurred while fetching item data.', 'error');
+            console.error('Error:', error);
+        });
+}
+
+// Function to open the Edit Category Modal and populate it with data
+function openEditCategoryModal(categoryId) {
+    console.log(`[openEditCategoryModal] Opening modal for category ID: ${categoryId}`);
+    fetch(`ajax/get_category.php?id=${categoryId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.category) {
+                const category = data.category;
+                document.getElementById('edit_category_id').value = category.id;
+                document.getElementById('edit_category_name').value = category.name;
+                document.getElementById('edit_category_description').value = category.description;
+                toggleModal('editCategoryModal', true);
+            } else {
+                displayGUIMessage('Error fetching category data: ' + data.message, 'error');
+                console.error('Error fetching category data:', data.message);
+            }
+        })
+        .catch(error => {
+            displayGUIMessage('An error occurred while fetching category data.', 'error');
+            console.error('Error:', error);
+        });
+}
+
+// AJAX Form Submissions for Edit Modals
+document.addEventListener('DOMContentLoaded', function() {
+    const editItemForm = document.getElementById('editItemForm');
+    if (editItemForm) {
+        editItemForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(editItemForm);
+
+            fetch('ajax/update_item.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayGUIMessage(data.message, 'success');
+                    toggleModal('editItemModal', false);
+                    if (data.item) {
+                        addOrUpdateItemRow(data.item); // Update the table row
+                    }
+                } else {
+                    displayGUIMessage('Error: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayGUIMessage('An error occurred while updating the item.', 'error');
+            });
+        });
+    }
+
+    const editCategoryForm = document.getElementById('editCategoryForm');
+    if (editCategoryForm) {
+        editCategoryForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(editCategoryForm);
+
+            fetch('ajax/update_category.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayGUIMessage(data.message, 'success');
+                    toggleModal('editCategoryModal', false);
+                    if (data.category) {
+                        addOrUpdateCategoryRow(data.category); // Update the table row
+                    }
+                } else {
+                    displayGUIMessage('Error: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayGUIMessage('An error occurred while updating the category.', 'error');
+            });
+        });
+    }
+});
+
 // Function to add or update an item row in the inventory table
 function addOrUpdateItemRow(item) {
     console.log('[addOrUpdateItemRow] Called with item:', item);
@@ -394,7 +507,7 @@ function addOrUpdateItemRow(item) {
             </td>
             <td class="table__cell">
                 <div class="d-flex gap-2">
-                    <a href="index.php?page=edit_item&id=${item.id}" class="btn btn--primary">Edit</a>
+                    <button class="btn btn--primary" onclick="openEditItemModal(${item.id})">Edit</button>
                     <a href="index.php?page=delete_item&id=${item.id}" class="btn btn--danger" onclick="return confirm('Are you sure you want to delete this item?')">Delete</a>
                 </div>
             </td>
@@ -445,7 +558,7 @@ function addOrUpdateCategoryRow(category) {
             <td class="table__cell">${category.created_at || 'N/A'}</td>
             <td class="table__cell">
                 <div class="d-flex gap-2">
-                    <a href="index.php?page=edit_category&id=${category.id}" class="btn btn--primary">Edit</a>
+                    <button class="btn btn--primary" onclick="openEditCategoryModal(${category.id})">Edit</button>
                     <a href="index.php?page=delete_category&id=${category.id}" class="btn btn--danger" onclick="return confirm('Are you sure you want to delete this category?');">Delete</a>
                 </div>
             </td>
