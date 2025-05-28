@@ -1,11 +1,25 @@
 <?php
+/**
+ * update_item.php
+ *
+ * This script handles the AJAX request for updating an existing item's details
+ * in the inventory system. It performs validation, checks for category existence,
+ * updates the item in the database, and returns a JSON response indicating
+ * success or failure, along with the updated item's details.
+ */
+
+// Include the database configuration file
 require_once '../config/db.php'; // Adjust path as needed
 
+// Set the content type to JSON for the response
 header('Content-Type: application/json');
 
+// Initialize the response array
 $response = ['success' => false, 'message' => ''];
 
+// Check if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Sanitize and retrieve input data from the POST request
     $item_id = filter_input(INPUT_POST, 'item_id', FILTER_VALIDATE_INT);
     $item_name = trim($_POST['item_name'] ?? '');
     $item_category_id = filter_input(INPUT_POST, 'item_category_id', FILTER_VALIDATE_INT);
@@ -16,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $item_description = trim($_POST['item_description'] ?? '');
     $item_location = trim($_POST['item_location'] ?? '');
 
-    // Basic validation
+    // Basic validation for all input fields
     if ($item_id === false || $item_id <= 0) {
         $response['message'] = 'Invalid Item ID.';
     } elseif (empty($item_name)) {
@@ -28,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($item_low_stock_threshold === false || $item_low_stock_threshold < 0) {
         $response['message'] = 'Low Stock Threshold must be a non-negative number.';
     } else {
-        // Check if category exists
+        // Check if the selected category exists in the database
         $sql_check_category = "SELECT id FROM categories WHERE id = ?";
         if ($stmt_check_cat = mysqli_prepare($conn, $sql_check_category)) {
             mysqli_stmt_bind_param($stmt_check_cat, "i", $item_category_id);
@@ -46,10 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
 
-        // Update item in database
+        // Prepare an update statement for the items table
         $sql = "UPDATE items SET name = ?, category_id = ?, barcode = ?, quantity = ?, unit = ?, low_stock_threshold = ?, description = ?, location = ?, updated_at = NOW() WHERE id = ?";
 
+        // Prepare the statement to prevent SQL injection
         if ($stmt = mysqli_prepare($conn, $sql)) {
+            // Bind parameters to the prepared statement
             mysqli_stmt_bind_param($stmt, "sisiiissi", 
                 $item_name, 
                 $item_category_id, 
@@ -62,7 +78,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $item_id
             );
 
+            // Execute the statement
             if (mysqli_stmt_execute($stmt)) {
+                // Check if any rows were affected (i.e., if the update actually changed something)
                 if (mysqli_stmt_affected_rows($stmt) > 0) {
                     $response['success'] = true;
                     $response['message'] = 'Item updated successfully!';
@@ -78,9 +96,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $result_fetch = mysqli_stmt_get_result($stmt_fetch);
                         if ($updated_item = mysqli_fetch_assoc($result_fetch)) {
                             $response['item'] = $updated_item;
+                            // Format updated_at for consistency with client-side display functions
                             $response['item']['formatted_updated_at'] = format_last_activity($updated_item['updated_at']);
                         }
-                        mysqli_stmt_close($stmt_fetch);
+                        mysqli_stmt_close($stmt_fetch); // Close the fetch statement
                     }
                 } else {
                     $response['message'] = 'No changes made to item or item not found.';
@@ -88,32 +107,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $response['message'] = 'Error updating item: ' . mysqli_stmt_error($stmt);
             }
-            mysqli_stmt_close($stmt);
+            mysqli_stmt_close($stmt); // Close the update statement
         } else {
             $response['message'] = 'Database query preparation failed: ' . mysqli_error($conn);
         }
     }
 } else {
+    // If the request method is not POST
     $response['message'] = 'Invalid request method.';
 }
 
+// Encode the response array to JSON and output it
 echo json_encode($response);
 
-// Function to format timestamp for "Last Activity" - simple version
+/**
+ * format_last_activity
+ *
+ * Formats a given timestamp into a human-readable string, indicating
+ * "Today", "Yesterday", "X days ago", or a specific date.
+ * This function is duplicated in get_item.php and update_item.php for convenience.
+ * In a larger application, this would typically be in a shared utility file.
+ *
+ * @param string $timestamp The timestamp string to format.
+ * @return string The formatted date string.
+ */
 function format_last_activity($timestamp) {
-    if (empty($timestamp)) return 'N/A';
-    $date = new DateTime($timestamp);
-    $now = new DateTime();
-    $interval = $now->diff($date);
+    if (empty($timestamp)) return 'N/A'; // Return 'N/A' if timestamp is empty
 
-    if ($interval->d == 0 && $interval->h < 24) { // Today
-        return "Today, " . $date->format('g:i A');
-    } elseif ($interval->d == 1) { // Yesterday
-        return "Yesterday, " . $date->format('g:i A');
-    } elseif ($interval->days < 7) { // Within a week
-        return $interval->days . " days ago";
+    $date = new DateTime($timestamp); // Create DateTime object from timestamp
+    $now = new DateTime(); // Create DateTime object for current time
+    $interval = $now->diff($date); // Calculate the difference between now and the timestamp
+
+    // Check if the activity was today
+    if ($interval->d == 0 && $interval->h < 24) {
+        return "Today, " . $date->format('g:i A'); // Format as "Today, 10:30 AM"
+    } elseif ($interval->d == 1) { // Check if the activity was yesterday
+        return "Yesterday, " . $date->format('g:i A'); // Format as "Yesterday, 10:30 AM"
+    } elseif ($interval->days < 7) { // Check if the activity was within a week
+        return $interval->days . " days ago"; // Format as "X days ago"
     } else {
-        return $date->format('M j, Y');
+        return $date->format('M j, Y'); // Format as "Jan 1, 2023" for older dates
     }
 }
 ?>
