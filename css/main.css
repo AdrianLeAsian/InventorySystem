@@ -788,3 +788,129 @@ textarea.form__input {
         display: none !important;
     }
 }
+
+/* POS Page Layout */
+.pos-layout {
+    display: flex;
+    gap: var(--spacing-md); /* Gap between main content and sidebar */
+    align-items: flex-start; /* Align items to the top */
+}
+
+.main-content {
+    flex: 3; /* Main content takes more space */
+    min-width: 0; /* Allow content to shrink */
+}
+
+.right-sidebar {
+    flex: 1; /* Sidebar takes less space */
+    max-width: 350px; /* Max width for the sidebar */
+    min-width: 280px; /* Min width for the sidebar */
+    background-color: var(--bg-white);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-medium);
+    padding: var(--spacing-md);
+    position: sticky; /* Make sidebar sticky */
+    top: calc(var(--header-height) + var(--spacing-md)); /* Position below header with some margin */
+    align-self: flex-start; /* Ensure it sticks to the top within the flex container */
+}
+
+/* Responsive adjustments for POS layout */
+@media (max-width: 992px) {
+    .pos-layout {
+        flex-direction: column; /* Stack main content and sidebar on smaller screens */
+    }
+
+    .main-content,
+    .right-sidebar {
+        flex: none; /* Remove flex grow/shrink */
+        width: 100%; /* Full width for both */
+        max-width: none; /* Remove max-width constraint */
+        position: static; /* Remove sticky positioning */
+        top: auto; /* Reset top */
+        align-self: auto; /* Reset align-self */
+    }
+}
+
+/* Cart Item Card Styling */
+.cart-items-container {
+    margin-top: var(--spacing-md); /* Add some space above the cart items */
+}
+
+.cart-item-card {
+    padding: var(--spacing-sm); /* Smaller padding for compact cards */
+    margin-bottom: var(--spacing-sm); /* Space between cards */
+    box-shadow: var(--shadow-light); /* Lighter shadow for individual cards */
+    border: 1px solid var(--border-color); /* Subtle border */
+}
+
+.cart-item-card .card__body {
+    padding: 0; /* Remove default card body padding as we have custom padding */
+}
+
+.cart-item-card .card__title {
+    font-size: 1em; /* Smaller title for cart items */
+    margin-bottom: 0; /* Remove default margin */
+}
+
+.cart-item-card .text-muted {
+    font-size: 0.85em; /* Smaller price text */
+}
+
+.item-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Smaller gap between quantity controls */
+}
+
+.item-quantity-controls .quantity-display {
+    font-weight: 600;
+    min-width: 20px; /* Ensure quantity display has a minimum width */
+    text-align: center;
+}
+
+.item-quantity-controls .btn--sm {
+    padding: 5px 8px; /* Smaller padding for quantity buttons */
+    font-size: 0.8em; /* Smaller font size for quantity buttons */
+}
+
+/* POS Page Layout */
+.pos-layout {
+    display: flex;
+    gap: var(--spacing-md); /* Gap between main content and sidebar */
+    align-items: flex-start; /* Align items to the top */
+}
+
+.main-content {
+    flex: 3; /* Main content takes more space */
+    min-width: 0; /* Allow content to shrink */
+}
+
+.right-sidebar {
+    flex: 1; /* Sidebar takes less space */
+    max-width: 350px; /* Max width for the sidebar */
+    min-width: 280px; /* Min width for the sidebar */
+    background-color: var(--bg-white);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-medium);
+    padding: var(--spacing-md);
+    position: sticky; /* Make sidebar sticky */
+    top: calc(var(--header-height) + var(--spacing-md)); /* Position below header with some margin */
+    align-self: flex-start; /* Ensure it sticks to the top within the flex container */
+}
+
+/* Responsive adjustments for POS layout */
+@media (max-width: 992px) {
+    .pos-layout {
+        flex-direction: column; /* Stack main content and sidebar on smaller screens */
+    }
+
+    .main-content,
+    .right-sidebar {
+        flex: none; /* Remove flex grow/shrink */
+        width: 100%; /* Full width for both */
+        max-width: none; /* Remove max-width constraint */
+        position: static; /* Remove sticky positioning */
+        top: auto; /* Reset top */
+        align-self: auto; /* Reset align-self */
+    }
+}
