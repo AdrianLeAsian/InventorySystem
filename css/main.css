@@ -453,6 +453,12 @@ table tbody tr:hover {
     color: var(--text-color-light);
 }
 
+.required-indicator {
+    color: var(--danger-color); /* Use the defined danger color for red */
+    margin-left: 4px;
+    font-weight: bold;
+}
+
 .form__input {
     width: 100%;
     padding: 10px 12px;
@@ -477,6 +483,10 @@ table tbody tr:hover {
 /* Adjust form__group margin for the last group if it's not part of a row */
 .form__group:last-of-type:not(.form__row .form__group) {
     margin-bottom: 0;
+}
+
+.ml-auto {
+    margin-left: auto;
 }
 
 .form__input:focus {

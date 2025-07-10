@@ -132,13 +132,48 @@ if (!empty($usage_data)) {
     }
 }
 
+// Fetch Total Items
+$total_items = 0;
+$sql_total_items = "SELECT COUNT(*) as total FROM items";
+if ($result_total_items = mysqli_query($conn, $sql_total_items)) {
+    $row = mysqli_fetch_assoc($result_total_items);
+    $total_items = $row['total'];
+    mysqli_free_result($result_total_items);
+} else {
+    $message .= "<p class='error'>Error fetching total items: " . mysqli_error($conn) . "</p>";
+}
+
+// Fetch Total Categories
+$total_categories = 0;
+$sql_total_categories = "SELECT COUNT(*) as total FROM categories";
+if ($result_total_categories = mysqli_query($conn, $sql_total_categories)) {
+    $row = mysqli_fetch_assoc($result_total_categories);
+    $total_categories = $row['total'];
+    mysqli_free_result($result_total_categories);
+} else {
+    $message .= "<p class='error'>Error fetching total categories: " . mysqli_error($conn) . "</p>";
+}
+
+// Fetch Total Stock Quantity
+$total_stock_quantity = 0;
+$sql_total_stock_quantity = "SELECT SUM(quantity) as total FROM items";
+if ($result_total_stock_quantity = mysqli_query($conn, $sql_total_stock_quantity)) {
+    $row = mysqli_fetch_assoc($result_total_stock_quantity);
+    $total_stock_quantity = $row['total'] ? $row['total'] : 0;
+    mysqli_free_result($result_total_stock_quantity);
+} else {
+    $message .= "<p class='error'>Error fetching total stock quantity: " . mysqli_error($conn) . "</p>";
+}
+
 ?>
 
 <link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 <div class="container">
     <div class="page">
         <header class="d-flex justify-between align-center mb-4">
+            <h1 class="header__title">Reports & Statistics</h1>
         </header>
 
         <?php if (!empty($message)): ?>
@@ -147,23 +182,87 @@ if (!empty($usage_data)) {
             </div>
         <?php endif; ?>
 
+        <!-- Reports Overview Section -->
+        <div class="grid grid--3-cols gap-4 mb-4">
+            <div class="card card--metric">
+                <div class="card__body">
+                    <span class="metric-indicator metric-indicator--green"></span>
+                    <div>
+                        <h3 class="metric-title">Total Items</h3>
+                        <p class="metric-value"><?php echo htmlspecialchars($total_items); ?></p>
+                        <p class="metric-description">Number of unique items in inventory</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card card--metric">
+                <div class="card__body">
+                    <span class="metric-indicator metric-indicator--blue"></span>
+                    <div>
+                        <h3 class="metric-title">Total Categories</h3>
+                        <p class="metric-value"><?php echo htmlspecialchars($total_categories); ?></p>
+                        <p class="metric-description">Number of item categories</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card card--metric">
+                <div class="card__body">
+                    <span class="metric-indicator metric-indicator--red"></span>
+                    <div>
+                        <h3 class="metric-title">Total Stock Quantity</h3>
+                        <p class="metric-value"><?php echo htmlspecialchars($total_stock_quantity); ?></p>
+                        <p class="metric-description">Sum of all item quantities</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Filters and Overview Section -->
+        <div class="grid grid--2-cols gap-4 mb-4">
+            <div class="card">
+                <div class="card__header">
+                    <h2 class="card__title">Daily Report Filter</h2>
+                </div>
+                <div class="card__body">
+                    <form action="index.php" method="get" class="form">
+                        <input type="hidden" name="page" value="reports">
+                        <div class="form__group">
+                            <label for="report_date" class="form__label">Select Date:</label>
+                            <div class="d-flex gap-2">
+                                <input type="text" id="report_date" name="report_date" class="form__input" value="<?php echo htmlspecialchars($report_date); ?>">
+                                <button type="submit" class="btn btn--primary">View Daily Report</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card__header">
+                    <h2 class="card__title">Usage Trends Period</h2>
+                </div>
+                <div class="card__body">
+                    <form action="index.php" method="get" class="form">
+                        <input type="hidden" name="page" value="reports">
+                        <div class="form__group">
+                            <label class="form__label">Select Period for Trends:</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="submit" name="trend_period" value="daily" class="btn <?php echo ($trend_period == 'daily') ? 'btn--primary' : 'btn--secondary'; ?>">Daily (Last 30 Days)</button>
+                                <button type="submit" name="trend_period" value="weekly" class="btn <?php echo ($trend_period == 'weekly') ? 'btn--primary' : 'btn--secondary'; ?>">Weekly (Last 12 Weeks)</button>
+                                <button type="submit" name="trend_period" value="monthly" class="btn <?php echo ($trend_period == 'monthly') ? 'btn--primary' : 'btn--secondary'; ?>">Monthly (Last 12 Months)</button>
+                                <button type="submit" name="trend_period" value="yearly" class="btn <?php echo ($trend_period == 'yearly') ? 'btn--primary' : 'btn--secondary'; ?>">Yearly (Last 5 Years)</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <div class="grid grid--2-cols gap-4 mb-4">
             <div class="card">
                 <div class="card__header">
                     <h2 class="card__title">Daily Items In/Out Report</h2>
                 </div>
                 <div class="card__body">
-                    <form action="index.php" method="get" class="form">
-                        <input type="hidden" name="page" value="reports">
-                        <div class="form__group">
-                            <label class="form__label">Select Date</label>
-                            <div class="d-flex gap-2">
-                                <input type="date" id="report_date" name="report_date" class="form__input" value="<?php echo htmlspecialchars($report_date); ?>">
-                                <button type="submit" class="btn btn--primary">View Report</button>
-                            </div>
-                        </div>
-                    </form>
-
                     <?php if (!empty($report_data_daily_in_out)): ?>
                         <div class="d-flex justify-between align-center mt-4 mb-2">
                             <h3 class="card__title">Report for: <?php echo htmlspecialchars($report_date); ?></h3>
@@ -200,16 +299,6 @@ if (!empty($usage_data)) {
             <div class="card">
                 <div class="card__header d-flex justify-between align-center">
                     <h2 class="card__title">Usage Trends</h2>
-                    <form action="index.php" method="get" class="form d-flex gap-2 align-center">
-                        <input type="hidden" name="page" value="reports">
-                        <label for="trend_period" class="form__label mb-0">Period:</label>
-                        <select id="trend_period" name="trend_period" class="form__input" onchange="this.form.submit()">
-                            <option value="daily" <?php echo ($trend_period == 'daily') ? 'selected' : ''; ?>>Daily (Last 30 Days)</option>
-                            <option value="weekly" <?php echo ($trend_period == 'weekly') ? 'selected' : ''; ?>>Weekly (Last 12 Weeks)</option>
-                            <option value="monthly" <?php echo ($trend_period == 'monthly') ? 'selected' : ''; ?>>Monthly (Last 12 Months)</option>
-                            <option value="yearly" <?php echo ($trend_period == 'yearly') ? 'selected' : ''; ?>>Yearly (Last 5 Years)</option>
-                        </select>
-                    </form>
                 </div>
                 <div class="card__body">
                     <?php if (!empty($chart_datasets)): ?>
@@ -221,7 +310,7 @@ if (!empty($usage_data)) {
             </div>
         </div>
 
-        <!-- New Sections for Reports -->
+        <!-- Existing Sections for Other Reports -->
         <div class="grid grid--2-cols gap-4 mb-4">
             <div class="card">
                 <div class="card__header">
@@ -391,8 +480,16 @@ if (!empty($usage_data)) {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Flatpickr for the daily report date input
+    flatpickr("#report_date", {
+        dateFormat: "Y-m-d",
+        defaultDate: "<?php echo htmlspecialchars($report_date); ?>",
+        inline: true // Display the calendar inline
+    });
+
     const monthlyUsageCtx = document.getElementById('monthlyUsageChart');
     if (monthlyUsageCtx && <?php echo !empty($chart_datasets) ? 'true' : 'false'; ?>) {
         const monthlyUsageChart = new Chart(monthlyUsageCtx, {

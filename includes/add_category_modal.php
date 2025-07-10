@@ -8,7 +8,7 @@
             <div class="card__body">
                 <form class="form" id="addCategoryForm">
                     <div class="form__group">
-                        <label class="form__label">Category Name</label>
+                        <label class="form__label">Category Name <span class="required-indicator">*</span></label>
                         <input type="text" name="category_name" class="form__input" required>
                     </div>
                     <div class="form__group">

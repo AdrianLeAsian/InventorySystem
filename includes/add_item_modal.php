@@ -8,11 +8,11 @@
             <div class="card__body">
                 <form class="form" id="addItemForm">
                     <div class="form__group">
-                        <label class="form__label">Item Name</label>
+                        <label class="form__label">Item Name <span class="required-indicator">*</span></label>
                         <input type="text" name="item_name" class="form__input" required>
                     </div>
                     <div class="form__group">
-                        <label class="form__label">Category</label>
+                        <label class="form__label">Category <span class="required-indicator">*</span></label>
                         <select name="item_category_id" class="form__input" required>
                             <option value="">Select Category</option>
                             <?php foreach ($all_categories as $category): ?>
