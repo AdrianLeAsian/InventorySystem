@@ -4,11 +4,15 @@ function toggleModal(modalId, show) {
     const modal = document.getElementById(modalId);
     if (modal) {
         if (show) {
-            modal.classList.add('modal--active');
-            console.log(`[toggleModal] ${modalId} class 'modal--active' added. ClassList: ${modal.classList}`);
+            modal.classList.remove('is-hidden');
+            modal.style.display = 'block'; // Explicitly set display to block
+            modal.style.visibility = 'visible'; // Ensure visibility
+            console.log(`[toggleModal] ${modalId} class 'is-hidden' removed, display set to block, visibility set to visible. ClassList: ${modal.classList}`);
         } else {
-            modal.classList.remove('modal--active');
-            console.log(`[toggleModal] ${modalId} class 'modal--active' removed. ClassList: ${modal.classList}`);
+            modal.classList.add('is-hidden');
+            modal.style.display = 'none'; // Explicitly set display to none
+            modal.style.visibility = 'hidden'; // Ensure hidden visibility
+            console.log(`[toggleModal] ${modalId} class 'is-hidden' added, display set to none, visibility set to hidden. ClassList: ${modal.classList}`);
         }
     } else {
         console.error(`[toggleModal] Error: Modal with ID ${modalId} not found.`);
@@ -318,130 +322,37 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const importItemsForm = document.getElementById('importItemsForm');
-    const excelFileInput = document.getElementById('excelFile');
-    const fileNameDisplay = document.getElementById('fileNameDisplay');
-    const fileUploadArea = document.getElementById('fileUploadArea');
-    const importResultDiv = document.getElementById('importResult');
-    const importProgressContainer = document.getElementById('importProgress');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    const importSubmitBtn = document.getElementById('importSubmitBtn');
-
     if (importItemsForm) {
-        // Handle file selection via input click
-        excelFileInput.addEventListener('change', function() {
-            if (this.files.length > 0) {
-                fileNameDisplay.textContent = this.files[0].name;
-                fileNameDisplay.style.display = 'block';
-            } else {
-                fileNameDisplay.textContent = '';
-                fileNameDisplay.style.display = 'none';
-            }
-        });
-
-        // Handle drag and drop
-        if (fileUploadArea) {
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                fileUploadArea.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                fileUploadArea.addEventListener(eventName, () => fileUploadArea.classList.add('highlight'), false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                fileUploadArea.addEventListener(eventName, () => fileUploadArea.classList.remove('highlight'), false);
-            });
-
-            fileUploadArea.addEventListener('drop', handleDrop, false);
-
-            function handleDrop(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                excelFileInput.files = files; // Assign dropped files to the input
-                if (files.length > 0) {
-                    fileNameDisplay.textContent = files[0].name;
-                    fileNameDisplay.style.display = 'block';
-                }
-            }
-        }
-
         importItemsForm.addEventListener('submit', function(event) {
             event.preventDefault();
-
-            if (excelFileInput.files.length === 0) {
-                displayGUIMessage('Please select a file to import.', 'error');
-                return;
-            }
-
             const formData = new FormData(importItemsForm);
-            
-            // Reset and show progress bar
-            importResultDiv.style.display = 'none';
-            importResultDiv.classList.remove('alert--success', 'alert--error');
-            progressBar.style.width = '0%';
-            progressText.textContent = '0%';
-            importProgressContainer.style.display = 'block';
-            importSubmitBtn.disabled = true; // Disable button during import
+            const importResultDiv = document.getElementById('importResult');
+            importResultDiv.style.display = 'none'; // Hide previous results
 
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'ajax/import_items.php', true);
-
-            xhr.upload.addEventListener('progress', function(e) {
-                if (e.lengthComputable) {
-                    const percent = Math.round((e.loaded / e.total) * 100);
-                    progressBar.style.width = percent + '%';
-                    progressText.textContent = percent + '%';
-                }
-            });
-
-            xhr.onload = function() {
-                importSubmitBtn.disabled = false; // Re-enable button
-                importProgressContainer.style.display = 'none'; // Hide progress bar
-
-                if (xhr.status === 200) {
-                    try {
-                        const data = JSON.parse(xhr.responseText);
-                        if (data.success) {
-                            importResultDiv.classList.add('alert--success');
-                            importResultDiv.innerHTML = `<strong>Import Successful!</strong><br>${data.imported_count} items imported, ${data.skipped_count} duplicates skipped.`;
-                            displayGUIMessage(data.message, 'success');
-                            // Optionally reload or update table
-                            location.reload(); 
-                        } else {
-                            importResultDiv.classList.add('alert--error');
-                            importResultDiv.innerHTML = `<strong>Import Failed:</strong><br>${data.message}`;
-                            displayGUIMessage('Error: ' + data.message, 'error');
-                        }
-                    } catch (e) {
-                        importResultDiv.classList.add('alert--error');
-                        importResultDiv.innerHTML = `<strong>Error:</strong> Invalid server response.`;
-                        displayGUIMessage('An unexpected error occurred.', 'error');
-                        console.error('Parsing error:', e, 'Response:', xhr.responseText);
-                    }
+            fetch('ajax/import_items.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayGUIMessage(data.message, 'success');
+                    importResultDiv.innerHTML = `<p class="success">${data.imported_count} items imported, ${data.skipped_count} duplicates skipped.</p>`;
+                    importResultDiv.style.display = 'block';
+                    // Optionally reload or update table
+                    location.reload(); 
                 } else {
-                    importResultDiv.classList.add('alert--error');
-                    importResultDiv.innerHTML = `<strong>Error:</strong> Server responded with status ${xhr.status}.`;
-                    displayGUIMessage('Server error during import.', 'error');
+                    displayGUIMessage('Error: ' + data.message, 'error');
+                    importResultDiv.innerHTML = `<p class="error">Error: ${data.message}</p>`;
+                    importResultDiv.style.display = 'block';
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                displayGUIMessage('An error occurred during import.', 'error');
+                importResultDiv.innerHTML = `<p class="error">An error occurred during import.</p>`;
                 importResultDiv.style.display = 'block';
-            };
-
-            xhr.onerror = function() {
-                importSubmitBtn.disabled = false; // Re-enable button
-                importProgressContainer.style.display = 'none'; // Hide progress bar
-                importResultDiv.classList.add('alert--error');
-                importResultDiv.innerHTML = `<strong>Error:</strong> Network error during import.`;
-                displayGUIMessage('Network error during import.', 'error');
-                importResultDiv.style.display = 'block';
-            };
-
-            xhr.send(formData);
+            });
         });
     }
 });

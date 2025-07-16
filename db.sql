@@ -15,6 +15,17 @@ CREATE TABLE `categories` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Table for SMS Recipients
+DROP TABLE IF EXISTS `sms_recipients`;
+CREATE TABLE `sms_recipients` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `phone_number` varchar(20) NOT NULL UNIQUE,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 INSERT INTO `categories` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
 (1, 'Kitchen Utensils', 'Items used for cooking and food preparation in the kitchen.', '2023-10-27 08:00:00', '2023-10-27 08:00:00'),
 (2, 'Food Ingredients', 'Raw materials and substances used in cooking.', '2023-10-27 08:00:00', '2023-10-27 08:00:00');

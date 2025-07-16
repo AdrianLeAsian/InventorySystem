@@ -1,0 +1,3 @@
+name,category_name,barcode,quantity,unit,low_stock_threshold,description,location
+Sample Item 1,Electronics,BARCODE001,10,Pcs,2,A sample electronic item,Warehouse A
+Sample Item 2,Office Supplies,BARCODE002,50,Units,10,Basic office paper,Storage Room
