@@ -1,0 +1,8 @@
+"Item Name","Quantity","Category","Barcode","Unit","Low Stock Threshold","Min Stock Level","Max Stock Level","Description","Location"
+"Laptop Pro X","10","Electronics","LPX001","pcs","2","1","15","High-performance laptop","Warehouse A"
+"Wireless Mouse","50","Electronics","WM005","pcs","10","5","100","Ergonomic wireless mouse","Warehouse B"
+"Mechanical Keyboard","25","Peripherals","MK010","pcs","5","3","50","RGB mechanical keyboard","Warehouse A"
+"USB-C Hub","100","Accessories","UCH020","pcs","20","10","200","Multi-port USB-C hub","Warehouse C"
+"Monitor Stand","15","Office Furniture","MS003","pcs","3","1","30","Adjustable monitor stand","Warehouse B"
+"External SSD 1TB","5","Storage","SSD1TB001","pcs","1","1","10","Fast external solid state drive","Warehouse A"
+"Webcam HD","30","Peripherals","WCAMHD002","pcs","5","2","60","High definition webcam","Warehouse C"
