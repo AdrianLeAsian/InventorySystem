@@ -104,7 +104,7 @@ if (isset($_GET['type'])) {
                 FROM items i 
                 JOIN categories c ON i.category_id = c.id 
                 ORDER BY i.name ASC";
-        $result = mysqli_query($link, $sql);
+        $result = mysqli_query($conn, $sql);
         $items_data = [];
         if ($result) {
             while ($row = mysqli_fetch_assoc($result)) {
@@ -117,7 +117,7 @@ if (isset($_GET['type'])) {
 
     } elseif ($type == 'categories_csv') {
         $sql = "SELECT id, name, description, created_at, updated_at FROM categories ORDER BY name ASC";
-        $result = mysqli_query($link, $sql);
+        $result = mysqli_query($conn, $sql);
         $categories_data = [];
         if ($result) {
             while ($row = mysqli_fetch_assoc($result)) {
@@ -145,7 +145,7 @@ if (isset($_GET['type'])) {
                              GROUP BY i.id, i.name
                              ORDER BY i.name ASC";
         $daily_data = [];
-        if ($stmt_daily = mysqli_prepare($link, $sql_daily_report)) {
+        if ($stmt_daily = mysqli_prepare($conn, $sql_daily_report)) {
             mysqli_stmt_bind_param($stmt_daily, "s", $report_date);
             mysqli_stmt_execute($stmt_daily);
             $result_daily_export = mysqli_stmt_get_result($stmt_daily);
@@ -160,7 +160,7 @@ if (isset($_GET['type'])) {
 
     } elseif ($type == 'stock_overview_csv') {
         $sql = "SELECT name, quantity, barcode FROM items ORDER BY name ASC";
-        $result = mysqli_query($link, $sql);
+        $result = mysqli_query($conn, $sql);
         $stock_overview_data = [];
         if ($result) {
             while ($row = mysqli_fetch_assoc($result)) {
@@ -173,7 +173,7 @@ if (isset($_GET['type'])) {
 
     } elseif ($type == 'low_stock_csv') {
         $sql = "SELECT name, quantity, low_stock_threshold, barcode FROM items WHERE quantity <= low_stock_threshold ORDER BY name ASC";
-        $result = mysqli_query($link, $sql);
+        $result = mysqli_query($conn, $sql);
         $low_stock_data = [];
         if ($result) {
             while ($row = mysqli_fetch_assoc($result)) {
@@ -192,7 +192,7 @@ if (isset($_GET['type'])) {
                  JOIN items i ON c.id = i.category_id
                  GROUP BY c.name
                  ORDER BY c.name ASC";
-        $result = mysqli_query($link, $sql);
+        $result = mysqli_query($conn, $sql);
         $category_summary_data = [];
         if ($result) {
             while ($row = mysqli_fetch_assoc($result)) {
@@ -215,7 +215,7 @@ if (isset($_GET['type'])) {
                 FROM inventory_log il
                 JOIN items i ON il.item_id = i.id
                 ORDER BY il.log_date DESC";
-        $result = mysqli_query($link, $sql);
+        $result = mysqli_query($conn, $sql);
         $all_logs_data = [];
         if ($result) {
             while ($row = mysqli_fetch_assoc($result)) {
@@ -239,7 +239,7 @@ if (isset($_GET['type'])) {
                             $where_sql
                             ORDER BY i.name ASC";
         
-        $stmt_filtered_items = mysqli_prepare($link, $sql_filtered_items);
+        $stmt_filtered_items = mysqli_prepare($conn, $sql_filtered_items);
         if ($stmt_filtered_items) {
             if (!empty($params)) {
                 mysqli_stmt_bind_param($stmt_filtered_items, $param_types, ...$params);
@@ -269,7 +269,7 @@ if (isset($_GET['type'])) {
                             $where_sql
                             ORDER BY i.name ASC";
         
-        $stmt_filtered_items = mysqli_prepare($link, $sql_filtered_items);
+        $stmt_filtered_items = mysqli_prepare($conn, $sql_filtered_items);
         if ($stmt_filtered_items) {
             if (!empty($params)) {
                 mysqli_stmt_bind_param($stmt_filtered_items, $param_types, ...$params);
