@@ -186,12 +186,10 @@ function format_last_activity($timestamp) {
                                         <col style="width: 10%;"> <!-- Category -->
                                         <col style="width: 10%;"> <!-- Barcode -->
                                         <col style="width: 8%;">  <!-- Current Stock -->
-                                        <col style="width: 8%;">  <!-- Low Stock Threshold -->
-                                        <col style="width: 8%;">  <!-- Min Stock -->
-                                        <col style="width: 8%;">  <!-- Max Stock -->
+                                        <!-- Removed Low Stock Threshold, Min Stock, Max Stock columns for declutter -->
                                         <col style="width: 5%;">  <!-- Unit -->
                                         <col style="width: 8%;">  <!-- Location -->
-                                        <col style="width: 10%;"> <!-- Last Activity -->
+                                        <!-- Removed Last Activity column for declutter -->
                                         <col style="width: 7%;">  <!-- Status -->
                                         <col style="width: 6%;">  <!-- Actions -->
                                     </colgroup>
@@ -201,12 +199,10 @@ function format_last_activity($timestamp) {
                                             <th class="table__cell">Category</th>
                                             <th class="table__cell">Barcode</th>
                                             <th class="table__cell">Current Stock</th>
-                                            <th class="table__cell">Low Stock Threshold</th>
-                                            <th class="table__cell">Min Stock</th>
-                                            <th class="table__cell">Max Stock</th>
+                                            <!-- Removed Low Stock Threshold, Min Stock, Max Stock headers for declutter -->
                                             <th class="table__cell">Unit</th>
                                             <th class="table__cell">Location</th>
-                                            <th class="table__cell">Last Activity</th>
+                                            <!-- Removed Last Activity header for declutter -->
                                             <th class="table__cell">Status</th>
                                             <th class="table__cell">Actions</th>
                                         </tr>
@@ -245,12 +241,10 @@ function format_last_activity($timestamp) {
                                                     <td class="table__cell"><?php echo htmlspecialchars($item['category_name']); ?></td>
                                                     <td class="table__cell"><?php echo htmlspecialchars($item['barcode'] ?? 'N/A'); ?></td>
                                                     <td class="table__cell"><?php echo htmlspecialchars($item['quantity']); ?></td>
-                                                    <td class="table__cell"><?php echo htmlspecialchars($item['low_stock_threshold']); ?></td>
-                                                    <td class="table__cell"><?php echo htmlspecialchars($item['min_stock_level']); ?></td>
-                                                    <td class="table__cell"><?php echo htmlspecialchars($item['max_stock_level']); ?></td>
+                                                    <!-- Removed Low Stock Threshold, Min Stock, Max Stock cells for declutter -->
                                                     <td class="table__cell"><?php echo htmlspecialchars($item['unit']); ?></td>
                                                     <td class="table__cell"><?php echo htmlspecialchars($item['location'] ?? 'N/A'); ?></td>
-                                                    <td class="table__cell"><?php echo format_last_activity($item['updated_at']); ?></td>
+                                                    <!-- Removed Last Activity cell for declutter -->
                                                     <td class="table__cell">
                                                         <span class="<?php echo $status_class_btn; ?>"><?php echo $status_display; ?></span>
                                                     </td>

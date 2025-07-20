@@ -5,10 +5,14 @@ function toggleModal(modalId, show) {
     if (modal) {
         if (show) {
             modal.classList.add('modal--active');
-            console.log(`[toggleModal] ${modalId} class 'modal--active' added. ClassList: ${modal.classList}`);
+            modal.classList.remove('is-hidden');
+            modal.style.display = 'flex';
+            console.log(`[toggleModal] ${modalId} shown. ClassList: ${modal.classList}`);
         } else {
             modal.classList.remove('modal--active');
-            console.log(`[toggleModal] ${modalId} class 'modal--active' removed. ClassList: ${modal.classList}`);
+            modal.classList.add('is-hidden');
+            modal.style.display = 'none';
+            console.log(`[toggleModal] ${modalId} hidden. ClassList: ${modal.classList}`);
         }
     } else {
         console.error(`[toggleModal] Error: Modal with ID ${modalId} not found.`);
@@ -240,10 +244,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     displayGUIMessage(data.message, 'success');
                     toggleModal('addItemModal', false);
-                    if (data.item) {
-                        addOrUpdateItemRow(data.item);
-                    }
-                    // location.reload(); // Reload page to show new item - Uncommented for now as a fallback
+                    setTimeout(() => { location.reload(); }, 500); // Reload page after success
                 } else {
                     displayGUIMessage('Error: ' + data.message, 'error');
                 }
@@ -464,9 +465,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     displayGUIMessage(data.message, 'success');
                     toggleModal('editItemModal', false);
-                    if (data.item) {
-                        addOrUpdateItemRow(data.item); // Update the table row
-                    }
+                    setTimeout(() => { location.reload(); }, 500); // Reload page after success
                 } else {
                     displayGUIMessage('Error: ' + data.message, 'error');
                 }
@@ -604,7 +603,7 @@ function addOrUpdateItemRow(item) {
             <td class="table__cell">
                 <div class="d-flex gap-2">
                     <button class="btn btn--primary" onclick="openEditItemModal(${item.id})">Edit</button>
-                    <a href="index.php?page=delete_item&id=${item.id}" class="btn btn--danger">Delete</a>
+                    <a href="index.php?page=delete_item&id=${item.id}" class="btn btn--danger" onclick="setTimeout(function(){location.reload();}, 500)">Delete</a>
                 </div>
             </td>
         `;
