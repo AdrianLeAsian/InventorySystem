@@ -44,7 +44,7 @@ CREATE TABLE `items` (
   `description` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `location` VARCHAR(255) DEFAULT NULL,
+  `location` VARCHAR(255) DEFAULT 'N/A',
   PRIMARY KEY (`id`),
   KEY `category_id` (`category_id`),
   CONSTRAINT `items_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE
