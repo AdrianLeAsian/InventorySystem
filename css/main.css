@@ -465,6 +465,10 @@ table tbody tr:hover {
     color: var(--text-color-light);
 }
 
+.form__label.m-0 {
+    margin: 0;
+}
+
 .required-indicator {
     color: var(--danger-color); /* Use the defined danger color for red */
     margin-left: 4px;
@@ -977,19 +981,5 @@ textarea.form__input {
     }
 }
 
-/* Additional styles for reports page filters and pagination */
-.form.grid--2-cols {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-}
-
-.pagination-controls .btn {
-    min-width: 100px; /* Ensure pagination buttons have a consistent width */
-}
-
-.d-flex.flex-wrap {
-    flex-wrap: wrap;
-}
-
-.align-end {
-    align-items: flex-end;
-}
+/* No specific styles needed for reports page filters and pagination after refactor */
+/* The .d-flex.flex-wrap and .align-end classes are general utilities and can remain */

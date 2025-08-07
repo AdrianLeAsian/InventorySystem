@@ -18,22 +18,22 @@ $response = [
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!isset($_FILES['excelFile']) || $_FILES['excelFile']['error'] !== UPLOAD_ERR_OK) {
+if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
         $response['message'] = 'File upload failed or no file was uploaded.';
         echo json_encode($response);
         exit();
     }
 
-    $fileTmpPath = $_FILES['excelFile']['tmp_name'];
-    $fileName = $_FILES['excelFile']['name'];
-    $fileSize = $_FILES['excelFile']['size'];
-    $fileType = $_FILES['excelFile']['type'];
+    $fileTmpPath = $_FILES['csv_file']['tmp_name'];
+    $fileName = $_FILES['csv_file']['name'];
+    $fileSize = $_FILES['csv_file']['size'];
+    $fileType = $_FILES['csv_file']['type'];
     $fileNameCmps = explode(".", $fileName);
     $fileExtension = strtolower(end($fileNameCmps));
 
-    $allowedfileExtensions = ['xlsx', 'csv'];
+    $allowedfileExtensions = ['csv']; // Only CSV is expected for this import
     if (!in_array($fileExtension, $allowedfileExtensions)) {
-        $response['message'] = 'Invalid file format. Only .xlsx and .csv files are allowed.';
+        $response['message'] = 'Invalid file format. Only .csv files are allowed.';
         echo json_encode($response);
         exit();
     }
@@ -46,20 +46,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $itemsSkipped = 0;
 
     try {
-        $spreadsheet = IOFactory::load($fileTmpPath);
-        $sheet = $spreadsheet->getActiveSheet();
-        $highestRow = $sheet->getHighestRow();
-        $highestColumn = $sheet->getHighestColumn();
-
-        // Get header row to map column names to indices
-        $header = [];
-        foreach ($sheet->getRowIterator(1, 1) as $row) {
-            $cellIterator = $row->getCellIterator();
-            $cellIterator->setIterateOnlyExistingCells(false); // This loops through all cells, even if a cell value is not set.
-            foreach ($cellIterator as $cell) {
-                $header[] = trim($cell->getValue());
-            }
+        // For CSV, use fgetcsv
+        $csvFile = fopen($fileTmpPath, 'r');
+        if (!$csvFile) {
+            throw new \Exception("Failed to open CSV file.");
         }
+
+        // Get header row
+        $header = fgetcsv($csvFile);
+        if ($header === false) {
+            throw new \Exception("Failed to read header row from CSV file.");
+        }
+        $header = array_map('trim', $header); // Trim whitespace from headers
 
         // Define required columns and their expected names
         $requiredColumns = [
@@ -88,14 +86,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt_check_category = $conn->prepare("SELECT id FROM categories WHERE name = ?");
         $stmt_insert_category = $conn->prepare("INSERT INTO categories (name) VALUES (?)");
 
-        for ($row = 2; $row <= $highestRow; $row++) { // Start from row 2 to skip header
-            $totalProcessed++;
-            $rowData = [];
-            foreach ($header as $colIndex => $colName) {
-                $columnLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIndex + 1);
-                $cellValue = $sheet->getCell($columnLetter . $row)->getValue();
-                $rowData[trim($colName)] = $cellValue;
+        $rowNum = 1; // Track row number for logging
+        while (($data = fgetcsv($csvFile)) !== FALSE) {
+            $rowNum++;
+            // Skip empty rows
+            if (empty(array_filter($data))) {
+                continue;
             }
+            $totalProcessed++;
+            $rowData = array_combine($header, array_map('trim', $data));
 
             $itemName = trim($rowData['Item Name'] ?? '');
             $quantity = filter_var($rowData['Quantity'] ?? '', FILTER_VALIDATE_INT);
@@ -235,12 +234,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $response['itemsAdded'] = $itemsAdded;
         $response['itemsSkipped'] = $itemsSkipped;
 
-    } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
-        $response['message'] = 'Error reading spreadsheet: ' . $e->getMessage();
-        $response['errors'][] = $e->getMessage();
     } catch (\Exception $e) {
         $response['message'] = 'An unexpected error occurred: ' . $e->getMessage();
         $response['errors'][] = $e->getMessage();
+    } finally {
+        if (isset($csvFile) && is_resource($csvFile)) {
+            fclose($csvFile);
+        }
     }
 } else {
     $response['message'] = 'Invalid request method.';
