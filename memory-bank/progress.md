@@ -10,14 +10,15 @@ This document tracks what works, what's left to build, the current status, and k
 - Flatpickr calendar has been integrated for daily report date selection.
 - A new blank page for messaging (`pages/messaging.php`) has been created.
 - The sidebar (`includes/sidebar.php`) has been updated to include a navigation link to the messaging page.
-- Basic HTML structure and placeholder content have been added to `pages/messaging.php`.
+- The messaging page (`pages/messaging.php`) has been cleared of its previous content.
 - The reports page has been remade to focus on usage trends with an integrated period selection dropdown.
-- Import items functionality via CSV has been implemented and is working.
+- Import items functionality via CSV has been implemented and is working correctly.
 - Mock data (`mock_data.sql`) has been created and confirmed to be in the database.
+- The "Import and Export Data" section has been added to the reports page, including the "Import Items" and "Export All Reports (CSV)" buttons.
 
 ## What's Left to Build:
 - Full implementation of all features outlined in `projectbrief.md` and `productContext.md`.
-- Full implementation of messaging functionality on the new page.
+- Re-evaluation of messaging page functionality based on user requirements.
 - Comprehensive error handling and input validation.
 - Security enhancements (e.g., prepared statements for all database operations).
 - Detailed reporting functionalities (further enhancements).

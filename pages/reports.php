@@ -136,29 +136,26 @@ if (!empty($usage_data)) {
             </div>
         </div>
 
-        <!-- Import and Export Data Section -->
+        <!-- Data Management Section -->
         <div class="card mb-4">
             <div class="card__header">
                 <h2 class="card__title">Data Management</h2>
-                <p class="text-muted">Import new items or export existing data.</p>
             </div>
-            <div class="card__body">
-                <div class="d-flex gap-2 flex-wrap mb-3">
-                    <button type="button" class="btn btn--primary" id="importItemsBtn">Import Items</button>
-                </div>
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="ajax/export_all_reports.php" class="btn btn--secondary">Export All Reports (CSV)</a>
-                </div>
+            <div class="card__body d-flex gap-3">
+                <button id="exportDataBtn" class="button button--primary">Export Data</button>
+                <input type="file" id="importCsvFile" accept=".csv" style="display: none;">
+                <button id="importDataBtn" class="button button--secondary">Import Data</button>
+                <button id="downloadTemplateBtn" class="button button--tertiary">Download Template</button>
             </div>
         </div>
+
     </div>
 </div>
-
-<?php include_once 'includes/import_items_modal.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="js/reports.js"></script>
+<script src="js/data_management.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const usageTrendCtx = document.getElementById('usageTrendChart');
@@ -198,122 +195,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
-    }
-
-    // Import Items Modal Logic
-    const importItemsBtn = document.getElementById('importItemsBtn');
-    const importItemsModal = document.getElementById('importItemsModal');
-    const closeImportModalBtn = document.getElementById('closeImportModalBtn');
-    const importCsvForm = document.getElementById('importCsvForm');
-    const importFile = document.getElementById('importFile');
-    const importFileName = document.getElementById('importFileName');
-    const importProgressBarContainer = document.getElementById('importProgressBarContainer');
-    const importProgressBar = document.getElementById('importProgressBar');
-    const importProgressText = document.getElementById('importProgressText');
-    const importSummary = document.getElementById('importSummary');
-    const importSuccessCount = document.getElementById('importSuccessCount');
-    const importSkippedCount = document.getElementById('importSkippedCount');
-    const importError = document.getElementById('importError');
-    const skippedLogLink = document.getElementById('skippedLogLink');
-
-    if (importItemsBtn) {
-        importItemsBtn.addEventListener('click', () => {
-            importItemsModal.classList.add('modal--active');
-            resetImportModal();
-        });
-    }
-
-    if (closeImportModalBtn) {
-        closeImportModalBtn.addEventListener('click', () => {
-            importItemsModal.classList.remove('modal--active');
-        });
-    }
-
-    if (importFile) {
-        importFile.addEventListener('change', (event) => {
-            if (event.target.files.length > 0) {
-                importFileName.textContent = event.target.files[0].name;
-            } else {
-                importFileName.textContent = 'No file chosen';
-            }
-        });
-    }
-
-    if (importCsvForm) {
-        importCsvForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const file = importFile.files[0];
-            if (!file) {
-                alert('Please select a CSV file to import.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('csv_file', file);
-
-            // Show progress bar and reset summary/error
-            importProgressBarContainer.style.display = 'block';
-            importProgressBar.style.width = '0%';
-            importProgressText.textContent = '0%';
-            importSummary.style.display = 'none';
-            importError.style.display = 'none';
-            skippedLogLink.style.display = 'none';
-
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', 'ajax/import_items.php', true);
-
-            xhr.upload.addEventListener('progress', function(e) {
-                if (e.lengthComputable) {
-                    const percent = (e.loaded / e.total) * 100;
-                    importProgressBar.style.width = percent.toFixed(0) + '%';
-                    importProgressText.textContent = percent.toFixed(0) + '%';
-                }
-            });
-
-            xhr.onload = function() {
-                importProgressBarContainer.style.display = 'none';
-                if (xhr.status === 200) {
-                    const response = JSON.parse(xhr.responseText);
-                    if (response.success) {
-                        importSummary.style.display = 'block';
-                        importSuccessCount.textContent = response.imported_count;
-                        importSkippedCount.textContent = response.skipped_count;
-                        if (response.skipped_log_file) {
-                            skippedLogLink.href = response.skipped_log_file;
-                            skippedLogLink.style.display = 'block';
-                        }
-                        // Optionally, refresh the page or relevant sections if needed
-                        // location.reload(); 
-                    } else {
-                        importError.style.display = 'block';
-                        importError.textContent = response.message || 'An unknown error occurred during import.';
-                    }
-                } else {
-                    importError.style.display = 'block';
-                    importError.textContent = 'Server error: ' + xhr.status;
-                }
-            };
-
-            xhr.onerror = function() {
-                importProgressBarContainer.style.display = 'none';
-                importError.style.display = 'block';
-                importError.textContent = 'Network error during import.';
-            };
-
-            xhr.send(formData);
-        });
-    }
-
-    function resetImportModal() {
-        importCsvForm.reset();
-        importFileName.textContent = 'No file chosen';
-        importProgressBarContainer.style.display = 'none';
-        importProgressBar.style.width = '0%';
-        importProgressText.textContent = '0%';
-        importSummary.style.display = 'none';
-        importError.style.display = 'none';
-        skippedLogLink.style.display = 'none';
     }
 });
 </script>

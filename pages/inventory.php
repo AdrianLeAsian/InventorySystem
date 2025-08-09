@@ -153,7 +153,6 @@ function format_last_activity($timestamp) {
                     <div class="d-flex gap-2" id="tab-buttons-container">
                         <div id="items-buttons" class="tab-buttons">
                             <button class="btn btn--primary" id="addItemBtn" onclick="toggleModal('addItemModal', true)">+ Add Item</button>
-                            <button class="btn btn--secondary" id="importItemsBtn" onclick="toggleModal('importItemsModal', true)">Import</button>
                         </div>
                         <div id="categories-buttons" class="tab-buttons" style="display: none;">
                             <button class="btn btn--secondary" id="addCategoryBtn" onclick="toggleModal('addCategoryModal', true)">+ Add Category</button>
@@ -367,7 +366,6 @@ function format_last_activity($timestamp) {
 <?php include 'includes/log_stock_modal.php'; ?>
 <?php include 'includes/edit_item_modal.php'; ?>
 <?php include 'includes/edit_category_modal.php'; ?>
-<?php include 'includes/import_items_modal.php'; ?>
 
 <script src="js/inventory.js"></script>
 <script src="js/inventory_tabs.js"></script>

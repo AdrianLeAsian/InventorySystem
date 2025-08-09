@@ -122,15 +122,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Error: addItemBtn not found.');
     }
 
-    const importItemsBtn = document.getElementById('importItemsBtn');
-    if (importItemsBtn) {
-        importItemsBtn.addEventListener('click', function(event) {
-            event.stopPropagation();
-            toggleModal('importItemsModal', true);
-        });
-    } else {
-        console.log('Error: importItemsBtn not found.');
-    }
 
     const logStockBtn = document.getElementById('logStockBtn');
     if (logStockBtn) {
@@ -318,78 +309,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    const importItemsForm = document.getElementById('importForm'); // Corrected ID
-    const excelFileInput = document.getElementById('excelFile');
-    const importSummaryDiv = document.getElementById('importSummary');
-    const totalProcessedSpan = document.getElementById('totalProcessed');
-    const itemsAddedSpan = document.getElementById('itemsAdded');
-    const itemsSkippedSpan = document.getElementById('itemsSkipped');
-    const skippedLogLinkDiv = document.getElementById('skippedLogLink');
-    const downloadLogAnchor = document.getElementById('downloadLog');
-    const importErrorDiv = document.getElementById('importError');
-
-    if (importItemsForm) {
-        importItemsForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            if (excelFileInput.files.length === 0) {
-                displayGUIMessage('Please select a file to import.', 'error');
-                return;
-            }
-
-            const formData = new FormData(importItemsForm);
-            formData.append('updateExisting', document.getElementById('updateExisting').checked ? 'true' : 'false');
-
-            // Reset display areas
-            importSummaryDiv.style.display = 'none';
-            importErrorDiv.style.display = 'none';
-            importErrorDiv.textContent = '';
-            skippedLogLinkDiv.style.display = 'none';
-
-            // Show a loading indicator or disable button if desired
-            // importSubmitBtn.disabled = true; 
-
-            fetch('ajax/import_items.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                // importSubmitBtn.disabled = false; // Re-enable button
-
-                if (data.success) {
-                    totalProcessedSpan.textContent = data.totalProcessed;
-                    itemsAddedSpan.textContent = data.itemsAdded;
-                    itemsSkippedSpan.textContent = data.itemsSkipped;
-                    importSummaryDiv.style.display = 'block';
-
-                    if (data.skippedLogFile) {
-                        downloadLogAnchor.href = data.skippedLogFile;
-                        skippedLogLinkDiv.style.display = 'block';
-                    }
-                    displayGUIMessage(data.message, 'success');
-                    // Optionally close modal after successful import
-                    // toggleModal('importItemsModal', false);
-                } else {
-                    importErrorDiv.textContent = data.message;
-                    importErrorDiv.style.display = 'block';
-                    displayGUIMessage('Error: ' + data.message, 'error');
-                }
-                // Refresh the inventory table to show newly added/updated items
-                // This assumes a function exists to refresh the main inventory table
-                // For now, a simple reload might be necessary if no such function exists.
-                // If addOrUpdateItemRow is robust enough, we could iterate through data.addedItems and data.updatedItems
-                location.reload(); // Temporarily reload to see changes
-            })
-            .catch(error => {
-                // importSubmitBtn.disabled = false; // Re-enable button
-                importErrorDiv.textContent = 'An unexpected error occurred during import: ' + error.message;
-                importErrorDiv.style.display = 'block';
-                displayGUIMessage('An unexpected error occurred during import.', 'error');
-                console.error('Error:', error);
-            });
-        });
-    }
 });
 
 // Function to open the Edit Item Modal and populate it with data
