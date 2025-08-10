@@ -1,0 +1,15 @@
+<?php
+include_once __DIR__ . '/../config/db.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id'], $_POST['name'], $_POST['email'])) {
+    $stmt = $conn->prepare("UPDATE email_recipients SET name = ?, email = ? WHERE id = ?");
+    $stmt->bind_param('ssi', $_POST['name'], $_POST['email'], $_POST['id']);
+
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true]);
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Failed to update recipient.']);
+    }
+}
+?>

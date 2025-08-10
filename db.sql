@@ -26,6 +26,21 @@ CREATE TABLE `sms_recipients` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- Table for Email Settings
+DROP TABLE IF EXISTS `email_settings`;
+CREATE TABLE `email_settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `smtp_host` varchar(255) NOT NULL,
+  `smtp_port` int(11) NOT NULL,
+  `smtp_username` varchar(255) NOT NULL,
+  `smtp_password` varchar(255) NOT NULL,
+  `sender_email` varchar(255) NOT NULL,
+  `sender_name` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 INSERT INTO `categories` (`id`, `name`, `description`, `created_at`, `updated_at`) VALUES
 (1, 'Kitchen Utensils', 'Items used for cooking and food preparation in the kitchen.', '2023-10-27 08:00:00', '2023-10-27 08:00:00'),
 (2, 'Food Ingredients', 'Raw materials and substances used in cooking.', '2023-10-27 08:00:00', '2023-10-27 08:00:00');

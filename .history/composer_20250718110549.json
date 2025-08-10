@@ -1,0 +1,10 @@
+{
+    "name": "inventory-system/inventory-system",
+    "description": "Inventory Management System",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "require": {
+        "dompdf/dompdf": "^3.1",
+        "phpoffice/phpspreadsheet": "^4.4"
+    }
+}

@@ -1,5 +1,4 @@
 <?php
-// Removed mysqli_report for broader compatibility and to avoid unhandled exceptions
 require_once 'config/db.php';
 require_once 'vendor/autoload.php'; // For Dompdf
 
@@ -19,13 +18,7 @@ function output_csv($filename, $data, $headers) {
     
     // Add data
     foreach ($data as $row) {
-        $ordered_row = [];
-        foreach ($headers as $header_key) {
-            // Use the header key to get the corresponding value from the associative row array
-            // Provide an empty string if the key doesn't exist to prevent errors
-            $ordered_row[] = $row[$header_key] ?? ''; 
-        }
-        fputcsv($output, $ordered_row);
+        fputcsv($output, $row);
     }
     fclose($output);
     exit;
@@ -210,54 +203,105 @@ if (isset($_GET['type'])) {
         $headers = ['Category Name', 'Total Stock'];
         output_csv('category_stock_summary_' . date('Y-m-d') . '.csv', $category_summary_data, $headers);
 
-    } elseif ($type == 'all_reports_csv') {
-        $all_data = [];
-        $headers = [
-            'Log ID', 'Log Date', 'Log Type', 'Quantity Change',
-            'Item ID', 'Item Name', 'Item Barcode', 'Item Quantity', 'Item Unit', 'Item Low Stock Threshold',
-            'Item Description', 'Item Created At', 'Item Updated At',
-            'Category ID', 'Category Name', 'Category Description', 'Category Created At', 'Category Updated At'
-        ];
-
-        // Fetch all inventory logs with joined item and category data
-        // Revert to full query for all reports
-        $sql_all_logs = "SELECT 
-                            il.id AS log_id, 
-                            il.log_date, 
-                            il.type AS log_type, 
-                            il.quantity_change, 
-                            i.id AS item_id,
-                            i.name AS item_name,
-                            i.barcode AS item_barcode,
-                            i.quantity AS item_quantity,
-                            i.unit AS item_unit,
-                            i.low_stock_threshold AS item_low_stock_threshold,
-                            i.description AS item_description,
-                            i.created_at AS item_created_at,
-                            i.updated_at AS item_updated_at,
-                            c.id AS category_id,
-                            c.name AS category_name,
-                            c.description AS category_description,
-                            c.created_at AS category_created_at,
-                            c.updated_at AS category_updated_at
-                         FROM inventory_log il
-                         LEFT JOIN items i ON il.item_id = i.id
-                         LEFT JOIN categories c ON i.category_id = c.id
-                         ORDER BY il.log_date DESC, il.id DESC";
-        
-        $result_all_logs = mysqli_query($conn, $sql_all_logs);
-        if ($result_all_logs === false) {
-            error_log("Error fetching all reports data: " . mysqli_error($conn));
-            // If query fails, output an empty array to prevent further errors, but log it.
-            $all_data = []; 
-        } else {
-            while ($row = mysqli_fetch_assoc($result_all_logs)) {
-                $all_data[] = $row;
+    } elseif ($type == 'all_logs_csv') {
+        $sql = "SELECT 
+                    il.id, 
+                    i.name as item_name, 
+                    il.type, 
+                    il.quantity_change, 
+                    il.current_quantity, 
+                    il.log_date, 
+                    il.remarks 
+                FROM inventory_log il
+                JOIN items i ON il.item_id = i.id
+                ORDER BY il.log_date DESC";
+        $result = mysqli_query($conn, $sql);
+        $all_logs_data = [];
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $all_logs_data[] = $row;
             }
-            mysqli_free_result($result_all_logs);
+            mysqli_free_result($result);
         }
+        $headers = ['Log ID', 'Item Name', 'Type', 'Quantity Change', 'Current Quantity', 'Log Date', 'Remarks'];
+        output_csv('all_inventory_logs_' . date('Y-m-d') . '.csv', $all_logs_data, $headers);
+
+    } elseif ($type == 'filtered_items_csv') {
+        $sql_filtered_items = "SELECT 
+                                i.name as item_name, 
+                                c.name as category_name, 
+                                i.barcode, 
+                                i.quantity, 
+                                i.low_stock_threshold, 
+                                i.created_at 
+                            FROM items i 
+                            JOIN categories c ON i.category_id = c.id 
+                            $where_sql
+                            ORDER BY i.name ASC";
         
-        output_csv('inventory_all_reports_' . date('Y-m-d_His') . '.csv', $all_data, $headers);
+        $stmt_filtered_items = mysqli_prepare($conn, $sql_filtered_items);
+        if ($stmt_filtered_items) {
+            if (!empty($params)) {
+                mysqli_stmt_bind_param($stmt_filtered_items, $param_types, ...$params);
+            }
+            mysqli_stmt_execute($stmt_filtered_items);
+            $result_filtered_items = mysqli_stmt_get_result($stmt_filtered_items);
+            $filtered_items_data = [];
+            while ($row = mysqli_fetch_assoc($result_filtered_items)) {
+                $filtered_items_data[] = $row;
+            }
+            mysqli_free_result($result_filtered_items);
+            mysqli_stmt_close($stmt_filtered_items);
+        }
+        $headers = ['Item Name', 'Category', 'Barcode', 'Quantity', 'Low Stock Threshold', 'Created At'];
+        output_csv('filtered_items_' . date('Y-m-d') . '.csv', $filtered_items_data, $headers);
+
+    } elseif ($type == 'filtered_items_pdf') {
+        $sql_filtered_items = "SELECT 
+                                i.name as item_name, 
+                                c.name as category_name, 
+                                i.barcode, 
+                                i.quantity, 
+                                i.low_stock_threshold, 
+                                i.created_at 
+                            FROM items i 
+                            JOIN categories c ON i.category_id = c.id 
+                            $where_sql
+                            ORDER BY i.name ASC";
+        
+        $stmt_filtered_items = mysqli_prepare($conn, $sql_filtered_items);
+        if ($stmt_filtered_items) {
+            if (!empty($params)) {
+                mysqli_stmt_bind_param($stmt_filtered_items, $param_types, ...$params);
+            }
+            mysqli_stmt_execute($stmt_filtered_items);
+            $result_filtered_items = mysqli_stmt_get_result($stmt_filtered_items);
+            $filtered_items_data = [];
+            while ($row = mysqli_fetch_assoc($result_filtered_items)) {
+                $filtered_items_data[] = $row;
+            }
+            mysqli_free_result($result_filtered_items);
+            mysqli_stmt_close($stmt_filtered_items);
+        }
+
+        $html = '<h1>Filtered Items Report</h1>';
+        $html .= '<table border="1" cellspacing="0" cellpadding="5" width="100%">';
+        $html .= '<thead><tr>';
+        $html .= '<th>Item Name</th><th>Category</th><th>Barcode</th><th>Quantity</th><th>Low Stock Threshold</th><th>Created At</th>';
+        $html .= '</tr></thead><tbody>';
+        foreach ($filtered_items_data as $row) {
+            $html .= '<tr>';
+            $html .= '<td>' . htmlspecialchars($row['item_name']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($row['category_name']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($row['barcode']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($row['quantity']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($row['low_stock_threshold']) . '</td>';
+            $html .= '<td>' . htmlspecialchars($row['created_at']) . '</td>';
+            $html .= '</tr>';
+        }
+        $html .= '</tbody></table>';
+
+        generate_pdf('filtered_items_' . date('Y-m-d') . '.pdf', $html);
 
     } else {
         echo "Invalid export type or missing parameters.";
