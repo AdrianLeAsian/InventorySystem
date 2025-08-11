@@ -14,10 +14,23 @@ include 'includes/db.php';
     <?php include 'includes/header.php'; ?>
     <div class="main-content">
         <h2>Items List</h2>
+        <!-- Search and filter -->
+        <form method="get" style="margin-bottom:18px;display:flex;gap:16px;align-items:center;">
+            <input type="text" name="search" placeholder="Search item name..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" style="max-width:220px;">
+            <select name="category_filter" style="max-width:180px;">
+                <option value="">All Categories</option>
+                <?php $catRes = $conn->query("SELECT * FROM categories");
+                while ($cat = $catRes->fetch_assoc()) {
+                    $sel = (isset($_GET['category_filter']) && $_GET['category_filter'] == $cat['id']) ? 'selected' : '';
+                    echo '<option value="'.$cat['id'].'" '.$sel.'>'.htmlspecialchars($cat['name']).'</option>';
+                } ?>
+            </select>
+            <button type="submit" class="btn-primary">Filter</button>
+        </form>
         <!-- Inventory table and modal triggers will go here -->
-        <button class="btn-primary" onclick="showAddItemModal()">Add Item</button>
-        <button class="btn-primary" onclick="showAddCategoryModal()">Add Category</button>
-        <button class="btn-primary" onclick="showAddLocationModal()">Add Location</button>
+    <button class="btn-primary" onclick="showAddItemModal()">Add Item</button>
+    <button class="btn-primary" onclick="showAddCategoryModal()">Add Category</button>
+    <button class="btn-primary" onclick="showAddLocationModal()">Add Location</button>
         <!-- Inventory table -->
         <table border="1" cellpadding="10" cellspacing="0">
             <thead>
@@ -26,24 +39,65 @@ include 'includes/db.php';
                     <th>Category</th>
                     <th>Location</th>
                     <th>Stock</th>
+                    <th>Status</th>
                     <th>Perishable</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                $result = $conn->query("SELECT items.*, categories.name AS category, locations.name AS location FROM items JOIN categories ON items.category_id=categories.id JOIN locations ON items.location_id=locations.id");
+                // Filtering logic
+                $where = [];
+                $params = [];
+                $types = '';
+                if (!empty($_GET['search'])) {
+                    $where[] = "items.name LIKE ?";
+                    $params[] = "%" . $_GET['search'] . "%";
+                    $types .= 's';
+                }
+                if (!empty($_GET['category_filter'])) {
+                    $where[] = "items.category_id = ?";
+                    $params[] = $_GET['category_filter'];
+                    $types .= 'i';
+                }
+                $sql = "SELECT items.*, categories.name AS category, locations.name AS location FROM items JOIN categories ON items.category_id=categories.id JOIN locations ON items.location_id=locations.id";
+                if ($where) $sql .= " WHERE " . implode(" AND ", $where);
+                if ($where) {
+                    $stmt = $conn->prepare($sql);
+                    $stmt->bind_param($types, ...$params);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                } else {
+                    $result = $conn->query($sql);
+                }
                 while ($row = $result->fetch_assoc()) {
                     echo '<tr>';
                     echo '<td>' . htmlspecialchars($row['name']) . '</td>';
                     echo '<td>' . htmlspecialchars($row['category']) . '</td>';
                     echo '<td>' . htmlspecialchars($row['location']) . '</td>';
                     echo '<td>' . $row['current_stock'] . '</td>';
+                    // Status logic
+                    $status = '';
+                    $statusColor = '';
+                    if ($row['current_stock'] == 0) {
+                        $status = 'NO STOCK';
+                        $statusColor = 'status-red';
+                    } elseif ($row['current_stock'] <= $row['low_stock']) {
+                        $status = 'LOW STOCK';
+                        $statusColor = 'status-orange';
+                    } elseif ($row['current_stock'] >= $row['max_stock']) {
+                        $status = 'FULL';
+                        $statusColor = 'status-green';
+                    } else {
+                        $status = 'OK';
+                        $statusColor = 'status-green';
+                    }
+                    echo '<td><span class="' . $statusColor . '">' . $status . '</span></td>';
                     echo '<td>' . ($row['is_perishable'] ? 'Yes' : 'No') . '</td>';
                     echo '<td>';
                     echo '<button class="btn-warning" onclick="showEditItemModal(' . $row['id'] . ')">Edit</button> ';
                     echo '<button class="btn-danger" onclick="showDeleteItemModal(' . $row['id'] . ')">Delete</button> ';
-                    echo '<button class="btn-primary" onclick="showUpdateStockModal(' . $row['id'] . ',' . $row['is_perishable'] . ')">Update Stock</button>';
+                    echo '<button class="btn-update-stock" onclick="showUpdateStockModal(' . $row['id'] . ',' . $row['is_perishable'] . ')">Update Stock</button>';
                     echo '</td>';
                     echo '</tr>';
                 }
@@ -124,21 +178,31 @@ include 'includes/db.php';
         document.getElementById('modal-body').innerHTML = `
             <h3>Add Item</h3>
             <form id="addItemForm">
+                <label>Item Name<span class="required-asterisk">*</span></label>
                 <input type="text" name="name" placeholder="Item Name" required><br>
+                <label>Category<span class="required-asterisk">*</span></label>
                 <select name="category_id" required>
                     <option value="">Select Category</option>
                     <?php $cats = $conn->query("SELECT * FROM categories"); while ($c = $cats->fetch_assoc()) echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).'</option>'; ?>
                 </select><br>
+                <label>Location<span class="required-asterisk">*</span></label>
                 <select name="location_id" required>
                     <option value="">Select Location</option>
                     <?php $locs = $conn->query("SELECT * FROM locations"); while ($l = $locs->fetch_assoc()) echo '<option value="'.$l['id'].'">'.htmlspecialchars($l['name']).'</option>'; ?>
                 </select><br>
+                <label>Stock<span class="required-asterisk">*</span></label>
                 <input type="number" name="current_stock" placeholder="Stock" min="0" required>
+                <label>Unit<span class="required-asterisk">*</span></label>
                 <input type="text" name="unit" placeholder="Unit (e.g. kg, gram, pieces)" required><br>
+                <label>Low Stock</label>
                 <input type="number" name="low_stock" placeholder="Low Stock" min="0"><br>
-                <input type="number" name="min_stock" placeholder="Minimum Stock" min="0"><br>
+                <label>Maximum Stock</label>
                 <input type="number" name="max_stock" placeholder="Maximum Stock" min="0"><br>
-                <label><input type="checkbox" name="is_perishable"> Perishable</label><br>
+                <label><input type="checkbox" name="is_perishable" id="isPerishableAdd" onchange="toggleExpiry('add')"> Perishable</label><br>
+                <div id="expiryDateAdd" style="display:none;">
+                    <label>Expiry Date<span class="required-asterisk">*</span></label>
+                    <input type="date" name="expiry_date" placeholder="Expiry Date" required><br>
+                </div>
                 <button type="submit" class="btn-primary">Add</button>
             </form>
             <div id="addItemMsg"></div>
@@ -153,34 +217,64 @@ include 'includes/db.php';
                 if(d.status=='success') setTimeout(()=>location.reload(),800);
             });
         };
+        document.getElementById('isPerishableAdd').addEventListener('change', function() {
+            document.getElementById('expiryDateAdd').style.display = this.checked ? 'block' : 'none';
+        });
     }
     function showEditItemModal(id) {
         document.getElementById('modal').style.display = 'block';
+        document.getElementById('modal-body').innerHTML = '<div style="text-align:center;padding:32px 0;">Loading item details...</div>';
         fetch('includes/item_actions.php', {method:'POST',body:new URLSearchParams({action:'get',id:id})})
         .then(r=>r.json()).then(item=>{
+            if(!item || !item.id) {
+                document.getElementById('modal-body').innerHTML = '<div style="text-align:center;padding:32px 0;color:#D33F49;">Error: Item details not found.</div>';
+                return;
+            }
             document.getElementById('modal-body').innerHTML = `
                 <h3>Edit Item</h3>
                 <form id="editItemForm">
                     <input type="hidden" name="id" value="${item.id}">
+                    <label>Item Name<span class="required-asterisk">*</span></label>
                     <input type="text" name="name" value="${item.name}" required><br>
-                    <select name="category_id" required>
+                    <label>Category<span class="required-asterisk">*</span></label>
+                    <select name="category_id" id="editCategorySelect" required>
                         <option value="">Select Category</option>
                         <?php $cats = $conn->query("SELECT * FROM categories"); while ($c = $cats->fetch_assoc()) echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).'</option>'; ?>
                     </select><br>
-                    <select name="location_id" required>
+                    <label>Location<span class="required-asterisk">*</span></label>
+                    <select name="location_id" id="editLocationSelect" required>
                         <option value="">Select Location</option>
                         <?php $locs = $conn->query("SELECT * FROM locations"); while ($l = $locs->fetch_assoc()) echo '<option value="'.$l['id'].'">'.htmlspecialchars($l['name']).'</option>'; ?>
                     </select><br>
+                    <label>Stock<span class="required-asterisk">*</span></label>
                     <input type="number" name="current_stock" value="${item.current_stock}" min="0" required>
+                    <label>Unit<span class="required-asterisk">*</span></label>
                     <input type="text" name="unit" value="${item.unit||''}" placeholder="Unit (e.g. kg, gram, pieces)" required><br>
+                    <label>Low Stock</label>
                     <input type="number" name="low_stock" value="${item.low_stock||''}" min="0"><br>
-                    <input type="number" name="min_stock" value="${item.min_stock||''}" min="0"><br>
+                    <label>Maximum Stock</label>
                     <input type="number" name="max_stock" value="${item.max_stock||''}" min="0"><br>
-                    <label><input type="checkbox" name="is_perishable" ${item.is_perishable==1?'checked':''}> Perishable</label><br>
+                    <label><input type="checkbox" name="is_perishable" id="isPerishableEdit" ${item.is_perishable==1?'checked':''} onchange="toggleExpiry('edit')"> Perishable</label><br>
+                    <div id="expiryDateEdit" style="display:${item.is_perishable==1?'block':'none'};">
+                        <label>Expiry Date<span class="required-asterisk">*</span></label>
+                        <input type="date" name="expiry_date" id="editExpiryDate" value="${item.expiry_date||''}" placeholder="Expiry Date"><br>
+                    </div>
                     <button type="submit" class="btn-primary">Update</button>
                 </form>
                 <div id="editItemMsg"></div>
             `;
+            // Pre-select category and location
+            setTimeout(function() {
+                var catSelect = document.getElementById('editCategorySelect');
+                if(catSelect) catSelect.value = item.category_id;
+                var locSelect = document.getElementById('editLocationSelect');
+                if(locSelect) locSelect.value = item.location_id;
+                // Set expiry date if perishable
+                if(item.is_perishable==1 && item.expiry_date) {
+                    var expInput = document.getElementById('editExpiryDate');
+                    if(expInput) expInput.value = item.expiry_date;
+                }
+            }, 100);
             document.getElementById('editItemForm').onsubmit = function(e) {
                 e.preventDefault();
                 var fd = new FormData(this);
@@ -191,6 +285,19 @@ include 'includes/db.php';
                     if(d.status=='success') setTimeout(()=>location.reload(),800);
                 });
             };
+            document.getElementById('isPerishableEdit').addEventListener('change', function() {
+                document.getElementById('expiryDateEdit').style.display = this.checked ? 'block' : 'none';
+            });
+            function toggleExpiry(type) {
+                if(type === 'add') {
+                    document.getElementById('expiryDateAdd').style.display = document.getElementById('isPerishableAdd').checked ? 'block' : 'none';
+                } else {
+                    document.getElementById('expiryDateEdit').style.display = document.getElementById('isPerishableEdit').checked ? 'block' : 'none';
+                }
+            }
+        })
+        .catch(function(){
+            document.getElementById('modal-body').innerHTML = '<div style="text-align:center;padding:32px 0;color:#D33F49;">Error loading item details.</div>';
         });
     }
     function showDeleteItemModal(id) {
@@ -222,19 +329,31 @@ include 'includes/db.php';
             <form id="updateStockForm">
                 <input type="hidden" name="item_id" value="${id}">
                 <input type="number" name="quantity" placeholder="Quantity" min="1" required><br>
-                ${is_perishable ? '<input type="date" name="expiry_date" required><br>' : ''}
-                <button type="submit" class="btn-primary">Add Stock</button>
+                ${is_perishable ? '<label>Expiry Date<span class="required-asterisk">*</span></label><input type="date" name="expiry_date" required><br>' : ''}
+                <button type="button" class="btn-primary" id="addStockBtn">Add Stock</button>
+                <button type="button" class="btn-danger" id="removeStockBtn">Remove Stock</button>
             </form>
             <div id="updateStockMsg"></div>
         `;
-        document.getElementById('updateStockForm').onsubmit = function(e) {
-            e.preventDefault();
-            var fd = new FormData(this);
+        document.getElementById('addStockBtn').onclick = function() {
+            var form = document.getElementById('updateStockForm');
+            var fd = new FormData(form);
             fd.append('action', 'update_stock');
             fd.append('is_perishable', is_perishable);
             fetch('includes/stock_actions.php', {method:'POST',body:fd})
             .then(r=>r.json()).then(d=>{
                 document.getElementById('updateStockMsg').innerText = d.message || (d.status=='success'?'Stock updated!':'Error');
+                if(d.status=='success') setTimeout(()=>location.reload(),800);
+            });
+        };
+        document.getElementById('removeStockBtn').onclick = function() {
+            var form = document.getElementById('updateStockForm');
+            var fd = new FormData(form);
+            fd.append('action', 'reduce_stock');
+            fd.append('is_perishable', is_perishable);
+            fetch('includes/stock_actions.php', {method:'POST',body:fd})
+            .then(r=>r.json()).then(d=>{
+                document.getElementById('updateStockMsg').innerText = d.message || (d.status=='success'?'Stock removed!':'Error');
                 if(d.status=='success') setTimeout(()=>location.reload(),800);
             });
         };

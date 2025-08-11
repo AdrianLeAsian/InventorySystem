@@ -19,7 +19,6 @@ CREATE TABLE items (
     current_stock INT DEFAULT 0,
     unit VARCHAR(30) NOT NULL,
     low_stock INT DEFAULT 0,
-    min_stock INT DEFAULT 0,
     max_stock INT DEFAULT 0,
     is_perishable BOOLEAN DEFAULT 0,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,

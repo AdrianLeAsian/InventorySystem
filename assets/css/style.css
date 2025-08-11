@@ -113,21 +113,22 @@ th, td {
 }
 th {
     background: var(--primary);
-    color: #fff;
+    color: #fff !important;
     font-weight: 700;
+    
 }
 tr:last-child td {
     border-bottom: none;
 }
 tr:hover td {
-    background: #FCFAF9;
+    background: #ffffff;
 }
 
 .btn-primary {
     background: var(--primary);
     color: #fff;
     border: none;
-    padding: 10px 22px;
+        padding: 10px 22px;
     border-radius: 6px;
     font-weight: 700;
     cursor: pointer;
@@ -137,13 +138,30 @@ tr:hover td {
     transition: background 0.2s;
 }
 .btn-primary:hover {
-    background: var(--secondary);
+    background: var(--primary);
+    }
+    background: var(--success);
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    box-shadow: 0 2px 6px rgba(52,73,94,0.08);
+    font-family: 'Quicksand', sans-serif;
+    transition: background 0.2s;
+}
+.btn-add:hover {
+    background: var(--primary);
+    color: #fff;
 }
 .btn-danger {
     background: #D33F49;
     color: #fff;
     border: none;
-    padding: 10px 22px;
+        padding: 10px 22px;
     border-radius: 6px;
     font-weight: 700;
     cursor: pointer;
@@ -154,7 +172,7 @@ tr:hover td {
 }
 .btn-danger:hover {
     background: #A82C38;
-}
+    }
 .btn-warning {
     background: var(--success);
     color: #fff;
@@ -170,7 +188,7 @@ tr:hover td {
     transition: background 0.2s;
 }
 .btn-warning:hover {
-    background: #6b836f;
+    background: var(--primary);
     color: #fff;
 }
 
@@ -179,6 +197,48 @@ button, .btn-primary, .btn-danger, .btn-warning {
 }
 
 /* --- Modal Fixes --- */
+/* Update Stock button orange */
+.btn-update-stock {
+    background: var(--warning);
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-right: 6px;
+    margin-bottom: 6px;
+    box-shadow: 0 2px 6px rgba(52,73,94,0.08);
+    font-family: 'Quicksand', sans-serif;
+    transition: background 0.2s;
+}
+.btn-update-stock:hover {
+    background: var(--primary);
+    color: #fff;
+}
+/* Red asterisk for required fields */
+.required-asterisk {
+    color: #D33F49;
+    margin-left: 3px;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+/* Align checkbox and label horizontally in modal forms */
+.modal-content label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1em;
+    margin-bottom: 8px;
+}
+/* Align checkbox and label horizontally in modal forms */
+.modal-content label:has(input[type="checkbox"]) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1em;
+    margin-bottom: 8px;
+}
 .modal {
     display: none;
     position: fixed;
@@ -191,40 +251,90 @@ button, .btn-primary, .btn-danger, .btn-warning {
 .modal-content {
     background: #fff;
     margin: 40px auto;
-    padding: 36px 32px;
-    border-radius: 12px;
+    padding: 40px 36px 32px 36px;
+    border-radius: 16px;
     width: 100%;
-    max-width: 420px;
-    box-shadow: 0 4px 24px rgba(52,73,94,0.18);
+    max-width: 480px;
+    box-shadow: 0 8px 32px rgba(52,73,94,0.22);
     position: relative;
+    color: #34495E;
 }
 .modal-content h3 {
     margin-top: 0;
-    color: #7C9885;
+    color: #34495E;
 }
 .modal-content .close {
     position: absolute;
-    top: 18px;
-    right: 22px;
-    font-size: 1.5em;
+    top: 16px;
+    right: 20px;
+    font-size: 2em;
     color: #D33F49;
     cursor: pointer;
+    font-weight: bold;
+    background: none;
+    border: none;
+    outline: none;
+    transition: color 0.2s;
+    z-index: 2;
+}
+.modal-content .close:hover {
+    color: #a81c2a;
 }
 input, select, textarea {
     width: 100%;
-    padding: 10px 12px;
-    margin: 10px 0 18px 0;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 1em;
+    padding: 12px 14px;
+    margin: 14px 0 22px 0;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 1.08em;
     font-family: 'Quicksand', sans-serif;
     box-sizing: border-box;
+    background: #f8f8f8;
 }
 input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: #7C9885;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1em;
+        margin-bottom: 8px;
+    border-color: #34495E;
     box-shadow: 0 2px 8px rgba(124,152,133,0.08);
 }
+
+/* Text color for elements with white or light background */
+.white-bg, .light-bg, .main-content, .dashboard-summary div, .modal-content, table, th, td, input, select, textarea {
+    color: var(--primary);
+/* Align checkbox and label horizontally */
+}
+
+.status-green {
+    background: var(--success);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-family: 'Quicksand', sans-serif;
+    display: inline-block;
+}
+.status-orange {
+    background: var(--warning);
+    color: #fff !important;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-family: 'Quicksand', sans-serif;
+    display: inline-block;
+}
+.status-red {
+    background: var(--secondary);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-family: 'Quicksand', sans-serif;
+    display: inline-block;
+}
+
 @media (max-width: 600px) {
     .modal-content {
         width: 95vw;

@@ -1,21 +1,15 @@
 # System Patterns
 
-## Architecture
+## System Architecture
+The Inventory Management System follows a traditional web application architecture. It appears to be primarily server-side rendered using PHP.
 
-The system follows a traditional web application architecture, likely a Model-View-Controller (MVC) or a similar pattern, given the PHP files present.
-
-- **Frontend:** Primarily handled by PHP files (`dashboard.php`, `inventory.php`, `reports.php`) and static assets in the `assets/` directory (CSS, images).
-- **Backend Logic:** PHP scripts within the `includes/` directory handle database interactions, business logic, and data processing (e.g., `category_location_actions.php`, `db.php`, `item_actions.php`, `stock_actions.php`).
-- **Database:** A SQL database is used, as indicated by `db_inventory.sql` and the presence of `includes/db.php`.
+- **Frontend:** HTML, CSS, and potentially JavaScript for user interface elements.
+- **Backend:** PHP for handling business logic, database interactions, and rendering dynamic content.
+- **Database:** MySQL, as indicated by the presence of `.sql` files (`db_inventory.sql`, `db_inventory_mock_data.sql`).
+- **Structure:** A common pattern of including header, sidebar, and action files (`includes/header.php`, `includes/sidebar.php`, `includes/category_location_actions.php`, etc.) suggests a modular approach within a procedural PHP framework.
 
 ## Key Technical Decisions
-
-- **Technology Stack:** PHP, MySQL, HTML, CSS, JavaScript (implied by web context).
-- **Database Interaction:** A dedicated `db.php` file suggests a centralized approach to database connections and queries.
-- **Modular Design:** The use of `includes/` directory indicates a modular approach to code organization, separating concerns like headers, sidebars, and action handlers.
-
-## Design Patterns
-
-- **Include/Require:** PHP's `include` and `require` statements are used for code modularity and reusability.
-- **Database Abstraction (Implied):** The `includes/db.php` file likely abstracts database connection and query logic.
-- **Action Controllers (Implied):** Files like `item_actions.php` and `stock_actions.php` suggest a pattern where specific actions are handled by dedicated files.
+- **Technology Stack:** PHP, MySQL, HTML, CSS.
+- **Database Interaction:** Likely uses direct MySQL queries or a simple abstraction layer within `includes/db.php`.
+- **Modularity:** Code is organized into include files for reusability (e.g., headers, footers, action handlers).
+- **Data Mocking:** `db_inventory_mock_data.sql` suggests a practice of using mock data for development or testing.

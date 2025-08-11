@@ -1,7 +1,19 @@
+
 <?php
 include 'db.php';
 
 $action = isset($_POST['action']) ? $_POST['action'] : '';
+
+if ($action == 'get') {
+	$id = intval($_POST['id']);
+	$stmt = $conn->prepare("SELECT * FROM items WHERE id = ?");
+	$stmt->bind_param('i', $id);
+	$stmt->execute();
+	$result = $stmt->get_result();
+	$item = $result->fetch_assoc();
+	echo json_encode($item);
+	exit;
+}
 
 if ($action == 'add') {
 	$name = trim($_POST['name']);
@@ -10,7 +22,7 @@ if ($action == 'add') {
 	$stock = intval($_POST['current_stock']);
 	$unit = trim($_POST['unit']);
 	$low_stock = intval($_POST['low_stock']);
-	$min_stock = intval($_POST['min_stock']);
+	// min_stock removed
 	$max_stock = intval($_POST['max_stock']);
 	$is_perishable = isset($_POST['is_perishable']) ? 1 : 0;
 
@@ -24,8 +36,8 @@ if ($action == 'add') {
 		exit;
 	}
 
-	$stmt = $conn->prepare("INSERT INTO items (name, category_id, location_id, current_stock, unit, low_stock, min_stock, max_stock, is_perishable) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-	$stmt->bind_param('sissiiiii', $name, $category_id, $location_id, $stock, $unit, $low_stock, $min_stock, $max_stock, $is_perishable);
+	$stmt = $conn->prepare("INSERT INTO items (name, category_id, location_id, current_stock, unit, low_stock, max_stock, is_perishable) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+	$stmt->bind_param('sissiiii', $name, $category_id, $location_id, $stock, $unit, $low_stock, $max_stock, $is_perishable);
 	if ($stmt->execute()) {
 		echo json_encode(['status' => 'success']);
 	} else {
@@ -42,7 +54,7 @@ if ($action == 'edit') {
 	$stock = intval($_POST['current_stock']);
 	$unit = trim($_POST['unit']);
 	$low_stock = intval($_POST['low_stock']);
-	$min_stock = intval($_POST['min_stock']);
+	// min_stock removed
 	$max_stock = intval($_POST['max_stock']);
 	$is_perishable = isset($_POST['is_perishable']) ? 1 : 0;
 
@@ -56,8 +68,8 @@ if ($action == 'edit') {
 		exit;
 	}
 
-	$stmt = $conn->prepare("UPDATE items SET name=?, category_id=?, location_id=?, current_stock=?, unit=?, low_stock=?, min_stock=?, max_stock=?, is_perishable=? WHERE id=?");
-	$stmt->bind_param('sissiiiiii', $name, $category_id, $location_id, $stock, $unit, $low_stock, $min_stock, $max_stock, $is_perishable, $id);
+	$stmt = $conn->prepare("UPDATE items SET name=?, category_id=?, location_id=?, current_stock=?, unit=?, low_stock=?, max_stock=?, is_perishable=? WHERE id=?");
+	$stmt->bind_param('sissiiiii', $name, $category_id, $location_id, $stock, $unit, $low_stock, $max_stock, $is_perishable, $id);
 	if ($stmt->execute()) {
 		echo json_encode(['status' => 'success']);
 	} else {
