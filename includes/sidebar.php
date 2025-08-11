@@ -1,37 +1,8 @@
-<?php
-$current_page = isset($_GET['page']) ? $_GET['page'] : 'dashboard';
-?>
 <div class="sidebar">
-    <div class="sidebar__header">
-        <img src="assets/images/logo.png" alt="AI Korean Buffet Restaurant Logo" class="sidebar__logo">
-        <h2 class="sidebar__title">AI Korean Buffet Restaurant</h2>
-    </div>
-    <nav class="sidebar__nav">
-        <ul class="sidebar__list">
-            <li class="sidebar__item <?php echo $current_page === 'dashboard' ? 'sidebar__item--active' : ''; ?>">
-                <a href="index.php?page=dashboard" class="sidebar__link">
-                    <i class="fas fa-th-large"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li class="sidebar__item <?php echo $current_page === 'inventory' ? 'sidebar__item--active' : ''; ?>">
-                <a href="index.php?page=inventory" class="sidebar__link">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span>Inventory</span>
-                </a>
-            </li>
-            <li class="sidebar__item <?php echo $current_page === 'tracking' ? 'sidebar__item--active' : ''; ?>">
-                <a href="index.php?page=tracking" class="sidebar__link">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>Daily Tracking</span>
-                </a>
-            </li>
-            <li class="sidebar__item <?php echo $current_page === 'reports' ? 'sidebar__item--active' : ''; ?>">
-                <a href="index.php?page=reports" class="sidebar__link">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Reports</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
+    <img src="assets/images/logo.png" alt="Logo" class="logo">
+    <div style="text-align:center; margin: 12px 0 24px 0; font-size:1.1em; font-weight:700; color:#fff; letter-spacing:1px;">AI Korean Buffet Restaurant</div>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <a href="dashboard.php" class="nav-link"><span class="icon"><span class="material-icons">dashboard</span></span>Dashboard</a>
+    <a href="inventory.php" class="nav-link"><span class="icon"><span class="material-icons">inventory_2</span></span>Inventory</a>
+    <a href="reports.php" class="nav-link"><span class="icon"><span class="material-icons">bar_chart</span></span>Reports</a>
 </div>
