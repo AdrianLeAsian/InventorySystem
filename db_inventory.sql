@@ -32,3 +32,10 @@ CREATE TABLE item_batches (
     quantity INT DEFAULT 0,
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
+
+-- Users table for authentication
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL
+);

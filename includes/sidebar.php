@@ -5,4 +5,5 @@
     <a href="dashboard.php" class="nav-link"><span class="icon"><span class="material-icons">dashboard</span></span>Dashboard</a>
     <a href="inventory.php" class="nav-link"><span class="icon"><span class="material-icons">inventory_2</span></span>Inventory</a>
     <a href="reports.php" class="nav-link"><span class="icon"><span class="material-icons">bar_chart</span></span>Reports</a>
+    <a href="logout.php" class="nav-link" style="margin-top:32px;color:#D33F49;"><span class="icon"><span class="material-icons">logout</span></span>Logout</a>
 </div>

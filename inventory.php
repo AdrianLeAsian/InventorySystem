@@ -1,4 +1,5 @@
 <?php
+include 'includes/auth.php';
 $page_title = 'Inventory Management';
 include 'includes/db.php';
 ?>
@@ -13,24 +14,26 @@ include 'includes/db.php';
     <?php include 'includes/sidebar.php'; ?>
     <?php include 'includes/header.php'; ?>
     <div class="main-content">
-        <h2>Items List</h2>
-        <!-- Search and filter -->
-        <form method="get" style="margin-bottom:18px;display:flex;gap:16px;align-items:center;">
-            <input type="text" name="search" placeholder="Search item name..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" style="max-width:220px;">
-            <select name="category_filter" style="max-width:180px;">
-                <option value="">All Categories</option>
-                <?php $catRes = $conn->query("SELECT * FROM categories");
-                while ($cat = $catRes->fetch_assoc()) {
-                    $sel = (isset($_GET['category_filter']) && $_GET['category_filter'] == $cat['id']) ? 'selected' : '';
-                    echo '<option value="'.$cat['id'].'" '.$sel.'>'.htmlspecialchars($cat['name']).'</option>';
-                } ?>
-            </select>
-            <button type="submit" class="btn-primary">Filter</button>
-        </form>
-        <!-- Inventory table and modal triggers will go here -->
-    <button class="btn-primary" onclick="showAddItemModal()">Add Item</button>
-    <button class="btn-primary" onclick="showAddCategoryModal()">Add Category</button>
-    <button class="btn-primary" onclick="showAddLocationModal()">Add Location</button>
+        <h2 style="margin-bottom:0;">Items List</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;">
+            <div style="display:flex;gap:8px;">
+                <button type="button" class="btn-primary" onclick="showAddItemModal()">Add Item</button>
+                <button type="button" class="btn-primary" onclick="showAddCategoryModal()">Add Category</button>
+                <button type="button" class="btn-primary" onclick="showAddLocationModal()">Add Location</button>
+            </div>
+            <form method="get" style="display:flex;align-items:center;gap:12px;margin:0;">
+                <input type="text" name="search" placeholder="Search item name..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" style="max-width:220px;">
+                <select name="category_filter" style="max-width:180px;">
+                    <option value="">All Categories</option>
+                    <?php $catRes = $conn->query("SELECT * FROM categories");
+                    while ($cat = $catRes->fetch_assoc()) {
+                        $sel = (isset($_GET['category_filter']) && $_GET['category_filter'] == $cat['id']) ? 'selected' : '';
+                        echo '<option value="'.$cat['id'].'" '.$sel.'>'.htmlspecialchars($cat['name']).'</option>';
+                    } ?>
+                </select>
+                <button type="submit" class="btn-primary">Filter</button>
+            </form>
+        </div>
         <!-- Inventory table -->
         <table border="1" cellpadding="10" cellspacing="0">
             <thead>
@@ -111,16 +114,38 @@ include 'includes/db.php';
                 <tr>
                     <th>Item</th>
                     <th>Expiry Date</th>
+                    <th>Status</th>
                     <th>Quantity</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
                 $fifo = $conn->query("SELECT items.name, item_batches.expiry_date, item_batches.quantity FROM item_batches JOIN items ON item_batches.item_id=items.id WHERE items.is_perishable=1 ORDER BY item_batches.expiry_date ASC");
+                $now = strtotime(date('Y-m-d'));
                 while ($row = $fifo->fetch_assoc()) {
+                    $exp = strtotime($row['expiry_date']);
+                    $days_total = ($exp - $now) / 86400;
+                    $status = '';
+                    $color = '';
+                    if ($days_total < 0) {
+                        $status = 'Expired';
+                        $color = '#D33F49';
+                    } else {
+                        // Assume shelf life is from today to expiry
+                        $fifo_life = $exp - $now;
+                        $half_life = $fifo_life / 2;
+                        if ($days_total <= $half_life / 86400) {
+                            $status = 'Near';
+                            $color = '#FFA500';
+                        } else {
+                            $status = 'Fresh';
+                            $color = '#27ae60';
+                        }
+                    }
                     echo '<tr>';
                     echo '<td>' . htmlspecialchars($row['name']) . '</td>';
                     echo '<td>' . htmlspecialchars($row['expiry_date']) . '</td>';
+                    echo '<td><span style="color:' . $color . ';font-weight:bold;">' . $status . '</span></td>';
                     echo '<td>' . $row['quantity'] . '</td>';
                     echo '</tr>';
                 }
@@ -180,24 +205,40 @@ include 'includes/db.php';
             <form id="addItemForm">
                 <label>Item Name<span class="required-asterisk">*</span></label>
                 <input type="text" name="name" placeholder="Item Name" required><br>
-                <label>Category<span class="required-asterisk">*</span></label>
-                <select name="category_id" required>
-                    <option value="">Select Category</option>
-                    <?php $cats = $conn->query("SELECT * FROM categories"); while ($c = $cats->fetch_assoc()) echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).'</option>'; ?>
-                </select><br>
-                <label>Location<span class="required-asterisk">*</span></label>
-                <select name="location_id" required>
-                    <option value="">Select Location</option>
-                    <?php $locs = $conn->query("SELECT * FROM locations"); while ($l = $locs->fetch_assoc()) echo '<option value="'.$l['id'].'">'.htmlspecialchars($l['name']).'</option>'; ?>
-                </select><br>
-                <label>Stock<span class="required-asterisk">*</span></label>
-                <input type="number" name="current_stock" placeholder="Stock" min="0" required>
-                <label>Unit<span class="required-asterisk">*</span></label>
-                <input type="text" name="unit" placeholder="Unit (e.g. kg, gram, pieces)" required><br>
-                <label>Low Stock</label>
-                <input type="number" name="low_stock" placeholder="Low Stock" min="0"><br>
-                <label>Maximum Stock</label>
-                <input type="number" name="max_stock" placeholder="Maximum Stock" min="0"><br>
+                <div style="margin-bottom:16px;">
+                    <label>Category<span class="required-asterisk">*</span></label>
+                    <select name="category_id" required style="width:100%;margin-top:2px;">
+                        <option value="">Select Category</option>
+                        <?php $cats = $conn->query("SELECT * FROM categories"); while ($c = $cats->fetch_assoc()) echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).'</option>'; ?>
+                    </select>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label>Location<span class="required-asterisk">*</span></label>
+                    <select name="location_id" required style="width:100%;margin-top:2px;">
+                        <option value="">Select Location</option>
+                        <?php $locs = $conn->query("SELECT * FROM locations"); while ($l = $locs->fetch_assoc()) echo '<option value="'.$l['id'].'">'.htmlspecialchars($l['name']).'</option>'; ?>
+                    </select>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center;">
+                    <div style="flex:1;">
+                        <label>Stock<span class="required-asterisk">*</span></label>
+                        <input type="number" name="current_stock" placeholder="Stock" min="0" required>
+                    </div>
+                    <div style="flex:1;">
+                        <label>Unit<span class="required-asterisk">*</span></label>
+                        <input type="text" name="unit" placeholder="Unit (e.g. kg, gram, pieces)" required>
+                    </div>
+                </div><br>
+                <div style="display:flex;gap:12px;align-items:center;">
+                    <div style="flex:1;">
+                        <label>Low Stock</label>
+                        <input type="number" name="low_stock" placeholder="Low Stock" min="0">
+                    </div>
+                    <div style="flex:1;">
+                        <label>Maximum Stock</label>
+                        <input type="number" name="max_stock" placeholder="Maximum Stock" min="0">
+                    </div>
+                </div><br>
                 <label><input type="checkbox" name="is_perishable" id="isPerishableAdd" onchange="toggleExpiry('add')"> Perishable</label><br>
                 <div id="expiryDateAdd" style="display:none;">
                     <label>Expiry Date<span class="required-asterisk">*</span></label>
@@ -236,24 +277,40 @@ include 'includes/db.php';
                     <input type="hidden" name="id" value="${item.id}">
                     <label>Item Name<span class="required-asterisk">*</span></label>
                     <input type="text" name="name" value="${item.name}" required><br>
-                    <label>Category<span class="required-asterisk">*</span></label>
-                    <select name="category_id" id="editCategorySelect" required>
-                        <option value="">Select Category</option>
-                        <?php $cats = $conn->query("SELECT * FROM categories"); while ($c = $cats->fetch_assoc()) echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).'</option>'; ?>
-                    </select><br>
-                    <label>Location<span class="required-asterisk">*</span></label>
-                    <select name="location_id" id="editLocationSelect" required>
-                        <option value="">Select Location</option>
-                        <?php $locs = $conn->query("SELECT * FROM locations"); while ($l = $locs->fetch_assoc()) echo '<option value="'.$l['id'].'">'.htmlspecialchars($l['name']).'</option>'; ?>
-                    </select><br>
-                    <label>Stock<span class="required-asterisk">*</span></label>
-                    <input type="number" name="current_stock" value="${item.current_stock}" min="0" required>
-                    <label>Unit<span class="required-asterisk">*</span></label>
-                    <input type="text" name="unit" value="${item.unit||''}" placeholder="Unit (e.g. kg, gram, pieces)" required><br>
-                    <label>Low Stock</label>
-                    <input type="number" name="low_stock" value="${item.low_stock||''}" min="0"><br>
-                    <label>Maximum Stock</label>
-                    <input type="number" name="max_stock" value="${item.max_stock||''}" min="0"><br>
+                    <div style="margin-bottom:16px;">
+                        <label>Category<span class="required-asterisk">*</span></label>
+                        <select name="category_id" id="editCategorySelect" required style="width:100%;margin-top:2px;">
+                            <option value="">Select Category</option>
+                            <?php $cats = $conn->query("SELECT * FROM categories"); while ($c = $cats->fetch_assoc()) echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).'</option>'; ?>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label>Location<span class="required-asterisk">*</span></label>
+                        <select name="location_id" id="editLocationSelect" required style="width:100%;margin-top:2px;">
+                            <option value="">Select Location</option>
+                            <?php $locs = $conn->query("SELECT * FROM locations"); while ($l = $locs->fetch_assoc()) echo '<option value="'.$l['id'].'">'.htmlspecialchars($l['name']).'</option>'; ?>
+                        </select>
+                    </div>
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        <div style="flex:1;">
+                            <label>Stock<span class="required-asterisk">*</span></label>
+                            <input type="number" name="current_stock" value="${item.current_stock}" min="0" required>
+                        </div>
+                        <div style="flex:1;">
+                            <label>Unit<span class="required-asterisk">*</span></label>
+                            <input type="text" name="unit" value="${item.unit||''}" placeholder="Unit (e.g. kg, gram, pieces)" required>
+                        </div>
+                    </div><br>
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        <div style="flex:1;">
+                            <label>Low Stock</label>
+                            <input type="number" name="low_stock" value="${item.low_stock||''}" min="0">
+                        </div>
+                        <div style="flex:1;">
+                            <label>Maximum Stock</label>
+                            <input type="number" name="max_stock" value="${item.max_stock||''}" min="0">
+                        </div>
+                    </div><br>
                     <label><input type="checkbox" name="is_perishable" id="isPerishableEdit" ${item.is_perishable==1?'checked':''} onchange="toggleExpiry('edit')"> Perishable</label><br>
                     <div id="expiryDateEdit" style="display:${item.is_perishable==1?'block':'none'};">
                         <label>Expiry Date<span class="required-asterisk">*</span></label>

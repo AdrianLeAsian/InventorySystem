@@ -27,7 +27,7 @@ body {
     position: fixed;
     height: 100vh;
     padding-top: 30px;
-    box-shadow: 2px 0 8px rgba(52,73,94,0.08);
+    box-shadow: 2px 0 16px rgba(52,73,94,0.18);
     z-index: 100;
 }
 
@@ -36,7 +36,7 @@ body {
     margin: 0 auto 20px auto;
     width: 120px;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(52,73,94,0.08);
+    box-shadow: 0 4px 16px rgba(52,73,94,0.18);
 }
 
 .sidebar a {
@@ -55,6 +55,7 @@ body {
 .sidebar a.active, .sidebar a:hover {
     background: var(--primary-light);
     color: #fff;
+    border-radius: 0 !important;
 }
 
 .sidebar .icon {
@@ -72,7 +73,7 @@ body {
     font-weight: 700;
     color: var(--primary);
     border-bottom: 1px solid #eee;
-    box-shadow: 0 2px 8px rgba(52,73,94,0.04);
+    box-shadow: 0 4px 16px rgba(52,73,94,0.12);
 }
 
 .main-content {
@@ -89,7 +90,7 @@ body {
 .dashboard-summary div {
     background: #fff;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(52,73,94,0.08);
+    box-shadow: 0 4px 16px rgba(52,73,94,0.16);
     padding: 24px 32px;
     font-size: 1.2em;
     color: #34495E;
@@ -103,7 +104,7 @@ table {
     margin: 24px 0;
     background: #fff;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(52,73,94,0.08);
+    box-shadow: 0 4px 16px rgba(52,73,94,0.16);
     overflow: hidden;
 }
 th, td {
@@ -255,7 +256,7 @@ button, .btn-primary, .btn-danger, .btn-warning {
     border-radius: 16px;
     width: 100%;
     max-width: 480px;
-    box-shadow: 0 8px 32px rgba(52,73,94,0.22);
+    box-shadow: 0 12px 48px rgba(52,73,94,0.32);
     position: relative;
     color: #34495E;
 }
