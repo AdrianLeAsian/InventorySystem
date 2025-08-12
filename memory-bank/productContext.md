@@ -9,6 +9,7 @@ To provide a simple and effective inventory management solution for small to med
 - Inefficient management of perishable items leading to waste.
 - Lack of centralized data for inventory reporting.
 - Lack of historical tracking of inventory changes.
+- Unauthorized access to sensitive inventory data.
 
 **How it should work:**
 Users should be able to:
@@ -19,6 +20,9 @@ Users should be able to:
 - View a separate table for perishable items, ordered by expiry date (FIFO), with status indicators (Expired, Near, Fresh).
 - Generate reports on inventory data.
 - View a log of all recent inventory activities on the dashboard, including item name, category, action performed, date/time, and expiry status.
+- Categories and Locations tables should be displayed side-by-side on the inventory page for better space utilization.
+- The "Inventory Overview" heading and summary cards on the dashboard should be visually grouped within a single container.
+- Access to core application pages (dashboard, inventory, reports, user management) should be restricted to authenticated users.
 
 **User experience goals:**
 - Intuitive and easy-to-navigate interface.
@@ -26,3 +30,5 @@ Users should be able to:
 - Efficient data entry and updates.
 - Reliable tracking of perishable goods to minimize waste.
 - Transparent overview of all inventory changes through activity logs.
+- Optimized layout for related data on the inventory and dashboard pages.
+- Secure and controlled access to inventory data.

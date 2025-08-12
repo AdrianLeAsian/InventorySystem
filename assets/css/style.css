@@ -82,6 +82,22 @@ body {
     min-height: 100vh;
 }
 
+.dashboard-section {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(52,73,94,0.16);
+    padding: 24px 32px;
+    margin-bottom: 36px; /* Add some space below this section */
+}
+
+.dashboard-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--primary);
+    font-size: 1.8em;
+    font-weight: 700;
+}
+
 .dashboard-summary {
     display: flex;
     gap: 24px; /* Adjusted gap for better spacing */

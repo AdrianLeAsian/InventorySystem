@@ -22,7 +22,10 @@ if ($action == 'update_stock') {
         $stmt->bind_param('isi', $item_id, $expiry_date, $quantity);
         if ($stmt->execute()) {
             // Update total stock in items table
-            $conn->query("UPDATE items SET current_stock = current_stock + $quantity WHERE id = $item_id");
+            $update_stock_stmt = $conn->prepare("UPDATE items SET current_stock = current_stock + ? WHERE id = ?");
+            $update_stock_stmt->bind_param('ii', $quantity, $item_id);
+            $update_stock_stmt->execute();
+            $update_stock_stmt->close();
             
             // Log the action
             $log_stmt = $conn->prepare("INSERT INTO logs (item_id, action, category) VALUES (?, ?, ?)");
@@ -73,7 +76,10 @@ if ($action == 'reduce_stock') {
         $stmt->bind_param('iisi', $quantity, $item_id, $expiry_date, $quantity);
         if ($stmt->execute()) {
             // Update total stock in items table
-            $conn->query("UPDATE items SET current_stock = current_stock - $quantity WHERE id = $item_id");
+            $update_stock_stmt = $conn->prepare("UPDATE items SET current_stock = current_stock - ? WHERE id = ?");
+            $update_stock_stmt->bind_param('ii', $quantity, $item_id);
+            $update_stock_stmt->execute();
+            $update_stock_stmt->close();
             
             // Log the action
             $log_stmt = $conn->prepare("INSERT INTO logs (item_id, action, category) VALUES (?, ?, ?)");

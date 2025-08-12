@@ -25,11 +25,16 @@ include 'includes/db.php';
                 <input type="text" name="search" placeholder="Search item name..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" style="max-width:220px;">
                 <select name="category_filter" style="max-width:180px;">
                     <option value="">All Categories</option>
-                    <?php $catRes = $conn->query("SELECT * FROM categories");
+                    <?php
+                    $catStmt = $conn->prepare("SELECT id, name FROM categories");
+                    $catStmt->execute();
+                    $catRes = $catStmt->get_result();
                     while ($cat = $catRes->fetch_assoc()) {
                         $sel = (isset($_GET['category_filter']) && $_GET['category_filter'] == $cat['id']) ? 'selected' : '';
                         echo '<option value="'.$cat['id'].'" '.$sel.'>'.htmlspecialchars($cat['name']).'</option>';
-                    } ?>
+                    }
+                    $catStmt->close();
+                    ?>
                 </select>
                 <button type="submit" class="btn-primary">Filter</button>
             </form>
@@ -120,9 +125,11 @@ include 'includes/db.php';
             </thead>
             <tbody>
                 <?php
-                $fifo = $conn->query("SELECT items.name, item_batches.expiry_date, item_batches.quantity FROM item_batches JOIN items ON item_batches.item_id=items.id WHERE items.is_perishable=1 ORDER BY item_batches.expiry_date ASC");
+                $fifoStmt = $conn->prepare("SELECT items.name, item_batches.expiry_date, item_batches.quantity FROM item_batches JOIN items ON item_batches.item_id=items.id WHERE items.is_perishable=1 ORDER BY item_batches.expiry_date ASC");
+                $fifoStmt->execute();
+                $fifoRes = $fifoStmt->get_result();
                 $now = strtotime(date('Y-m-d'));
-                while ($row = $fifo->fetch_assoc()) {
+                while ($row = $fifoRes->fetch_assoc()) {
                     $exp = strtotime($row['expiry_date']);
                     $days_total = ($exp - $now) / 86400;
                     $status = '';
@@ -149,51 +156,63 @@ include 'includes/db.php';
                     echo '<td>' . $row['quantity'] . '</td>';
                     echo '</tr>';
                 }
+                $fifoStmt->close();
                 ?>
             </tbody>
         </table>
-        <!-- Category Table -->
-        <h3>Categories</h3>
-        <table border="1" cellpadding="10" cellspacing="0">
-            <thead>
-                <tr><th>Name</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-                <?php
-                $cats = $conn->query("SELECT * FROM categories");
-                while ($row = $cats->fetch_assoc()) {
-                    echo '<tr>';
-                    echo '<td>' . htmlspecialchars($row['name']) . '</td>';
-                    echo '<td>';
-                    echo '<button class="btn-warning" onclick="showEditCategoryModal(' . $row['id'] . ', \'' . addslashes($row['name']) . '\')">Edit</button> ';
-                    echo '<button class="btn-danger" onclick="showDeleteCategoryModal(' . $row['id'] . ')">Delete</button>';
-                    echo '</td>';
-                    echo '</tr>';
-                }
-                ?>
-            </tbody>
-        </table>
-        <!-- Location Table -->
-        <h3>Locations</h3>
-        <table border="1" cellpadding="10" cellspacing="0">
-            <thead>
-                <tr><th>Name</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-                <?php
-                $locs = $conn->query("SELECT * FROM locations");
-                while ($row = $locs->fetch_assoc()) {
-                    echo '<tr>';
-                    echo '<td>' . htmlspecialchars($row['name']) . '</td>';
-                    echo '<td>';
-                    echo '<button class="btn-warning" onclick="showEditLocationModal(' . $row['id'] . ', \'' . addslashes($row['name']) . '\')">Edit</button> ';
-                    echo '<button class="btn-danger" onclick="showDeleteLocationModal(' . $row['id'] . ')">Delete</button>';
-                    echo '</td>';
-                    echo '</tr>';
-                }
-                ?>
-            </tbody>
-        </table>
+        <!-- Categories and Locations in one row -->
+        <div style="display:flex; justify-content:space-between; gap:20px; margin-top:20px;">
+            <div style="flex:1;">
+                <h3>Categories</h3>
+                <table border="1" cellpadding="10" cellspacing="0" style="width:100%;">
+                    <thead>
+                        <tr><th>Name</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $catsStmt = $conn->prepare("SELECT id, name FROM categories");
+                        $catsStmt->execute();
+                        $catsRes = $catsStmt->get_result();
+                        while ($row = $catsRes->fetch_assoc()) {
+                            echo '<tr>';
+                            echo '<td>' . htmlspecialchars($row['name']) . '</td>';
+                            echo '<td>';
+                            echo '<button class="btn-warning" onclick="showEditCategoryModal(' . $row['id'] . ', \'' . addslashes($row['name']) . '\')">Edit</button> ';
+                            echo '<button class="btn-danger" onclick="showDeleteCategoryModal(' . $row['id'] . ')">Delete</button>';
+                            echo '</td>';
+                            echo '</tr>';
+                        }
+                        $catsStmt->close();
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+            <div style="flex:1;">
+                <h3>Locations</h3>
+                <table border="1" cellpadding="10" cellspacing="0" style="width:100%;">
+                    <thead>
+                        <tr><th>Name</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $locsStmt = $conn->prepare("SELECT id, name FROM locations");
+                        $locsStmt->execute();
+                        $locsRes = $locsStmt->get_result();
+                        while ($row = $locsRes->fetch_assoc()) {
+                            echo '<tr>';
+                            echo '<td>' . htmlspecialchars($row['name']) . '</td>';
+                            echo '<td>';
+                            echo '<button class="btn-warning" onclick="showEditLocationModal(' . $row['id'] . ', \'' . addslashes($row['name']) . '\')">Edit</button> ';
+                            echo '<button class="btn-danger" onclick="showDeleteLocationModal(' . $row['id'] . ')">Delete</button>';
+                            echo '</td>';
+                            echo '</tr>';
+                        }
+                        $locsStmt->close();
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
     <?php include 'includes/modals.php'; ?>
     <script>
@@ -209,14 +228,30 @@ include 'includes/db.php';
                     <label>Category<span class="required-asterisk">*</span></label>
                     <select name="category_id" required style="width:100%;margin-top:2px;">
                         <option value="">Select Category</option>
-                        <?php $cats = $conn->query("SELECT * FROM categories"); while ($c = $cats->fetch_assoc()) echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).'</option>'; ?>
+                        <?php
+                        $catsStmt = $conn->prepare("SELECT id, name FROM categories");
+                        $catsStmt->execute();
+                        $catsRes = $catsStmt->get_result();
+                        while ($c = $catsRes->fetch_assoc()) {
+                            echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).'</option>';
+                        }
+                        $catsStmt->close();
+                        ?>
                     </select>
                 </div>
                 <div style="margin-bottom:16px;">
                     <label>Location<span class="required-asterisk">*</span></label>
                     <select name="location_id" required style="width:100%;margin-top:2px;">
                         <option value="">Select Location</option>
-                        <?php $locs = $conn->query("SELECT * FROM locations"); while ($l = $locs->fetch_assoc()) echo '<option value="'.$l['id'].'">'.htmlspecialchars($l['name']).'</option>'; ?>
+                        <?php
+                        $locsStmt = $conn->prepare("SELECT id, name FROM locations");
+                        $locsStmt->execute();
+                        $locsRes = $locsStmt->get_result();
+                        while ($l = $locsRes->fetch_assoc()) {
+                            echo '<option value="'.$l['id'].'">'.htmlspecialchars($l['name']).'</option>';
+                        }
+                        $locsStmt->close();
+                        ?>
                     </select>
                 </div>
                 <div style="display:flex;gap:12px;align-items:center;">
@@ -288,14 +323,30 @@ include 'includes/db.php';
                         <label>Category<span class="required-asterisk">*</span></label>
                         <select name="category_id" id="editCategorySelect" required style="width:100%;margin-top:2px;">
                             <option value="">Select Category</option>
-                            <?php $cats = $conn->query("SELECT * FROM categories"); while ($c = $cats->fetch_assoc()) echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).'</option>'; ?>
+                            <?php
+                            $catsStmt = $conn->prepare("SELECT id, name FROM categories");
+                            $catsStmt->execute();
+                            $catsRes = $catsStmt->get_result();
+                            while ($c = $catsRes->fetch_assoc()) {
+                                echo '<option value="'.$c['id'].'">'.htmlspecialchars($c['name']).'</option>';
+                            }
+                            $catsStmt->close();
+                            ?>
                         </select>
                     </div>
                     <div style="margin-bottom:16px;">
                         <label>Location<span class="required-asterisk">*</span></label>
                         <select name="location_id" id="editLocationSelect" required style="width:100%;margin-top:2px;">
                             <option value="">Select Location</option>
-                            <?php $locs = $conn->query("SELECT * FROM locations"); while ($l = $locs->fetch_assoc()) echo '<option value="'.$l['id'].'">'.htmlspecialchars($l['name']).'</option>'; ?>
+                            <?php
+                            $locsStmt = $conn->prepare("SELECT id, name FROM locations");
+                            $locsStmt->execute();
+                            $locsRes = $locsStmt->get_result();
+                            while ($l = $locsRes->fetch_assoc()) {
+                                echo '<option value="'.$l['id'].'">'.htmlspecialchars($l['name']).'</option>';
+                            }
+                            $locsStmt->close();
+                            ?>
                         </select>
                     </div>
                     <div style="display:flex;gap:12px;align-items:center;">

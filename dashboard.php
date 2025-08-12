@@ -1,4 +1,5 @@
 <?php
+include 'includes/auth.php';
 $page_title = 'Dashboard';
 include 'includes/db.php';
 ?>
@@ -13,79 +14,81 @@ include 'includes/db.php';
     <?php include 'includes/sidebar.php'; ?>
     <?php include 'includes/header.php'; ?>
     <div class="main-content">
-        <h2>Inventory Overview</h2>
-        <div class="dashboard-container">
-            <div class="dashboard-summary">
-                <?php
-                // Get summary counts
-                function get_count($conn, $sql) {
-                    $result = $conn->query($sql);
-                    if ($result && $row = $result->fetch_row()) {
-                        return $row[0];
+        <div class="dashboard-section">
+            <h2>Inventory Overview</h2>
+            <div class="dashboard-container">
+                <div class="dashboard-summary">
+                    <?php
+                    // Get summary counts
+                    function get_count($conn, $sql) {
+                        $result = $conn->query($sql);
+                        if ($result && $row = $result->fetch_row()) {
+                            return $row[0];
+                        }
+                        return 0;
                     }
-                    return 0;
-                }
 
-                $total_items = get_count($conn, "SELECT COUNT(*) FROM items");
-                $low_stock_count = get_count($conn, "SELECT COUNT(*) FROM items WHERE current_stock <= low_stock");
-                $now = date('Y-m-d');
-                $near_expired_count = get_count($conn, "SELECT COUNT(*) FROM item_batches WHERE expiry_date <= DATE_ADD('$now', INTERVAL 7 DAY) AND expiry_date >= '$now'");
-                $expired_count = get_count($conn, "SELECT COUNT(*) FROM item_batches WHERE expiry_date < '$now'");
-                $total_near_expired = $near_expired_count + $expired_count;
+                    $total_items = get_count($conn, "SELECT COUNT(*) FROM items");
+                    $low_stock_count = get_count($conn, "SELECT COUNT(*) FROM items WHERE current_stock <= low_stock");
+                    $now = date('Y-m-d');
+                    $near_expired_count = get_count($conn, "SELECT COUNT(*) FROM item_batches WHERE expiry_date <= DATE_ADD('$now', INTERVAL 7 DAY) AND expiry_date >= '$now'");
+                    $expired_count = get_count($conn, "SELECT COUNT(*) FROM item_batches WHERE expiry_date < '$now'");
+                    $total_near_expired = $near_expired_count + $expired_count;
 
-                // Determine color for Total Items (Green: always normal)
-                $total_items_color = '#7D9D8A'; // Green
+                    // Determine color for Total Items (Green: always normal)
+                    $total_items_color = '#7D9D8A'; // Green
 
-                // Determine color for Near/Expired Items (Orange: warning, Red: urgent)
-                if ($expired_count > 0) { // Prioritize red if any items are expired
-                    $near_expired_color = '#D33F49'; // Red
-                } elseif ($total_near_expired > 0) { // Orange if there are near-expired items but no expired ones
-                    $near_expired_color = '#FFA500'; // Orange
-                } else {
-                    $near_expired_color = '#7D9D8A'; // Green (normal)
-                }
+                    // Determine color for Near/Expired Items (Orange: warning, Red: urgent)
+                    if ($expired_count > 0) { // Prioritize red if any items are expired
+                        $near_expired_color = '#D33F49'; // Red
+                    } elseif ($total_near_expired > 0) { // Orange if there are near-expired items but no expired ones
+                        $near_expired_color = '#FFA500'; // Orange
+                    } else {
+                        $near_expired_color = '#7D9D8A'; // Green (normal)
+                    }
 
-                // Determine color for Low Stock Alerts (Orange: warning, Red: urgent)
-                if ($low_stock_count > 5) { // Example threshold for urgent
-                    $low_stock_color = '#D33F49'; // Red
-                } elseif ($low_stock_count > 0) { // Example threshold for warning
-                    $low_stock_color = '#FFA500'; // Orange
-                } else {
-                    $low_stock_color = '#7D9D8A'; // Green (normal)
-                }
-                ?>
+                    // Determine color for Low Stock Alerts (Orange: warning, Red: urgent)
+                    if ($low_stock_count > 5) { // Example threshold for urgent
+                        $low_stock_color = '#D33F49'; // Red
+                    } elseif ($low_stock_count > 0) { // Example threshold for warning
+                        $low_stock_color = '#FFA500'; // Orange
+                    } else {
+                        $low_stock_color = '#7D9D8A'; // Green (normal)
+                    }
+                    ?>
 
-                <div class="summary-card">
-                    <div class="card-title">Total Items</div>
-                    <div class="card-content">
-                        <svg class="color-indicator" width="20" height="20">
-                            <circle cx="10" cy="10" r="10" fill="<?php echo $total_items_color; ?>"/>
-                        </svg>
-                        <span class="counter"><?php echo $total_items; ?></span>
+                    <div class="summary-card">
+                        <div class="card-title">Total Items</div>
+                        <div class="card-content">
+                            <svg class="color-indicator" width="20" height="20">
+                                <circle cx="10" cy="10" r="10" fill="<?php echo $total_items_color; ?>"/>
+                            </svg>
+                            <span class="counter"><?php echo $total_items; ?></span>
+                        </div>
+                        <div class="card-description">Items in inventory</div>
                     </div>
-                    <div class="card-description">Items in inventory</div>
-                </div>
 
-                <div class="summary-card">
-                    <div class="card-title">Near/Expired Items</div>
-                    <div class="card-content">
-                        <svg class="color-indicator" width="20" height="20">
-                            <circle cx="10" cy="10" r="10" fill="<?php echo $near_expired_color; ?>"/>
-                        </svg>
-                        <span class="counter"><?php echo $total_near_expired; ?></span>
+                    <div class="summary-card">
+                        <div class="card-title">Near/Expired Items</div>
+                        <div class="card-content">
+                            <svg class="color-indicator" width="20" height="20">
+                                <circle cx="10" cy="10" r="10" fill="<?php echo $near_expired_color; ?>"/>
+                            </svg>
+                            <span class="counter"><?php echo $total_near_expired; ?></span>
+                        </div>
+                        <div class="card-description">Items near or past expiry</div>
                     </div>
-                    <div class="card-description">Items near or past expiry</div>
-                </div>
 
-                <div class="summary-card">
-                    <div class="card-title">Low Stock Alerts</div>
-                    <div class="card-content">
-                        <svg class="color-indicator" width="20" height="20">
-                            <circle cx="10" cy="10" r="10" fill="<?php echo $low_stock_color; ?>"/>
-                        </svg>
-                        <span class="counter"><?php echo $low_stock_count; ?></span>
+                    <div class="summary-card">
+                        <div class="card-title">Low Stock Alerts</div>
+                        <div class="card-content">
+                            <svg class="color-indicator" width="20" height="20">
+                                <circle cx="10" cy="10" r="10" fill="<?php echo $low_stock_color; ?>"/>
+                            </svg>
+                            <span class="counter"><?php echo $low_stock_count; ?></span>
+                        </div>
+                        <div class="card-description">Items need attention</div>
                     </div>
-                    <div class="card-description">Items need attention</div>
                 </div>
             </div>
         </div>

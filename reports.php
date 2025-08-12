@@ -1,4 +1,5 @@
 <?php
+include 'includes/auth.php';
 $page_title = 'Reports';
 include 'includes/db.php';
 ?>
