@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                     error_log("New location '{$location_name}' added with ID: {$location_id}");
                 } else {
                     $errors[] = "Failed to add new location '{$location_name}' (DB error): " . $insertLocStmt->error;
-                    error_log("Failed to add new location: " . $insertLocStmt->error . " - Location: " . $location_name);
+                    error_log("Failed to add new location: " . $insertStmt->error . " - Location: " . $location_name);
                     $skipped_count++;
                     continue; // Skip row if location cannot be added
                 }
@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                     error_log("Item '{$name}' found, attempting UPDATE.");
                     // Item exists, perform UPDATE
                     $item_id = $existing_item['id'];
-                    $updateStmt = $conn->prepare("UPDATE items SET category_id=?, location_id=?, current_stock=?, unit=?, low_stock=?, max_stock=?, is_perishable=?, expiry_date=? WHERE id=?");
+$updateStmt = $conn->prepare("UPDATE items SET category_id=?, location_id=?, current_stock=?, unit=?, low_stock=?, max_stock=?, is_perishable=?, expiry_date=? WHERE id=?");
                     // Debugging: Log parameters before binding
                     error_log("UPDATE Params: cat_id={$category_id}, loc_id={$location_id}, stock={$current_stock}, unit={$unit}, low={$low_stock}, max={$max_stock}, perishable={$is_perishable}, expiry={$expiry_date}, id={$item_id}");
                     $updateStmt->bind_param('iiisiiisi', $category_id, $location_id, $current_stock, $unit, $low_stock, $max_stock, $is_perishable, $expiry_date, $item_id);
@@ -139,25 +139,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                         }
                         $logStmt->close();
 
-                        // If perishable, update/add to item_batches
-                        if ($is_perishable) {
-                            error_log("Item '{$name}' is perishable, updating item_batches.");
-                            // For simplicity, delete existing batches and insert new one from CSV
-                            $deleteBatchesStmt = $conn->prepare("DELETE FROM item_batches WHERE item_id = ?");
-                            $deleteBatchesStmt->bind_param('i', $item_id);
-                            if (!$deleteBatchesStmt->execute()) {
-                                $errors[] = "Failed to delete old item_batches for '{$name}' (DB error): " . $deleteBatchesStmt->error;
-                                error_log("Failed to delete old item_batches: " . $deleteBatchesStmt->error . " - Item: " . $name);
+                        // If perishable and expiry date provided, add a new batch
+                        if ($is_perishable && $expiry_date) {
+                            error_log("Item '{$name}' is perishable with expiry, adding new batch.");
+                            $batchInsertStmt = $conn->prepare("INSERT INTO item_batches (item_id, quantity, expiry_date) VALUES (?, ?, ?)");
+                            // Use the $current_stock from CSV as the quantity for the new batch
+                            $batchInsertStmt->bind_param('iis', $item_id, $current_stock, $expiry_date);
+                            if (!$batchInsertStmt->execute()) {
+                                $errors[] = "Failed to add new batch for item '{$name}' (DB error): " . $batchInsertStmt->error;
+                                error_log("Failed to add new batch for item '{$name}': " . $batchInsertStmt->error);
                             }
-                            $deleteBatchesStmt->close();
-
-                            $insertBatchStmt = $conn->prepare("INSERT INTO item_batches (item_id, quantity, expiry_date) VALUES (?, ?, ?)");
-                            $insertBatchStmt->bind_param('iis', $item_id, $current_stock, $expiry_date);
-                            if (!$insertBatchStmt->execute()) {
-                                $errors[] = "Failed to insert new item_batches for '{$name}' (DB error): " . $insertBatchStmt->error;
-                                error_log("Failed to insert new item_batches: " . $insertBatchStmt->error . " - Item: " . $name);
-                            }
-                            $insertBatchStmt->close();
+                            $batchInsertStmt->close();
                         }
                     } else {
                         $skipped_count++;
@@ -176,8 +168,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                         $imported_count++;
                         $new_item_id = $conn->insert_id;
                         error_log("Item '{$name}' inserted successfully with ID: {$new_item_id}.");
-                        // If perishable, add to item_batches
-                        if ($is_perishable) {
+                            // If perishable and expiry date provided, add a new batch for the newly inserted item
+                            if ($is_perishable && $expiry_date) {
                             error_log("Item '{$name}' is perishable, inserting into item_batches.");
                             $insertBatchStmt = $conn->prepare("INSERT INTO item_batches (item_id, quantity, expiry_date) VALUES (?, ?, ?)");
                             $insertBatchStmt->bind_param('iis', $new_item_id, $current_stock, $expiry_date);
