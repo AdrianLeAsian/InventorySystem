@@ -1,18 +1,19 @@
 # Active Context
 
 **Current work focus:**
-Refactored the layout of the Categories and Locations tables on `inventory.php` to display side-by-side, and grouped the "Inventory Overview" heading with its summary cards on `dashboard.php` within a new container.
+Implemented prepared statements for all database queries and added session-based authentication checks to `dashboard.php`, `inventory.php`, `reports.php`, and `users.php` to prevent unauthorized access.
 
 **Recent changes:**
-- Modified `inventory.php` to use a flexbox container for the Categories and Locations tables, placing them in one row.
-- Modified `dashboard.php` to wrap the `<h2>Inventory Overview</h2>` and the `dashboard-summary` div within a new `dashboard-section` div.
-- Added new CSS rules to `assets/css/style.css` for the `.dashboard-section` to provide visual grouping and spacing.
-- Updated `projectbrief.md`, `productContext.md`, `systemPatterns.md`, and `techContext.md` to reflect these UI/layout changes.
+- Modified `inventory.php` to use prepared statements for category, location, and perishable item fetching.
+- Modified `includes/item_actions.php` to use prepared statements for updating `items` table.
+- Modified `includes/stock_actions.php` to use prepared statements for updating `items` table.
+- Added `include 'includes/auth.php';` to `dashboard.php`, `inventory.php`, `reports.php`, and `users.php` to enforce session-based authentication.
+- Updated `projectbrief.md`, `productContext.md`, `systemPatterns.md`, and `techContext.md` to reflect these security and authentication changes.
 
 **Next steps:**
 - Address any further feedback or new requirements from the user.
 
 **Active decisions and considerations:**
-- The use of flexbox for table layout improves responsiveness and visual organization on `inventory.php`.
-- The `dashboard-section` container on `dashboard.php` enhances the visual hierarchy and readability of the dashboard overview.
-- Maintaining consistent styling across the application is crucial for a good user experience.
+- Consistent use of prepared statements significantly reduces SQL injection risks.
+- Session-based authentication ensures that only logged-in users can access sensitive application pages.
+- The database connection using `root` with no password remains a security concern for production environments and has been noted in `techContext.md`.
