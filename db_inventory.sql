@@ -21,6 +21,7 @@ CREATE TABLE items (
     low_stock INT DEFAULT 0,
     max_stock INT DEFAULT 0,
     is_perishable BOOLEAN DEFAULT 0,
+    input_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
     FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE
 );
