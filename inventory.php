@@ -213,10 +213,56 @@ include 'includes/db.php';
                 </table>
             </div>
         </div>
+        <div style="display:flex; justify-content:space-between; gap:20px; margin-top:20px;">
+            <div style="flex:1;">
+                <h3>Import/Export</h3>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button type="button" class="btn-primary" onclick="showImportCsvModal()">Import CSV</button>
+                    <a href="export_csv.php" class="btn-primary" style="text-decoration:none; padding: 8px 12px; border-radius: 5px;">Export CSV</a>
+                </div>
+            </div>
+        </div>
     </div>
     <?php include 'includes/modals.php'; ?>
     <script>
     // Modal helpers
+    function showImportCsvModal() {
+        document.getElementById('modal').style.display = 'block';
+        document.getElementById('modal-body').innerHTML = `
+            <h3>Import CSV</h3>
+            <div style="margin-bottom: 15px;">
+                <a href="download_template.php" class="btn-primary" style="text-decoration:none; padding: 8px 12px; border-radius: 5px;">Download Template</a>
+            </div>
+            <form action="import_csv.php" method="post" enctype="multipart/form-data" id="importCsvForm">
+                <label>Select CSV File<span class="required-asterisk">*</span></label>
+                <input type="file" name="csv_file" accept=".csv" required><br>
+                <button type="submit" class="btn-primary">Import</button>
+            </form>
+            <div id="importCsvMsg"></div>
+        `;
+        document.getElementById('importCsvForm').onsubmit = function(e) {
+            e.preventDefault();
+            var fd = new FormData(this);
+            fetch('import_csv.php', {method:'POST',body:fd})
+            .then(r=>r.text()).then(text=>{ // Changed to text to see full response
+                try {
+                    var d = JSON.parse(text);
+                    document.getElementById('importCsvMsg').innerText = d.message || (d.status=='success'?'CSV imported!':'Error');
+                    if(d.status=='success') setTimeout(()=>location.reload(),800);
+                } catch (e) {
+                    // If not JSON, it's likely a redirect or raw PHP output
+                    console.error("Non-JSON response:", text);
+                    document.getElementById('importCsvMsg').innerText = "Import initiated. Please refresh the page if it doesn't update automatically.";
+                    setTimeout(()=>location.reload(),800);
+                }
+            })
+            .catch(error => {
+                console.error('Error during fetch:', error);
+                document.getElementById('importCsvMsg').innerText = 'An error occurred during import.';
+            });
+        };
+    }
+
     function showAddItemModal() {
         document.getElementById('modal').style.display = 'block';
         document.getElementById('modal-body').innerHTML = `
@@ -316,7 +362,7 @@ include 'includes/db.php';
             document.getElementById('modal-body').innerHTML = `
                 <h3>Edit Item</h3>
                 <form id="editItemForm">
-                    <input type="hidden" name="id" value="${item.id}">
+                    <input type="hidden" name="id" value="${id}">
                     <label>Item Name<span class="required-asterisk">*</span></label>
                     <input type="text" name="name" value="${item.name}" required><br>
                     <div style="margin-bottom:16px;">
