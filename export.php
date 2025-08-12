@@ -88,10 +88,9 @@ if (isset($_GET['type'])) {
         }
     }
     if ($search_query !== null) {
-        $where_clauses[] = "(i.name LIKE ? OR i.barcode LIKE ?)";
+        $where_clauses[] = "i.name LIKE ?";
         $params[] = '%' . $search_query . '%';
-        $params[] = '%' . $search_query . '%';
-        $param_types .= 'ss';
+        $param_types .= 's';
     }
 
     $where_sql = '';
@@ -100,7 +99,7 @@ if (isset($_GET['type'])) {
     }
 
     if ($type == 'items_csv') {
-        $sql = "SELECT i.id, i.name, c.name as category_name, i.barcode, i.quantity, i.unit, i.low_stock_threshold, i.purchase_price, i.selling_price, i.description, i.created_at, i.updated_at 
+        $sql = "SELECT i.id, i.name, c.name as category_name, i.quantity, i.unit, i.low_stock_threshold, i.purchase_price, i.selling_price, i.description, i.created_at, i.updated_at 
                 FROM items i 
                 JOIN categories c ON i.category_id = c.id 
                 ORDER BY i.name ASC";
@@ -112,7 +111,7 @@ if (isset($_GET['type'])) {
             }
             mysqli_free_result($result);
         }
-        $headers = ['ID', 'Item Name', 'Category', 'Barcode', 'Quantity', 'Unit', 'Low Stock At', 'Purchase Price', 'Selling Price', 'Description', 'Created At', 'Updated At'];
+        $headers = ['ID', 'Item Name', 'Category', 'Quantity', 'Unit', 'Low Stock At', 'Purchase Price', 'Selling Price', 'Description', 'Created At', 'Updated At'];
         output_csv('inventory_items_' . date('Y-m-d') . '.csv', $items_data, $headers);
 
     } elseif ($type == 'categories_csv') {
@@ -159,7 +158,7 @@ if (isset($_GET['type'])) {
         output_csv('daily_in_out_' . $report_date . '.csv', $daily_data, $headers);
 
     } elseif ($type == 'stock_overview_csv') {
-        $sql = "SELECT name, quantity, barcode FROM items ORDER BY name ASC";
+        $sql = "SELECT name, quantity FROM items ORDER BY name ASC";
         $result = mysqli_query($conn, $sql);
         $stock_overview_data = [];
         if ($result) {
@@ -168,11 +167,11 @@ if (isset($_GET['type'])) {
             }
             mysqli_free_result($result);
         }
-        $headers = ['Item Name', 'Current Stock', 'Barcode'];
+        $headers = ['Item Name', 'Current Stock'];
         output_csv('stock_overview_' . date('Y-m-d') . '.csv', $stock_overview_data, $headers);
 
     } elseif ($type == 'low_stock_csv') {
-        $sql = "SELECT name, quantity, low_stock_threshold, barcode FROM items WHERE quantity <= low_stock_threshold ORDER BY name ASC";
+        $sql = "SELECT name, quantity, low_stock_threshold FROM items WHERE quantity <= low_stock_threshold ORDER BY name ASC";
         $result = mysqli_query($conn, $sql);
         $low_stock_data = [];
         if ($result) {
@@ -181,7 +180,7 @@ if (isset($_GET['type'])) {
             }
             mysqli_free_result($result);
         }
-        $headers = ['Item Name', 'Current Stock', 'Low Stock Threshold', 'Barcode'];
+        $headers = ['Item Name', 'Current Stock', 'Low Stock Threshold'];
         output_csv('low_stock_items_' . date('Y-m-d') . '.csv', $low_stock_data, $headers);
 
     } elseif ($type == 'category_summary_csv') {
@@ -230,7 +229,6 @@ if (isset($_GET['type'])) {
         $sql_filtered_items = "SELECT 
                                 i.name as item_name, 
                                 c.name as category_name, 
-                                i.barcode, 
                                 i.quantity, 
                                 i.low_stock_threshold, 
                                 i.created_at 
@@ -253,14 +251,13 @@ if (isset($_GET['type'])) {
             mysqli_free_result($result_filtered_items);
             mysqli_stmt_close($stmt_filtered_items);
         }
-        $headers = ['Item Name', 'Category', 'Barcode', 'Quantity', 'Low Stock Threshold', 'Created At'];
+        $headers = ['Item Name', 'Category', 'Quantity', 'Low Stock Threshold', 'Created At'];
         output_csv('filtered_items_' . date('Y-m-d') . '.csv', $filtered_items_data, $headers);
 
     } elseif ($type == 'filtered_items_pdf') {
         $sql_filtered_items = "SELECT 
                                 i.name as item_name, 
                                 c.name as category_name, 
-                                i.barcode, 
                                 i.quantity, 
                                 i.low_stock_threshold, 
                                 i.created_at 
@@ -287,13 +284,12 @@ if (isset($_GET['type'])) {
         $html = '<h1>Filtered Items Report</h1>';
         $html .= '<table border="1" cellspacing="0" cellpadding="5" width="100%">';
         $html .= '<thead><tr>';
-        $html .= '<th>Item Name</th><th>Category</th><th>Barcode</th><th>Quantity</th><th>Low Stock Threshold</th><th>Created At</th>';
+        $html .= '<th>Item Name</th><th>Category</th><th>Quantity</th><th>Low Stock Threshold</th><th>Created At</th>';
         $html .= '</tr></thead><tbody>';
         foreach ($filtered_items_data as $row) {
             $html .= '<tr>';
             $html .= '<td>' . htmlspecialchars($row['item_name']) . '</td>';
             $html .= '<td>' . htmlspecialchars($row['category_name']) . '</td>';
-            $html .= '<td>' . htmlspecialchars($row['barcode']) . '</td>';
             $html .= '<td>' . htmlspecialchars($row['quantity']) . '</td>';
             $html .= '<td>' . htmlspecialchars($row['low_stock_threshold']) . '</td>';
             $html .= '<td>' . htmlspecialchars($row['created_at']) . '</td>';

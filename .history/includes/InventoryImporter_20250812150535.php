@@ -89,7 +89,7 @@ class InventoryImporter {
                     }
                 }
 
-                // Check for existing item by name
+                // Check for existing item
                 $itemId = null;
                 $stmt_check_item_by_name->bind_param("s", $itemName);
                 $stmt_check_item_by_name->execute();

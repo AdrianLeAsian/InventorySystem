@@ -167,6 +167,67 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Barcode scanner logic
+    const barcodeInput = document.getElementById('barcode_scanner_input');
+    const itemSelect = document.querySelector('select[name="item_id"]'); // Select by name as ID might conflict if multiple forms
+    const quantityInput = document.querySelector('input[name="quantity_change"]');
+    const barcodeStatus = document.getElementById('barcode_status');
+
+    if (barcodeInput) {
+        barcodeInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                event.preventDefault(); // Prevent form submission if it's part of one
+                const barcode = barcodeInput.value.trim();
+                if (barcode === '') {
+                    barcodeStatus.textContent = 'Please enter a barcode.';
+                    barcodeStatus.style.color = 'red';
+                    return;
+                }
+                barcodeStatus.textContent = 'Searching...';
+                barcodeStatus.style.color = 'orange';
+
+                fetch('get_item_by_barcode.php?barcode=' + encodeURIComponent(barcode))
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok: ' + response.statusText);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success && data.item) {
+                            const item = data.item;
+                            let itemFoundInSelect = false;
+                            for (let i = 0; i < itemSelect.options.length; i++) {
+                                if (itemSelect.options[i].value == item.id) {
+                                    itemSelect.value = item.id;
+                                    itemFoundInSelect = true;
+                                    break;
+                                }
+                            }
+                            if (itemFoundInSelect) {
+                                barcodeStatus.textContent = 'Item found: ' + item.name;
+                                barcodeStatus.style.color = 'green';
+                                quantityInput.focus(); // Focus on quantity field
+                                barcodeInput.value = ''; // Clear barcode input
+                            } else {
+                                barcodeStatus.textContent = 'Item found but not in dropdown (refresh page?)';
+                                barcodeStatus.style.color = 'red';
+                            }
+                        } else {
+                            barcodeStatus.textContent = data.message || 'Item not found or error.';
+                            barcodeStatus.style.color = 'red';
+                            itemSelect.value = ''; // Clear selection
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        barcodeStatus.textContent = 'Error fetching item. See console.';
+                        barcodeStatus.style.color = 'red';
+                    });
+            }
+        });
+    }
+
     // AJAX Form Submissions
     const addItemForm = document.getElementById('addItemForm');
     if (addItemForm) {
@@ -360,6 +421,7 @@ function openEditItemModal(itemId) {
                 document.getElementById('edit_item_id').value = item.id;
                 document.getElementById('edit_item_name').value = item.name;
                 document.getElementById('edit_item_category_id').value = item.category_id;
+                document.getElementById('edit_item_barcode').value = item.barcode;
                 document.getElementById('edit_item_quantity').value = item.quantity;
                 document.getElementById('edit_item_unit').value = item.unit;
                 document.getElementById('edit_item_low_stock_threshold').value = item.low_stock_threshold;
@@ -519,12 +581,13 @@ function addOrUpdateItemRow(item) {
         existingRow.cells[0].textContent = item.name;
         existingRow.cells[0].title = item.name;
         existingRow.cells[1].textContent = item.category_name;
-        existingRow.cells[2].textContent = item.quantity;
-        existingRow.cells[3].textContent = item.unit;
-        existingRow.cells[4].textContent = item.location || 'N/A';
+        existingRow.cells[2].textContent = item.barcode || 'N/A';
+        existingRow.cells[3].textContent = item.quantity;
+        existingRow.cells[4].textContent = item.unit;
+        existingRow.cells[5].textContent = item.location || 'N/A';
         
         // Update status and color-coded indicators
-        const statusCell = existingRow.cells[5];
+        const statusCell = existingRow.cells[6];
         let status_display = 'Normal';
         let status_class_btn = 'btn btn--success';
         let row_status_class = 'stock-normal';
@@ -575,6 +638,7 @@ function addOrUpdateItemRow(item) {
         newRow.innerHTML = `
             <td class="table__cell" title="${item.name}">${item.name}</td>
             <td class="table__cell">${item.category_name}</td>
+            <td class="table__cell">${item.barcode || 'N/A'}</td>
             <td class="table__cell">${item.quantity}</td>
             <td class="table__cell">${item.unit}</td>
             <td class="table__cell">${item.location || 'N/A'}</td>

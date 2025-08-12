@@ -2,6 +2,7 @@
 $item_id = null;
 $item_name = '';
 $item_category_id = '';
+$item_barcode = '';
 $item_quantity = 0; // Fetched for info; not typically edited directly here.
 $item_unit = 'pcs';
 $item_low_stock_threshold = 0;
@@ -23,6 +24,7 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_item'])) {
     $item_name = trim($_POST['item_name']);
     $item_category_id = (int)$_POST['item_category_id'];
+    $item_barcode = trim($_POST['item_barcode']);
     $item_unit = trim($_POST['item_unit']);
     $item_low_stock_threshold = (int)$_POST['item_low_stock_threshold'];
     // Ensure low_stock_threshold is at least 1 if it's 0 or not provided
@@ -34,13 +36,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_item'])) {
 
     if (!empty($item_name) && $item_category_id > 0) {
         // Updated SQL to include location field
-        $sql = "UPDATE items SET name = ?, category_id = ?, unit = ?, low_stock_threshold = ?, description = ?, location = ? WHERE id = ?";
+        $sql = "UPDATE items SET name = ?, category_id = ?, barcode = ?, unit = ?, low_stock_threshold = ?, description = ?, location = ? WHERE id = ?";
         
         if ($stmt = mysqli_prepare($conn, $sql)) {
             // Adjusted bind_param to include location
-            mysqli_stmt_bind_param($stmt, "siisssi", 
+            mysqli_stmt_bind_param($stmt, "sisissis", 
                 $item_name, 
                 $item_category_id, 
+                $item_barcode, 
                 $item_unit, 
                 $item_low_stock_threshold, 
                 $item_description,
@@ -88,17 +91,18 @@ if ($result_cat = mysqli_query($conn, $sql_categories)) {
 // Fetch the item details for pre-filling the form
 if ($item_id) {
     // Updated SQL to include location field
-    $sql_fetch = "SELECT name, category_id, quantity, unit, low_stock_threshold, description, location FROM items WHERE id = ?";
+    $sql_fetch = "SELECT name, category_id, barcode, quantity, unit, low_stock_threshold, description, location FROM items WHERE id = ?";
     if ($stmt_fetch = mysqli_prepare($conn, $sql_fetch)) {
         mysqli_stmt_bind_param($stmt_fetch, "i", $item_id);
         if (mysqli_stmt_execute($stmt_fetch)) {
             mysqli_stmt_store_result($stmt_fetch);
             if (mysqli_stmt_num_rows($stmt_fetch) == 1) {
                 // Adjusted bind_result to include location
-                mysqli_stmt_bind_result($stmt_fetch, $fetched_name, $fetched_cat_id, $fetched_qty, $fetched_unit, $fetched_low_stock, $fetched_desc, $fetched_location);
+                mysqli_stmt_bind_result($stmt_fetch, $fetched_name, $fetched_cat_id, $fetched_barcode, $fetched_qty, $fetched_unit, $fetched_low_stock, $fetched_desc, $fetched_location);
                 if (mysqli_stmt_fetch($stmt_fetch)) {
                     $item_name = $fetched_name;
                     $item_category_id = $fetched_cat_id;
+                    $item_barcode = $fetched_barcode;
                     $item_quantity = $fetched_qty; 
                     $item_unit = $fetched_unit;
                     $item_low_stock_threshold = $fetched_low_stock;
@@ -167,6 +171,10 @@ if ($item_id) {
                         </select>
                     </div>
 
+                    <div class="form__group">
+                        <label class="form__label">Barcode</label>
+                        <input type="text" name="item_barcode" class="form__input" value="<?php echo htmlspecialchars($item_barcode); ?>">
+                    </div>
 
                     <div class="form__group">
                         <label class="form__label">Unit</label>

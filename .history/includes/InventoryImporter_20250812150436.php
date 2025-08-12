@@ -89,18 +89,29 @@ class InventoryImporter {
                     }
                 }
 
-                // Check for existing item by name
+                // Check for existing item
                 $itemId = null;
-                $stmt_check_item_by_name->bind_param("s", $itemName);
-                $stmt_check_item_by_name->execute();
-                $result_item = $stmt_check_item_by_name->get_result();
-                if ($result_item->num_rows > 0) {
-                    $itemId = $result_item->fetch_assoc()['id'];
+                if (!empty($barcode)) {
+                    $stmt_check_item_by_barcode->bind_param("s", $barcode);
+                    $stmt_check_item_by_barcode->execute();
+                    $result_item = $stmt_check_item_by_barcode->get_result();
+                    if ($result_item->num_rows > 0) {
+                        $itemId = $result_item->fetch_assoc()['id'];
+                    }
+                }
+                
+                if (!$itemId) {
+                    $stmt_check_item_by_name->bind_param("s", $itemName);
+                    $stmt_check_item_by_name->execute();
+                    $result_item = $stmt_check_item_by_name->get_result();
+                    if ($result_item->num_rows > 0) {
+                        $itemId = $result_item->fetch_assoc()['id'];
+                    }
                 }
 
                 if ($itemId) { // Item exists
                     if ($updateExisting) {
-                        $stmt_update_item->bind_param("siiissssi", $itemName, $categoryId, $quantity, $unit, $lowStockThreshold, $minStockLevel, $maxStockLevel, $description, $location, $itemId);
+                        $stmt_update_item->bind_param("sisisiisssi", $itemName, $categoryId, $barcode, $quantity, $unit, $lowStockThreshold, $minStockLevel, $maxStockLevel, $description, $location, $itemId);
                         if ($stmt_update_item->execute()) {
                             $itemsUpdated++;
                         } else {
@@ -112,7 +123,7 @@ class InventoryImporter {
                         $itemsSkipped++;
                     }
                 } else { // New item
-                    $stmt_insert_item->bind_param("sisiisiss", $itemName, $categoryId, $quantity, $unit, $lowStockThreshold, $minStockLevel, $maxStockLevel, $description, $location);
+                    $stmt_insert_item->bind_param("sssisiiiss", $itemName, $categoryId, $barcode, $quantity, $unit, $lowStockThreshold, $minStockLevel, $maxStockLevel, $description, $location);
                     if ($stmt_insert_item->execute()) {
                         $itemsAdded++;
                     } else {
@@ -122,6 +133,7 @@ class InventoryImporter {
                 }
             }
 
+            $stmt_check_item_by_barcode->close();
             $stmt_check_item_by_name->close();
             $stmt_update_item->close();
             $stmt_insert_item->close();
