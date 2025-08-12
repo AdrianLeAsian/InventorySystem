@@ -82,29 +82,28 @@ body {
     min-height: 100vh;
 }
 
-.dashboard-container {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(52,73,94,0.16);
-    padding: 24px 32px;
-    margin-top: 24px;
-}
-
 .dashboard-summary {
     display: flex;
-    gap: 32px;
-    flex-wrap: wrap; /* Allow cards to wrap to the next line */
+    gap: 24px; /* Adjusted gap for better spacing */
+    margin-top: 24px;
+    flex-wrap: wrap; /* Allow cards to wrap on smaller screens */
 }
+
 .summary-card {
-    min-width: 220px;
+    background: #fff;
+    border-radius: 12px; /* Larger border-radius as per image */
+    box-shadow: 0 4px 16px rgba(52,73,94,0.16);
+    padding: 24px 32px;
+    min-width: 220px; /* Minimum width for cards */
     flex: 1; /* Allow cards to grow and shrink */
-    margin-right: 24px; /* Keep margin for spacing between cards */
+    max-width: calc(33.33% - 16px); /* Max width for 3 cards per row with gap */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
 .summary-card .card-title {
     font-size: 1.1em;
     font-weight: 600;
-    color: var(--dark-text);
+    color: var(--dark-text); /* Using defined color variable */
 }
 
 .summary-card .card-content {
@@ -114,23 +113,24 @@ body {
 }
 
 .summary-card .color-indicator {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
     display: inline-block;
     margin-right: 10px;
+    vertical-align: middle;
+    flex-shrink: 0;
 }
 
 .summary-card .counter {
     font-size: 2em;
     font-weight: 700;
-    color: var(--dark-text);
+    color: var(--dark-text); /* Using defined color variable */
 }
 
 .summary-card .card-description {
-    color: var(--light-text); /* Lighter grey for description */
+    color: var(--light-text); /* Using defined color variable for description */
     margin-top: 6px;
+    font-size: 0.9em; /* Slightly smaller font for description */
 }
+
 
 table {
     width: 100%;
@@ -163,7 +163,7 @@ tr:hover td {
     background: var(--primary);
     color: #fff;
     border: none;
-    padding: 10px 22px;
+        padding: 10px 22px;
     border-radius: 6px;
     font-weight: 700;
     cursor: pointer;
@@ -175,6 +175,7 @@ tr:hover td {
 .btn-primary:hover {
     background: var(--primary-light);
 }
+
 .btn-add {
     background: var(--success);
     color: #fff;
@@ -190,7 +191,7 @@ tr:hover td {
     transition: background 0.2s;
 }
 .btn-add:hover {
-    background: var(--primary);
+    background: var(--primary-light);
     color: #fff;
 }
 .btn-danger {
@@ -210,7 +211,7 @@ tr:hover td {
     background: #A82C38;
 }
 .btn-warning {
-    background: var(--success);
+    background: var(--success); /* Changed to green for edit buttons */
     color: #fff;
     border: none;
     padding: 10px 22px;
@@ -224,7 +225,7 @@ tr:hover td {
     transition: background 0.2s;
 }
 .btn-warning:hover {
-    background: var(--primary);
+    background: var(--primary-light); /* Adjusted hover to primary-light for consistency */
     color: #fff;
 }
 
@@ -328,6 +329,11 @@ input, select, textarea {
     background: #f8f8f8;
 }
 input:focus, select:focus, textarea:focus {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1em;
+        margin-bottom: 8px;
     border-color: #34495E;
     box-shadow: 0 2px 8px rgba(124,152,133,0.08);
 }
@@ -335,6 +341,7 @@ input:focus, select:focus, textarea:focus {
 /* Text color for elements with white or light background */
 .white-bg, .light-bg, .main-content, .dashboard-summary div, .modal-content, table, th, td, input, select, textarea {
     color: var(--primary);
+/* Align checkbox and label horizontally */
 }
 
 .status-green {
@@ -386,4 +393,55 @@ input:focus, select:focus, textarea:focus {
         padding: 12px 8px;
         font-size: 1.2em;
     }
+}
+
+/* Recent Activities Container Styling */
+.recent-activities-container {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(52,73,94,0.16);
+    padding: 24px 32px;
+    margin-top: 36px;
+}
+
+.recent-activities-container h3 {
+    color: var(--primary);
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    font-weight: 700;
+}
+
+.recent-activities-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0; /* Override default table margin */
+    box-shadow: none; /* Remove shadow as container already has one */
+}
+
+.recent-activities-container th,
+.recent-activities-container td {
+    padding: 12px 18px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+.recent-activities-container th {
+    background: var(--primary);
+    color: #fff !important;
+    font-weight: 700;
+}
+
+.recent-activities-container tr:last-child td {
+    border-bottom: none;
+}
+
+.recent-activities-container tr:hover td {
+    background: #f9f9f9;
+}
+
+.recent-activities-container .activity-list p {
+    text-align: center;
+    color: var(--light-text);
+    padding: 20px;
 }

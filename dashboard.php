@@ -27,7 +27,7 @@ include 'includes/db.php';
                 }
 
                 $total_items = get_count($conn, "SELECT COUNT(*) FROM items");
-                $low_stock_count = get_count($conn, "SELECT COUNT(*) FROM items WHERE stock <= low_stock");
+                $low_stock_count = get_count($conn, "SELECT COUNT(*) FROM items WHERE current_stock <= low_stock");
                 $now = date('Y-m-d');
                 $near_expired_count = get_count($conn, "SELECT COUNT(*) FROM item_batches WHERE expiry_date <= DATE_ADD('$now', INTERVAL 7 DAY) AND expiry_date >= '$now'");
                 $expired_count = get_count($conn, "SELECT COUNT(*) FROM item_batches WHERE expiry_date < '$now'");
@@ -37,9 +37,9 @@ include 'includes/db.php';
                 $total_items_color = '#7D9D8A'; // Green
 
                 // Determine color for Near/Expired Items (Orange: warning, Red: urgent)
-                if ($total_near_expired > 10) { // Example threshold for urgent
+                if ($expired_count > 0) { // Prioritize red if any items are expired
                     $near_expired_color = '#D33F49'; // Red
-                } elseif ($total_near_expired > 0) { // Example threshold for warning
+                } elseif ($total_near_expired > 0) { // Orange if there are near-expired items but no expired ones
                     $near_expired_color = '#FFA500'; // Orange
                 } else {
                     $near_expired_color = '#7D9D8A'; // Green (normal)
@@ -55,32 +55,73 @@ include 'includes/db.php';
                 }
                 ?>
 
-                <div class="summary-card" style="background:#fff;border-radius:12px;box-shadow:0 4px 16px rgba(52,73,94,0.16);padding:24px 32px;min-width:220px;margin-right:24px;display:inline-block;vertical-align:top;">
-                    <div class="card-title" style="font-size:1.1em;font-weight:600;color:#34495E;">Total Items</div>
-                    <div class="card-content" style="display:flex;align-items:center;margin-top:8px;">
-                        <span class="color-indicator" style="width:18px;height:18px;background:<?php echo $total_items_color; ?>;border-radius:50%;display:inline-block;margin-right:10px;"></span>
-                        <span class="counter" style="font-size:2em;font-weight:700;color:#34495E;"><?php echo $total_items; ?></span>
+                <div class="summary-card">
+                    <div class="card-title">Total Items</div>
+                    <div class="card-content">
+                        <svg class="color-indicator" width="20" height="20">
+                            <circle cx="10" cy="10" r="10" fill="<?php echo $total_items_color; ?>"/>
+                        </svg>
+                        <span class="counter"><?php echo $total_items; ?></span>
                     </div>
-                    <div class="card-description" style="color:<?php echo $total_items_color; ?>;margin-top:6px;">Items in inventory</div>
+                    <div class="card-description">Items in inventory</div>
                 </div>
 
-                <div class="summary-card" style="background:#fff;border-radius:12px;box-shadow:0 4px 16px rgba(52,73,94,0.16);padding:24px 32px;min-width:220px;margin-right:24px;display:inline-block;vertical-align:top;">
-                    <div class="card-title" style="font-size:1.1em;font-weight:600;color:#34495E;">Near/Expired Items</div>
-                    <div class="card-content" style="display:flex;align-items:center;margin-top:8px;">
-                        <span class="color-indicator" style="width:18px;height:18px;background:<?php echo $near_expired_color; ?>;border-radius:50%;display:inline-block;margin-right:10px;"></span>
-                        <span class="counter" style="font-size:2em;font-weight:700;color:#34495E;"><?php echo $total_near_expired; ?></span>
+                <div class="summary-card">
+                    <div class="card-title">Near/Expired Items</div>
+                    <div class="card-content">
+                        <svg class="color-indicator" width="20" height="20">
+                            <circle cx="10" cy="10" r="10" fill="<?php echo $near_expired_color; ?>"/>
+                        </svg>
+                        <span class="counter"><?php echo $total_near_expired; ?></span>
                     </div>
-                    <div class="card-description" style="color:<?php echo $near_expired_color; ?>;margin-top:6px;">Items near or past expiry</div>
+                    <div class="card-description">Items near or past expiry</div>
                 </div>
 
-                <div class="summary-card" style="background:#fff;border-radius:12px;box-shadow:0 4px 16px rgba(52,73,94,0.16);padding:24px 32px;min-width:220px;display:inline-block;vertical-align:top;">
-                    <div class="card-title" style="font-size:1.1em;font-weight:600;color:#34495E;">Low Stock Alerts</div>
-                    <div class="card-content" style="display:flex;align-items:center;margin-top:8px;">
-                        <span class="color-indicator" style="width:18px;height:18px;background:<?php echo $low_stock_color; ?>;border-radius:50%;display:inline-block;margin-right:10px;"></span>
-                        <span class="counter" style="font-size:2em;font-weight:700;color:#34495E;"><?php echo $low_stock_count; ?></span>
+                <div class="summary-card">
+                    <div class="card-title">Low Stock Alerts</div>
+                    <div class="card-content">
+                        <svg class="color-indicator" width="20" height="20">
+                            <circle cx="10" cy="10" r="10" fill="<?php echo $low_stock_color; ?>"/>
+                        </svg>
+                        <span class="counter"><?php echo $low_stock_count; ?></span>
                     </div>
-                    <div class="card-description" style="color:<?php echo $low_stock_color; ?>;margin-top:6px;">Items need attention</div>
+                    <div class="card-description">Items need attention</div>
                 </div>
+            </div>
+        </div>
+
+        <div class="recent-activities-container">
+            <h3>Recent Activities</h3>
+            <div class="activity-list">
+                <?php
+                $logs_query = "SELECT l.action, l.date_time, i.name AS item_name, c.name AS category_name, i.expiry_date
+                               FROM logs l
+                               JOIN items i ON l.item_id = i.id
+                               JOIN categories c ON i.category_id = c.id
+                               ORDER BY l.date_time DESC
+                               LIMIT 10"; // Fetch the 10 most recent activities
+                $logs_result = $conn->query($logs_query);
+
+                if ($logs_result->num_rows > 0) {
+                    echo '<table>';
+                    echo '<thead><tr><th>Item Name</th><th>Category</th><th>Action</th><th>Date & Time</th><th>Expiry Status</th></tr></thead>';
+                    echo '<tbody>';
+                    while ($row = $logs_result->fetch_assoc()) {
+                        $expiry_status = $row['expiry_date'] ? date('M d, Y', strtotime($row['expiry_date'])) : 'NO EXPIRY';
+                        echo '<tr>';
+                        echo '<td>' . htmlspecialchars($row['item_name']) . '</td>';
+                        echo '<td>' . htmlspecialchars($row['category_name']) . '</td>';
+                        echo '<td>' . htmlspecialchars($row['action']) . '</td>';
+                        echo '<td>' . htmlspecialchars(date('M d, Y H:i:s', strtotime($row['date_time']))) . '</td>';
+                        echo '<td>' . htmlspecialchars($expiry_status) . '</td>';
+                        echo '</tr>';
+                    }
+                    echo '</tbody>';
+                    echo '</table>';
+                } else {
+                    echo '<p>No recent activities.</p>';
+                }
+                ?>
             </div>
         </div>
     </div>

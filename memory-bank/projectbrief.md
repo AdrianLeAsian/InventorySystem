@@ -1,13 +1,15 @@
 # Project Brief
 
-This document outlines the core requirements and goals for the Inventory System project.
+This project is an Inventory Management System. Its primary goal is to provide a web-based application for managing items, categories, locations, and stock levels within an inventory.
 
-**Goal:** To develop a functional Inventory Management System.
+**Core Requirements:**
+- User authentication (login, signup, logout).
+- CRUD operations for items, categories, and locations.
+- Stock management (add/remove stock).
+- Tracking of perishable items with expiry dates (FIFO).
+- Reporting on inventory status (e.g., low stock, full stock).
+- Comprehensive logging of all inventory actions.
+- Dashboard display of recent inventory activities.
 
-**Key Features:**
-- User authentication (login, signup, logout)
-- Inventory tracking (items, stock levels)
-- Reporting
-- User management
-
-**Scope:** The system should cover basic inventory operations and user management.
+**Current Task:**
+Implemented a new `logs` table in the database, added `expiry_date` column to the `items` table, updated backend logic in `includes/item_actions.php` and `includes/stock_actions.php` to handle expiry dates and log all item and stock related actions, and created a "Recent Activities" container on `dashboard.php` with corresponding CSS styling.

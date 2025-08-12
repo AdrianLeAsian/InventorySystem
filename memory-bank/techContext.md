@@ -1,20 +1,24 @@
 # Tech Context
 
-**Technologies Used:**
-- **Backend:** PHP (inferred from file extensions like `.php`)
-- **Database:** SQL (indicated by `db_inventory.sql`), likely MySQL given the context of PHP web development.
-- **Frontend:** HTML, CSS (indicated by `assets/css/style.css`), and potentially JavaScript (though no `.js` files are immediately visible, it's common in web apps).
+**Technologies used:**
+- **PHP:** Server-side scripting language (version not explicitly specified, assumed modern PHP 7+).
+- **MySQL:** Relational database management system.
+- **HTML5:** Markup language for web content.
+- **CSS3:** Stylesheet language for styling web pages.
+- **JavaScript (ES5/ES6+):** Client-side scripting for interactive elements and AJAX.
+- **Apache HTTP Server:** Web server.
 
-**Development Setup:**
-- The project is located in `c:/xampp/htdocs/InventorySystem`. This suggests the use of XAMPP, a popular web development environment that includes Apache, MySQL, and PHP.
-- The presence of a `.git` directory and a remote URL (`https://github.com/AdrianLeAsian/InventorySystem.git`) indicates version control is used, likely Git.
+**Development setup:**
+- **XAMPP:** Likely used for local development, providing Apache, MySQL, and PHP.
+- **VS Code:** Integrated Development Environment.
+
+**Technical constraints:**
+- The current implementation relies on direct PHP-MySQL interactions without an ORM or a more structured framework, which might limit scalability or maintainability for very large applications.
+- Client-side validation is minimal; server-side validation is crucial.
 
 **Dependencies:**
-- No explicit dependency management files (like `composer.json` for PHP or `package.json` for Node.js) are visible in the top-level directory. This might mean dependencies are either minimal, managed manually, or located in subdirectories not yet explored.
-- The `includes/db.php` file will likely contain database connection details.
+- PHP `mysqli` extension for database interaction.
+- Standard web browser for client-side execution.
 
 **Key UI Components:**
-- **Dashboard Summary Cards:** The dashboard now features dynamic summary cards for "Total Items", "Near/Expired Items", and "Low Stock Alerts". These cards include counters and a colored indicator (green, orange, red) that changes based on predefined thresholds related to item details from the inventory. The styling of these cards has been updated to match the provided design, including rounded corners, shadows, and specific font sizes/colors for titles, counters, and descriptions. The summary cards are now housed within a `dashboard-container` for better structural organization and consistent padding/shadows.
-
-**Database Schema Updates:**
-- Added an `input_timestamp` column of type `TIMESTAMP` with a default value of `CURRENT_TIMESTAMP` to the `items` table in `db_inventory.sql` to record when items are inputted.
+- **Dashboard Summary Cards:** The dashboard now features dynamic summary cards for "Total Items", "Near/Expired Items", and "Low Stock Alerts". These cards include counters and a colored indicator (green, orange, red) that changes based on predefined thresholds related to item details from the inventory. The styling of these cards has been updated to match the provided design, including rounded corners, shadows, and specific font sizes/colors for titles, counters, and descriptions. The color indicators are now implemented using SVG circles for consistent rendering. The summary cards are now housed within a `dashboard-container` for better structural organization and consistent padding/shadows.

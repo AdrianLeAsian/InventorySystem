@@ -242,7 +242,7 @@ include 'includes/db.php';
                 <label><input type="checkbox" name="is_perishable" id="isPerishableAdd" onchange="toggleExpiry('add')"> Perishable</label><br>
                 <div id="expiryDateAdd" style="display:none;">
                     <label>Expiry Date<span class="required-asterisk">*</span></label>
-                    <input type="date" name="expiry_date" placeholder="Expiry Date" required><br>
+                    <input type="date" name="expiry_date" id="addExpiryDate" placeholder="Expiry Date"><br>
                 </div>
                 <button type="submit" class="btn-primary">Add</button>
             </form>
@@ -259,7 +259,14 @@ include 'includes/db.php';
             });
         };
         document.getElementById('isPerishableAdd').addEventListener('change', function() {
-            document.getElementById('expiryDateAdd').style.display = this.checked ? 'block' : 'none';
+            var expiryDateInput = document.getElementById('addExpiryDate');
+            if (this.checked) {
+                document.getElementById('expiryDateAdd').style.display = 'block';
+                expiryDateInput.setAttribute('required', 'required');
+            } else {
+                document.getElementById('expiryDateAdd').style.display = 'none';
+                expiryDateInput.removeAttribute('required');
+            }
         });
     }
     function showEditItemModal(id) {
@@ -331,6 +338,16 @@ include 'includes/db.php';
                     var expInput = document.getElementById('editExpiryDate');
                     if(expInput) expInput.value = item.expiry_date;
                 }
+                // Ensure expiry date is required if perishable is checked on edit
+                var isPerishableEdit = document.getElementById('isPerishableEdit');
+                var editExpiryDateInput = document.getElementById('editExpiryDate');
+                if (isPerishableEdit && editExpiryDateInput) {
+                    if (isPerishableEdit.checked) {
+                        editExpiryDateInput.setAttribute('required', 'required');
+                    } else {
+                        editExpiryDateInput.removeAttribute('required');
+                    }
+                }
             }, 100);
             document.getElementById('editItemForm').onsubmit = function(e) {
                 e.preventDefault();
@@ -343,15 +360,23 @@ include 'includes/db.php';
                 });
             };
             document.getElementById('isPerishableEdit').addEventListener('change', function() {
-                document.getElementById('expiryDateEdit').style.display = this.checked ? 'block' : 'none';
-            });
-            function toggleExpiry(type) {
-                if(type === 'add') {
-                    document.getElementById('expiryDateAdd').style.display = document.getElementById('isPerishableAdd').checked ? 'block' : 'none';
+                var expiryDateInput = document.getElementById('editExpiryDate');
+                if (this.checked) {
+                    document.getElementById('expiryDateEdit').style.display = 'block';
+                    expiryDateInput.setAttribute('required', 'required');
                 } else {
-                    document.getElementById('expiryDateEdit').style.display = document.getElementById('isPerishableEdit').checked ? 'block' : 'none';
+                    document.getElementById('expiryDateEdit').style.display = 'none';
+                    expiryDateInput.removeAttribute('required');
                 }
-            }
+            });
+            // The toggleExpiry function is no longer needed as the logic is now directly in the event listeners
+            // function toggleExpiry(type) {
+            //     if(type === 'add') {
+            //         document.getElementById('expiryDateAdd').style.display = document.getElementById('isPerishableAdd').checked ? 'block' : 'none';
+            //     } else {
+            //         document.getElementById('expiryDateEdit').style.display = document.getElementById('isPerishableEdit').checked ? 'block' : 'none';
+            //     }
+            // }
         })
         .catch(function(){
             document.getElementById('modal-body').innerHTML = '<div style="text-align:center;padding:32px 0;color:#D33F49;">Error loading item details.</div>';

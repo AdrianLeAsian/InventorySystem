@@ -25,6 +25,7 @@ if ($action == 'add') {
 	// min_stock removed
 	$max_stock = intval($_POST['max_stock']);
 	$is_perishable = isset($_POST['is_perishable']) ? 1 : 0;
+	$expiry_date = ($is_perishable && !empty($_POST['expiry_date'])) ? $_POST['expiry_date'] : NULL;
 
 	// Duplicate check
 	$check = $conn->prepare("SELECT id FROM items WHERE name = ?");
@@ -36,9 +37,24 @@ if ($action == 'add') {
 		exit;
 	}
 
-	$stmt = $conn->prepare("INSERT INTO items (name, category_id, location_id, current_stock, unit, low_stock, max_stock, is_perishable) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-	$stmt->bind_param('sissiiii', $name, $category_id, $location_id, $stock, $unit, $low_stock, $max_stock, $is_perishable);
+	$stmt = $conn->prepare("INSERT INTO items (name, category_id, location_id, current_stock, unit, low_stock, max_stock, is_perishable, expiry_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+	$stmt->bind_param('sissiiiis', $name, $category_id, $location_id, $stock, $unit, $low_stock, $max_stock, $is_perishable, $expiry_date);
 	if ($stmt->execute()) {
+		$item_id = $conn->insert_id; // Get the ID of the newly inserted item
+
+		// Log the action
+		$category_name_stmt = $conn->prepare("SELECT name FROM categories WHERE id = ?");
+		$category_name_stmt->bind_param('i', $category_id);
+		$category_name_stmt->execute();
+		$category_result = $category_name_stmt->get_result();
+		$category_row = $category_result->fetch_assoc();
+		$category_name = $category_row['name'];
+
+		$log_stmt = $conn->prepare("INSERT INTO logs (item_id, action, category) VALUES (?, ?, ?)");
+		$log_action = 'Added';
+		$log_stmt->bind_param('iss', $item_id, $log_action, $category_name);
+		$log_stmt->execute();
+
 		echo json_encode(['status' => 'success']);
 	} else {
 		echo json_encode(['status' => 'error', 'message' => 'Failed to add item.']);
@@ -57,6 +73,7 @@ if ($action == 'edit') {
 	// min_stock removed
 	$max_stock = intval($_POST['max_stock']);
 	$is_perishable = isset($_POST['is_perishable']) ? 1 : 0;
+	$expiry_date = ($is_perishable && !empty($_POST['expiry_date'])) ? $_POST['expiry_date'] : NULL;
 
 	// Duplicate check (exclude current item)
 	$check = $conn->prepare("SELECT id FROM items WHERE name = ? AND id != ?");
@@ -68,9 +85,37 @@ if ($action == 'edit') {
 		exit;
 	}
 
-	$stmt = $conn->prepare("UPDATE items SET name=?, category_id=?, location_id=?, current_stock=?, unit=?, low_stock=?, max_stock=?, is_perishable=? WHERE id=?");
-	$stmt->bind_param('sissiiiii', $name, $category_id, $location_id, $stock, $unit, $low_stock, $max_stock, $is_perishable, $id);
+	// Get old item details for logging
+	$old_item_stmt = $conn->prepare("SELECT current_stock, category_id FROM items WHERE id = ?");
+	$old_item_stmt->bind_param('i', $id);
+	$old_item_stmt->execute();
+	$old_item_result = $old_item_stmt->get_result();
+	$old_item_data = $old_item_result->fetch_assoc();
+	$old_stock = $old_item_data['current_stock'];
+	$old_category_id = $old_item_data['category_id'];
+
+	$stmt = $conn->prepare("UPDATE items SET name=?, category_id=?, location_id=?, current_stock=?, unit=?, low_stock=?, max_stock=?, is_perishable=?, expiry_date=? WHERE id=?");
+	$stmt->bind_param('sissiiiisi', $name, $category_id, $location_id, $stock, $unit, $low_stock, $max_stock, $is_perishable, $expiry_date, $id);
 	if ($stmt->execute()) {
+		// Log the action
+		$category_name_stmt = $conn->prepare("SELECT name FROM categories WHERE id = ?");
+		$category_name_stmt->bind_param('i', $category_id);
+		$category_name_stmt->execute();
+		$category_result = $category_name_stmt->get_result();
+		$category_row = $category_result->fetch_assoc();
+		$category_name = $category_row['name'];
+
+		$log_action = 'Updated';
+		if ($stock > $old_stock) {
+			$log_action = 'Stocked In';
+		} elseif ($stock < $old_stock) {
+			$log_action = 'Stocked Out';
+		}
+
+		$log_stmt = $conn->prepare("INSERT INTO logs (item_id, action, category) VALUES (?, ?, ?)");
+		$log_stmt->bind_param('iss', $id, $log_action, $category_name);
+		$log_stmt->execute();
+
 		echo json_encode(['status' => 'success']);
 	} else {
 		echo json_encode(['status' => 'error', 'message' => 'Failed to update item.']);
@@ -80,9 +125,32 @@ if ($action == 'edit') {
 
 if ($action == 'delete') {
 	$id = intval($_POST['id']);
+
+	// Get item details for logging before deleting
+	$item_details_stmt = $conn->prepare("SELECT name, category_id FROM items WHERE id = ?");
+	$item_details_stmt->bind_param('i', $id);
+	$item_details_stmt->execute();
+	$item_details_result = $item_details_stmt->get_result();
+	$item_data = $item_details_result->fetch_assoc();
+	$item_name = $item_data['name'];
+	$category_id = $item_data['category_id'];
+
 	$stmt = $conn->prepare("DELETE FROM items WHERE id=?");
 	$stmt->bind_param('i', $id);
 	if ($stmt->execute()) {
+		// Log the action
+		$category_name_stmt = $conn->prepare("SELECT name FROM categories WHERE id = ?");
+		$category_name_stmt->bind_param('i', $category_id);
+		$category_name_stmt->execute();
+		$category_result = $category_name_stmt->get_result();
+		$category_row = $category_result->fetch_assoc();
+		$category_name = $category_row['name'];
+
+		$log_stmt = $conn->prepare("INSERT INTO logs (item_id, action, category) VALUES (?, ?, ?)");
+		$log_action = 'Deleted';
+		$log_stmt->bind_param('iss', $id, $log_action, $category_name);
+		$log_stmt->execute();
+
 		echo json_encode(['status' => 'success']);
 	} else {
 		echo json_encode(['status' => 'error', 'message' => 'Failed to delete item.']);

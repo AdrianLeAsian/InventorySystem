@@ -21,9 +21,18 @@ CREATE TABLE items (
     low_stock INT DEFAULT 0,
     max_stock INT DEFAULT 0,
     is_perishable BOOLEAN DEFAULT 0,
-    input_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expiry_date DATE,
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
     FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE
+);
+
+CREATE TABLE logs (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    item_id INT NOT NULL,
+    action VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    date_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
 
 CREATE TABLE item_batches (
