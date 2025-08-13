@@ -1,19 +1,23 @@
 # Active Context
 
 **Current work focus:**
-Implemented prepared statements for all database queries and added session-based authentication checks to `dashboard.php`, `inventory.php`, `reports.php`, and `users.php` to prevent unauthorized access.
+Implemented a role-based access control system and enhanced user management features.
 
 **Recent changes:**
-- Modified `inventory.php` to use prepared statements for category, location, and perishable item fetching.
-- Modified `includes/item_actions.php` to use prepared statements for updating `items` table.
-- Modified `includes/stock_actions.php` to use prepared statements for updating `items` table.
-- Added `include 'includes/auth.php';` to `dashboard.php`, `inventory.php`, `reports.php`, and `users.php` to enforce session-based authentication.
-- Updated `projectbrief.md`, `productContext.md`, `systemPatterns.md`, and `techContext.md` to reflect these security and authentication changes.
+-   **Role System Implementation**:
+    -   Modified `login.php` to fetch and store the user's role in the session (`$_SESSION['user_role']`) upon successful login.
+    -   Added role checks to `inventory.php` and `users.php` to restrict access to 'admin' role users only.
+    -   Updated `users.php` to include functionality for admins to add new users with specified roles and to manage existing users' roles. The GUI of the User Management page was also updated for consistency with the system.
+    -   Modified `includes/sidebar.php` to conditionally display the 'Users' link only for users with the 'admin' role.
+-   **Previous Work (Prepared Statements & Authentication)**:
+    -   Implemented prepared statements for all database queries to prevent SQL injection.
+    -   Added session-based authentication checks to key pages (`dashboard.php`, `inventory.php`, `reports.php`, `users.php`) via `includes/auth.php`.
 
 **Next steps:**
-- Address any further feedback or new requirements from the user.
+-   Address any further feedback or new requirements from the user.
 
 **Active decisions and considerations:**
-- Consistent use of prepared statements significantly reduces SQL injection risks.
-- Session-based authentication ensures that only logged-in users can access sensitive application pages.
-- The database connection using `root` with no password remains a security concern for production environments and has been noted in `techContext.md`.
+-   Role-based access control enhances security by limiting access to sensitive features based on user privileges.
+-   Centralizing role checks in pages and the sidebar ensures consistent enforcement of access policies.
+-   The user management interface in `users.php` now provides admins with the necessary tools to manage user accounts and their roles.
+-   The security concern regarding the database connection (`root` user with no password) noted in `techContext.md` remains for production environments.

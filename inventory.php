@@ -1,5 +1,15 @@
 <?php
-include 'includes/auth.php';
+session_start(); // Ensure session is started
+// Check if user is logged in (already handled by includes/auth.php, but good practice to have here too)
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+// Check user role
+if ($_SESSION['user_role'] !== 'admin') {
+    header('Location: dashboard.php'); // Redirect users to dashboard
+    exit;
+}
 $page_title = 'Inventory Management';
 include 'includes/db.php';
 ?>

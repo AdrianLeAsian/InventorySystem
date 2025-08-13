@@ -10,6 +10,7 @@ The system follows a traditional LAMP (Linux, Apache, MySQL, PHP) stack architec
 - **Prepared Statements:** All database interactions now use prepared statements (`mysqli_prepare()`, `mysqli_bind_param()`, `mysqli_execute()`, `mysqli_get_result()`) to prevent SQL injection vulnerabilities.
 - **Password Hashing:** Passwords are securely stored using `password_hash()` and verified with `password_verify()`.
 - **Session-based Authentication:** User sessions are managed to control access to authenticated pages (`dashboard.php`, `inventory.php`, `reports.php`, `users.php`) via `includes/auth.php`.
+- **Role-Based Access Control:** A role system ('user', 'admin') has been implemented. Roles are stored in the `users` table, loaded into the session upon login, and used to enforce access restrictions on pages (`inventory.php`, `users.php`) and conditionally display UI elements (e.g., 'Users' link in sidebar).
 - **AJAX for Modals:** Modals use `fetch` API to send data to PHP action scripts (`item_actions.php`, `category_location_actions.php`, `stock_actions.php`) without full page reloads.
 - **Separation of Concerns (Basic):** Logic is somewhat separated into `includes/` directory for database connection, authentication, and specific actions.
 - **Centralized Logging:** A dedicated `logs` table is used to record all significant inventory actions, providing an audit trail.
