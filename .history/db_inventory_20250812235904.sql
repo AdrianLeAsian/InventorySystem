@@ -50,15 +50,3 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'user' NOT NULL
 );
-
--- Table for import history
-CREATE TABLE IF NOT EXISTS import_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    import_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    user_id INT,
-    file_name VARCHAR(255) NOT NULL,
-    status VARCHAR(50) NOT NULL, -- e.g., 'success', 'failure', 'partial_success'
-    summary TEXT, -- e.g., 'Imported 10 items, 2 locations, 5 logs. Skipped 1 row due to error.'
-    errors JSON, -- Store detailed errors as JSON
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);

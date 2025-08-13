@@ -17,9 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Username already exists.';
         } else {
             $hash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
-            $role = 'user'; // Default role for new users
-            $stmt->bind_param('sss', $username, $hash, $role);
+            $stmt = $conn->prepare('INSERT INTO users (username, password) VALUES (?, ?)');
+            $stmt->bind_param('ss', $username, $hash);
             if ($stmt->execute()) {
                 $success = 'Account created! You can now log in.';
             } else {

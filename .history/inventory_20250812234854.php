@@ -218,7 +218,6 @@ include 'includes/db.php';
                 <h3>Import/Export</h3>
                 <div style="display:flex; gap:10px; margin-top:10px;">
                     <button type="button" class="btn-primary" onclick="showImportCsvModal()">Import CSV</button>
-                    <button type="button" class="btn-primary" onclick="showImportExcelModal()">Import Excel</button>
                     <a href="export_csv.php" class="btn-primary" style="text-decoration:none; padding: 8px 12px; border-radius: 5px;">Export CSV</a>
                 </div>
             </div>
@@ -260,55 +259,6 @@ include 'includes/db.php';
             .catch(error => {
                 console.error('Error during fetch:', error);
                 document.getElementById('importCsvMsg').innerText = 'An error occurred during import.';
-            });
-        };
-    }
-
-    function showImportExcelModal() {
-        document.getElementById('modal').style.display = 'block';
-        document.getElementById('modal-body').innerHTML = `
-            <h3>Import Excel (.xlsx)</h3>
-            <div style="margin-bottom: 15px;">
-                <a href="assets/templates/item_import_template.xlsx" class="btn-primary" style="text-decoration:none; padding: 8px 12px; border-radius: 5px;" download>Download Template</a>
-            </div>
-            <form action="import_excel.php" method="post" enctype="multipart/form-data" id="importExcelForm">
-                <label>Select Excel File<span class="required-asterisk">*</span></label>
-                <input type="file" name="excelFile" accept=".xlsx" required><br>
-                <button type="submit" class="btn-primary">Import</button>
-            </form>
-            <div id="importExcelMsg"></div>
-            <div id="importExcelErrors" style="margin-top: 15px; color: #D33F49;"></div>
-        `;
-        document.getElementById('importExcelForm').onsubmit = function(e) {
-            e.preventDefault();
-            var fd = new FormData(this);
-            fetch('import_excel.php', {method:'POST',body:fd})
-            .then(r=>r.json()).then(d=>{
-                document.getElementById('importExcelMsg').innerText = d.overall_message || (d.overall_status=='success'?'Excel imported!':'Error');
-                var errorDiv = document.getElementById('importExcelErrors');
-                errorDiv.innerHTML = ''; // Clear previous errors
-
-                if (d.overall_status === 'failure' || d.total_skipped_rows > 0) {
-                    if (d.locations && d.locations.errors.length > 0) {
-                        errorDiv.innerHTML += '<h4>Location Errors:</h4><ul>' + d.locations.errors.map(err => `<li>${err}</li>`).join('') + '</ul>';
-                    }
-                    if (d.items && d.items.errors.length > 0) {
-                        errorDiv.innerHTML += '<h4>Item Errors:</h4><ul>' + d.items.errors.map(err => `<li>${err}</li>`).join('') + '</ul>';
-                    }
-                    if (d.logs && d.logs.errors.length > 0) {
-                        errorDiv.innerHTML += '<h4>Log Errors:</h4><ul>' + d.logs.errors.map(err => `<li>${err}</li>`).join('') + '</ul>';
-                    }
-                    if (d.batches && d.batches.errors.length > 0) {
-                        errorDiv.innerHTML += '<h4>Batch Errors:</h4><ul>' + d.batches.errors.map(err => `<li>${err}</li>`).join('') + '</ul>';
-                    }
-                }
-
-                if(d.overall_status=='success' || d.total_imported_rows > 0) setTimeout(()=>location.reload(),800);
-            })
-            .catch(error => {
-                console.error('Error during fetch:', error);
-                document.getElementById('importExcelMsg').innerText = 'An error occurred during import.';
-                document.getElementById('importExcelErrors').innerText = 'Check console for details.';
             });
         };
     }

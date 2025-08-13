@@ -1,31 +1,28 @@
 <?php
 session_start();
+if (isset($_SESSION['user_id'])) {
+    header('Location: dashboard.php');
+    exit;
+}
 include 'includes/db.php';
 $error = '';
-$success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
-    if (strlen($username) < 3 || strlen($password) < 4) {
-        $error = 'Username must be at least 3 characters and password at least 4.';
-    } else {
-        $stmt = $conn->prepare('SELECT id FROM users WHERE username = ?');
-        $stmt->bind_param('s', $username);
-        $stmt->execute();
-        $stmt->store_result();
-        if ($stmt->num_rows > 0) {
-            $error = 'Username already exists.';
+    $stmt = $conn->prepare('SELECT id, password FROM users WHERE username = ?');
+    $stmt->bind_param('s', $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($row = $result->fetch_assoc()) {
+        if (password_verify($password, $row['password'])) {
+            $_SESSION['user_id'] = $row['id'];
+            header('Location: dashboard.php');
+            exit;
         } else {
-            $hash = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
-            $role = 'user'; // Default role for new users
-            $stmt->bind_param('sss', $username, $hash, $role);
-            if ($stmt->execute()) {
-                $success = 'Account created! You can now log in.';
-            } else {
-                $error = 'Failed to create account.';
-            }
+            $error = 'Invalid username or password.';
         }
+    } else {
+        $error = 'Invalid username or password.';
     }
 }
 ?>
@@ -33,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sign Up - Inventory Management</title>
+    <title>Login - Inventory Management</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
         .login-container {
@@ -52,11 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .login-container .error {
             color: #FEC0AA;
-            text-align: center;
-            margin-bottom: 18px;
-        }
-        .login-container .success {
-            color: #7C9885;
             text-align: center;
             margin-bottom: 18px;
         }
@@ -100,32 +92,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: var(--primary-light);
             color: #fff;
         }
-        .login-container .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 18px;
-            color: #fff;
-            text-decoration: underline;
-            font-size: 0.98em;
-        }
     </style>
 </head>
 <body>
     <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--light-bg);">
         <div class="login-container">
-            <img src="assets/images/logo.png" alt="Logo" style="display:block;margin:0 auto 16px auto;width:90px;border-radius:8px;box-shadow:0 2px 8px rgba(52,73,94,0.08);">
-            <div style="text-align:center; margin-bottom:24px; font-size:1.1em; font-weight:700; color:#fff; letter-spacing:1px;">AI Korean Buffet Restaurant</div>
-            <h2>Sign Up</h2>
-            <?php if ($error) echo '<div class="error">' . htmlspecialchars($error) . '</div>'; ?>
-            <?php if ($success) echo '<div class="success">' . htmlspecialchars($success) . '</div>'; ?>
-            <form method="post">
-                <label>Username</label>
-                <input type="text" name="username" required autofocus>
-                <label>Password</label>
-                <input type="password" name="password" required>
-                <button type="submit">Create Account</button>
-            </form>
-            <a href="login.php" class="back-link">Back to Login</a>
+        <img src="assets/images/logo.png" alt="Logo" style="display:block;margin:0 auto 16px auto;width:90px;border-radius:8px;box-shadow:0 2px 8px rgba(52,73,94,0.08);">
+    <div style="text-align:center; margin-bottom:24px; font-size:1.1em; font-weight:700; color:#fff; letter-spacing:1px;">AI Korean Buffet Restaurant</div>
+        <h2>Login</h2>
+        <?php if ($error) echo '<div class="error">' . htmlspecialchars($error) . '</div>'; ?>
+        <form method="post">
+            <label>Username</label>
+            <input type="text" name="username" required autofocus>
+            <label>Password</label>
+            <input type="password" name="password" required>
+            <button type="submit">Login</button>
+        </form>
+        <a href="signup.php" style="display:block;text-align:center;margin-top:18px;color:#fff;text-decoration:underline;font-size:0.98em;">Sign up for a new account</a>
         </div>
     </div>
 </body>
