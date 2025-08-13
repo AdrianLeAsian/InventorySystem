@@ -73,7 +73,107 @@ if ($is_admin) {
     <meta charset="UTF-8">
     <title>User Management</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/users.css">
+    <style>
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .user-management-container {
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .user-management-container h2 {
+            color: var(--primary);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .user-management-container .error {
+            color: var(--danger);
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .user-management-container .success {
+            color: var(--success);
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .add-user-form {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .add-user-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        .add-user-form input[type="text"],
+        .add-user-form input[type="password"],
+        .add-user-form select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        .add-user-form button {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        .add-user-form button:hover {
+            background: var(--primary-dark);
+        }
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .users-table th, .users-table td {
+            border: 1px solid #eee;
+            padding: 12px 15px;
+            text-align: left;
+        }
+        .users-table th {
+            background-color: var(--secondary);
+            color: #fff;
+            font-weight: bold;
+        }
+        .users-table tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+        .users-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        .users-table .actions button {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-right: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .users-table .actions button.delete {
+            background: var(--danger);
+        }
+        .users-table .actions button:hover {
+            opacity: 0.9;
+        }
+    </style>
 </head>
 <body>
     <div class="main-content">
@@ -137,7 +237,6 @@ if ($is_admin) {
         </div>
     </div>
 
-    <?php include 'includes/modals.php'; ?>
     <!-- Edit User Modal -->
     <div id="editUserModal" class="modal">
         <div class="modal-content">

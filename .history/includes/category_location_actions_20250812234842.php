@@ -1,14 +1,10 @@
 <?php
-session_start(); // Ensure session is started
 include 'db.php';
-include 'auth.php'; // Include auth.php for check_admin_role()
-
 $action = isset($_POST['action']) ? $_POST['action'] : '';
 $type = isset($_POST['type']) ? $_POST['type'] : '';
 
 if ($type == 'category') {
     if ($action == 'add') {
-        check_admin_role(); // Enforce admin role for adding categories
         $name = trim($_POST['name']);
         $check = $conn->prepare("SELECT id FROM categories WHERE name = ?");
         $check->bind_param('s', $name);
@@ -28,7 +24,6 @@ if ($type == 'category') {
         exit;
     }
     if ($action == 'edit') {
-        check_admin_role(); // Enforce admin role for editing categories
         $id = intval($_POST['id']);
         $name = trim($_POST['name']);
         $check = $conn->prepare("SELECT id FROM categories WHERE name = ? AND id != ?");
@@ -49,7 +44,6 @@ if ($type == 'category') {
         exit;
     }
     if ($action == 'delete') {
-        check_admin_role(); // Enforce admin role for deleting categories
         $id = intval($_POST['id']);
         $stmt = $conn->prepare("DELETE FROM categories WHERE id=?");
         $stmt->bind_param('i', $id);
@@ -64,7 +58,6 @@ if ($type == 'category') {
 
 if ($type == 'location') {
     if ($action == 'add') {
-        check_admin_role(); // Enforce admin role for adding locations
         $name = trim($_POST['name']);
         $check = $conn->prepare("SELECT id FROM locations WHERE name = ?");
         $check->bind_param('s', $name);
@@ -84,7 +77,6 @@ if ($type == 'location') {
         exit;
     }
     if ($action == 'edit') {
-        check_admin_role(); // Enforce admin role for editing locations
         $id = intval($_POST['id']);
         $name = trim($_POST['name']);
         $check = $conn->prepare("SELECT id FROM locations WHERE name = ? AND id != ?");
@@ -105,7 +97,6 @@ if ($type == 'location') {
         exit;
     }
     if ($action == 'delete') {
-        check_admin_role(); // Enforce admin role for deleting locations
         $id = intval($_POST['id']);
         $stmt = $conn->prepare("DELETE FROM locations WHERE id=?");
         $stmt->bind_param('i', $id);

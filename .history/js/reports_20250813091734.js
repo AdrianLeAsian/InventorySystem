@@ -532,17 +532,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Export Functionality ---
     document.getElementById('exportDetailedInventory').addEventListener('click', () => {
         const filters = getDetailedInventoryFilters();
-        triggerExport('detailed_inventory', filters, 'CSV');
+        const exportType = prompt("Export Detailed Inventory as (PDF, Excel, CSV)?", "CSV");
+        if (exportType) {
+            triggerExport('detailed_inventory', filters, exportType.toUpperCase());
+        }
     });
 
     document.getElementById('exportTransactionLogs').addEventListener('click', () => {
         const filters = getTransactionLogsFilters();
-        triggerExport('transaction_logs', filters, 'CSV');
+        const exportType = prompt("Export Transaction Logs as (PDF, Excel, CSV)?", "CSV");
+        if (exportType) {
+            triggerExport('transaction_logs', filters, exportType.toUpperCase());
+        }
     });
 
     document.getElementById('exportCalendarList').addEventListener('click', () => {
-        const filters = getCalendarFilters(); // Use getCalendarFilters to pass current filters
-        triggerExport('expiry_calendar_list', filters, 'CSV');
+        const exportType = prompt("Export Expiry Calendar List as (PDF, Excel, CSV)?", "CSV");
+        if (exportType) {
+            // For calendar, we export the currently loaded events
+            triggerCalendarExport(exportType.toUpperCase());
+        }
     });
 
     function triggerExport(reportType, filters, format) {

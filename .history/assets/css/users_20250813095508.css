@@ -1,0 +1,210 @@
+.main-content {
+    margin-left: 220px; /* Adjusted to match sidebar width in style.css */
+    padding: 36px; /* Adjusted to match main-content padding in style.css */
+    min-height: 100vh;
+}
+.user-management-container {
+    background: var(--white-bg);
+    padding: 24px 32px; /* Adjusted to match dashboard-section padding in style.css */
+    border-radius: 12px; /* Adjusted to match dashboard-section border-radius in style.css */
+    box-shadow: 0 4px 16px rgba(52,73,94,0.16); /* Adjusted to match dashboard-section box-shadow in style.css */
+    margin-bottom: 36px; /* Add some space below this section */
+}
+.user-management-container h2 {
+    color: var(--primary);
+    margin-bottom: 20px; /* Adjusted to match dashboard-section h2 margin-bottom */
+    text-align: left; /* Adjusted to match dashboard-section h2 text-align */
+    font-size: 1.8em; /* Adjusted to match dashboard-section h2 font-size */
+    font-weight: 700; /* Adjusted to match dashboard-section h2 font-weight */
+}
+.user-management-container .error {
+    color: var(--secondary); /* Using secondary for error */
+    text-align: center;
+    margin-bottom: 15px;
+}
+.user-management-container .success {
+    color: var(--success);
+    text-align: center;
+    margin-bottom: 15px;
+}
+.add-user-form {
+    margin-bottom: 36px; /* Adjusted to match dashboard-section margin-bottom */
+    padding: 24px 32px; /* Adjusted to match dashboard-section padding */
+    border: none; /* Removed border */
+    border-radius: 12px; /* Adjusted to match dashboard-section border-radius */
+    background-color: var(--white-bg); /* Using white-bg */
+    box-shadow: 0 4px 16px rgba(52,73,94,0.16); /* Adjusted to match dashboard-section box-shadow */
+}
+.add-user-form h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--primary);
+    font-size: 1.5em;
+    font-weight: 700;
+}
+.add-user-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: var(--dark-text); /* Using dark-text */
+}
+.add-user-form input[type="text"],
+.add-user-form input[type="password"],
+.add-user-form select {
+    width: 100%; /* Full width */
+    padding: 12px 14px; /* Adjusted to match input/select in style.css */
+    margin: 14px 0 22px 0; /* Adjusted to match input/select in style.css */
+    border: 1.5px solid #ccc; /* Adjusted to match input/select in style.css */
+    border-radius: 8px; /* Adjusted to match input/select in style.css */
+    font-size: 1.08em; /* Adjusted to match input/select in style.css */
+    font-family: 'Quicksand', sans-serif;
+    box-sizing: border-box;
+    background: #f8f8f8; /* Adjusted to match input/select in style.css */
+}
+.add-user-form input:focus,
+.add-user-form select:focus {
+    border-color: var(--primary); /* Adjusted to match input/select focus in style.css */
+    box-shadow: 0 2px 8px rgba(124,152,133,0.08); /* Adjusted to match input/select focus in style.css */
+}
+.add-user-form button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 10px 22px; /* Adjusted to match btn-primary in style.css */
+    border-radius: 6px; /* Adjusted to match btn-primary in style.css */
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+    font-weight: 700; /* Added font-weight */
+    box-shadow: 0 2px 6px rgba(52,73,94,0.08); /* Added box-shadow */
+    font-family: 'Quicksand', sans-serif; /* Added font-family */
+}
+.add-user-form button:hover {
+    background: var(--primary-light); /* Using primary-light for hover */
+}
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0; /* Adjusted to match table margin in style.css */
+    background: var(--white-bg); /* Using white-bg */
+    border-radius: 8px; /* Adjusted to match table border-radius in style.css */
+    box-shadow: 0 4px 16px rgba(52,73,94,0.16); /* Adjusted to match table box-shadow in style.css */
+    overflow: hidden;
+}
+.users-table th, .users-table td {
+    padding: 14px 18px; /* Adjusted to match th/td padding in style.css */
+    border-bottom: 1px solid #eee; /* Adjusted to match th/td border-bottom in style.css */
+    text-align: left;
+    color: var(--dark-text); /* Ensure text color is consistent */
+}
+.users-table th {
+    background-color: var(--primary); /* Using primary for table header */
+    color: #fff !important; /* Ensure text color is white */
+    font-weight: 700; /* Ensure font-weight is bold */
+}
+.users-table tr:nth-child(even) {
+    background-color: #f8f8f8; /* Keep light grey for even rows */
+}
+.users-table tr:hover {
+    background-color: #ffffff; /* Adjusted to match table hover in style.css */
+}
+.users-table .actions button {
+    background: var(--success); /* Using success for edit buttons */
+    color: #fff;
+    border: none;
+    padding: 10px 22px; /* Adjusted to match btn-warning in style.css */
+    border-radius: 6px; /* Adjusted to match btn-warning in style.css */
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-right: 6px; /* Adjusted margin */
+    margin-bottom: 6px; /* Adjusted margin */
+    transition: background-color 0.3s ease;
+    font-weight: 700; /* Added font-weight */
+    box-shadow: 0 2px 6px rgba(52,73,94,0.08); /* Added box-shadow */
+    font-family: 'Quicksand', sans-serif; /* Added font-family */
+}
+.users-table .actions button.delete {
+    background: var(--secondary); /* Using secondary for delete buttons */
+}
+.users-table .actions button:hover {
+    background: var(--primary-light); /* Adjusted hover to primary-light for consistency */
+    color: #fff;
+}
+
+/* Modal Styling for Edit User Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0; top: 0; width: 100vw; height: 100vh;
+    background: rgba(52, 73, 94, 0.18);
+    backdrop-filter: blur(2px);
+    overflow: auto;
+}
+.modal-content {
+    background: var(--white-bg);
+    margin: 40px auto;
+    padding: 40px 36px 32px 36px;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 12px 48px rgba(52,73,94,0.32);
+    position: relative;
+    color: var(--dark-text);
+}
+.modal-content h2 {
+    margin-top: 0;
+    color: var(--primary);
+    text-align: center; /* Centered as per original users.php modal */
+}
+.modal-content .close-button {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 2em;
+    color: var(--secondary);
+    cursor: pointer;
+    font-weight: bold;
+    background: none;
+    border: none;
+    outline: none;
+    transition: color 0.2s;
+    z-index: 2;
+}
+.modal-content .close-button:hover {
+    color: #a81c2a;
+}
+.modal-content input[type="text"],
+.modal-content input[type="password"],
+.modal-content select {
+    width: 100%;
+    padding: 12px 14px;
+    margin: 14px 0 22px 0;
+    border: 1.5px solid #ccc;
+    border-radius: 8px;
+    font-size: 1.08em;
+    font-family: 'Quicksand', sans-serif;
+    box-sizing: border-box;
+    background: #f8f8f8;
+}
+.modal-content input:focus,
+.modal-content select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(124,152,133,0.08);
+}
+.modal-content button[type="submit"] {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px; /* Added margin-top for spacing */
+    box-shadow: 0 2px 6px rgba(52,73,94,0.08);
+    font-family: 'Quicksand', sans-serif;
+    transition: background 0.2s;
+}
+.modal-content button[type="submit"]:hover {
+    background: var(--primary-light);
+}

@@ -3,8 +3,6 @@ include 'includes/auth.php';
 $page_title = 'Inventory Management';
 include 'includes/db.php';
 
-$current_page = basename($_SERVER['PHP_SELF']); // Get the current page filename
-
 // Check if the logged-in user is an admin
 $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 ?>

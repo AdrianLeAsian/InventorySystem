@@ -1,13 +1,9 @@
 <?php
-session_start(); // Ensure session is started
 include 'db.php';
-include 'auth.php'; // Include auth.php for check_admin_role()
-
 $action = isset($_POST['action']) ? $_POST['action'] : '';
 $item_id = isset($_POST['item_id']) ? intval($_POST['item_id']) : 0;
 
 if ($action == 'update_stock') {
-    check_admin_role(); // Enforce admin role for updating stock
     $quantity = intval($_POST['quantity']);
     $is_perishable = isset($_POST['is_perishable']) ? intval($_POST['is_perishable']) : 0;
     $expiry_date = isset($_POST['expiry_date']) ? $_POST['expiry_date'] : null;
@@ -62,7 +58,6 @@ if ($action == 'update_stock') {
 }
 
 if ($action == 'reduce_stock') {
-    check_admin_role(); // Enforce admin role for reducing stock
     $quantity = intval($_POST['quantity']);
     $is_perishable = isset($_POST['is_perishable']) ? intval($_POST['is_perishable']) : 0;
     $expiry_date = isset($_POST['expiry_date']) ? $_POST['expiry_date'] : null;

@@ -2,8 +2,6 @@
 include 'includes/auth.php';
 $page_title = 'Dashboard';
 include 'includes/db.php';
-
-$current_page = basename($_SERVER['PHP_SELF']); // Get the current page filename
 ?>
 <!DOCTYPE html>
 <html lang="en">

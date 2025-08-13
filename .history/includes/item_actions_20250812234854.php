@@ -1,13 +1,10 @@
 
 <?php
-session_start(); // Ensure session is started
 include 'db.php';
-include 'auth.php'; // Include auth.php for check_admin_role()
 
 $action = isset($_POST['action']) ? $_POST['action'] : '';
 
 if ($action == 'get') {
-	// No admin check needed for read operation
 	$id = intval($_POST['id']);
 	$stmt = $conn->prepare("SELECT * FROM items WHERE id = ?");
 	$stmt->bind_param('i', $id);
@@ -18,9 +15,7 @@ if ($action == 'get') {
 	exit;
 }
 
-// For 'add', 'edit', 'delete' actions, admin access is required
 if ($action == 'add') {
-    check_admin_role(); // Enforce admin role for adding items
 	$name = trim($_POST['name']);
 	$category_id = intval($_POST['category_id']);
 	$location_id = intval($_POST['location_id']);
@@ -68,7 +63,6 @@ if ($action == 'add') {
 }
 
 if ($action == 'edit') {
-    check_admin_role(); // Enforce admin role for editing items
 	$id = intval($_POST['id']);
 	$name = trim($_POST['name']);
 	$category_id = intval($_POST['category_id']);
@@ -130,7 +124,6 @@ if ($action == 'edit') {
 }
 
 if ($action == 'delete') {
-    check_admin_role(); // Enforce admin role for deleting items
 	$id = intval($_POST['id']);
 
 	// Get item details for logging before deleting

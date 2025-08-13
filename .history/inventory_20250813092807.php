@@ -2,11 +2,6 @@
 include 'includes/auth.php';
 $page_title = 'Inventory Management';
 include 'includes/db.php';
-
-$current_page = basename($_SERVER['PHP_SELF']); // Get the current page filename
-
-// Check if the logged-in user is an admin
-$is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,11 +17,9 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         <h2 style="margin-bottom:0;">Items List</h2>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px;">
             <div style="display:flex;gap:8px;">
-                <?php if ($is_admin): ?>
                 <button type="button" class="btn-primary" onclick="showAddItemModal()">Add Item</button>
                 <button type="button" class="btn-primary" onclick="showAddCategoryModal()">Add Category</button>
                 <button type="button" class="btn-primary" onclick="showAddLocationModal()">Add Location</button>
-                <?php endif; ?>
             </div>
             <form method="get" style="display:flex;align-items:center;gap:12px;margin:0;">
                 <input type="text" name="search" placeholder="Search item name..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" style="max-width:220px;">
@@ -56,9 +49,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
                     <th>Stock</th>
                     <th>Status</th>
                     <th>Perishable</th>
-                    <?php if ($is_admin): ?>
                     <th>Actions</th>
-                    <?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -111,13 +102,11 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
                     }
                     echo '<td><span class="' . $statusColor . '">' . $status . '</span></td>';
                     echo '<td>' . ($row['is_perishable'] ? 'Yes' : 'No') . '</td>';
-                    if ($is_admin): // Only show actions if admin
                     echo '<td>';
                     echo '<button class="btn-warning" onclick="showEditItemModal(' . $row['id'] . ')">Edit</button> ';
                     echo '<button class="btn-danger" onclick="showDeleteItemModal(' . $row['id'] . ')">Delete</button> ';
                     echo '<button class="btn-update-stock" onclick="showUpdateStockModal(' . $row['id'] . ',' . $row['is_perishable'] . ')">Update Stock</button>';
                     echo '</td>';
-                    endif;
                     echo '</tr>';
                 }
                 ?>
@@ -151,8 +140,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
                     } else {
                         // Assume shelf life is from today to expiry
                         $fifo_life = $exp - $now;
-                        $half_life = $fifo_life / 86400 / 2;
-                        if ($days_total <= $half_life) {
+                        $half_life = $fifo_life / 2;
+                        if ($days_total <= $half_life / 86400) {
                             $status = 'Near';
                             $color = '#FFA500';
                         } else {
@@ -177,7 +166,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
                 <h3>Categories</h3>
                 <table border="1" cellpadding="10" cellspacing="0" style="width:100%;">
                     <thead>
-                        <tr><th>Name</th><?php if ($is_admin): ?><th>Actions</th><?php endif; ?></tr>
+                        <tr><th>Name</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                         <?php
@@ -187,12 +176,10 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
                         while ($row = $catsRes->fetch_assoc()) {
                             echo '<tr>';
                             echo '<td>' . htmlspecialchars($row['name']) . '</td>';
-                            if ($is_admin): // Only show actions if admin
                             echo '<td>';
                             echo '<button class="btn-warning" onclick="showEditCategoryModal(' . $row['id'] . ', \'' . addslashes($row['name']) . '\')">Edit</button> ';
                             echo '<button class="btn-danger" onclick="showDeleteCategoryModal(' . $row['id'] . ')">Delete</button>';
                             echo '</td>';
-                            endif;
                             echo '</tr>';
                         }
                         $catsStmt->close();
@@ -204,7 +191,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
                 <h3>Locations</h3>
                 <table border="1" cellpadding="10" cellspacing="0" style="width:100%;">
                     <thead>
-                        <tr><th>Name</th><?php if ($is_admin): ?><th>Actions</th><?php endif; ?></tr>
+                        <tr><th>Name</th><th>Actions</th></tr>
                     </thead>
                     <tbody>
                         <?php
@@ -214,12 +201,10 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
                         while ($row = $locsRes->fetch_assoc()) {
                             echo '<tr>';
                             echo '<td>' . htmlspecialchars($row['name']) . '</td>';
-                            if ($is_admin): // Only show actions if admin
                             echo '<td>';
                             echo '<button class="btn-warning" onclick="showEditLocationModal(' . $row['id'] . ', \'' . addslashes($row['name']) . '\')">Edit</button> ';
                             echo '<button class="btn-danger" onclick="showDeleteLocationModal(' . $row['id'] . ')">Delete</button>';
                             echo '</td>';
-                            endif;
                             echo '</tr>';
                         }
                         $locsStmt->close();
@@ -231,15 +216,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
     </div>
     <?php include 'includes/modals.php'; ?>
     <script>
-    // Pass PHP variable to JavaScript
-    const IS_ADMIN = <?php echo json_encode($is_admin); ?>;
-
     // Modal helpers
     function showAddItemModal() {
-        if (!IS_ADMIN) {
-            alert('You do not have permission to add items.');
-            return;
-        }
         document.getElementById('modal').style.display = 'block';
         document.getElementById('modal-body').innerHTML = `
             <h3>Add Item</h3>
@@ -327,10 +305,6 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         });
     }
     function showEditItemModal(id) {
-        if (!IS_ADMIN) {
-            alert('You do not have permission to edit items.');
-            return;
-        }
         document.getElementById('modal').style.display = 'block';
         document.getElementById('modal-body').innerHTML = '<div style="text-align:center;padding:32px 0;">Loading item details...</div>';
         fetch('includes/item_actions.php', {method:'POST',body:new URLSearchParams({action:'get',id:id})})
@@ -460,10 +434,6 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         });
     }
     function showDeleteItemModal(id) {
-        if (!IS_ADMIN) {
-            alert('You do not have permission to delete items.');
-            return;
-        }
         document.getElementById('modal').style.display = 'block';
         document.getElementById('modal-body').innerHTML = `
             <h3>Delete Item</h3>
@@ -486,10 +456,6 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         };
     }
     function showUpdateStockModal(id, is_perishable) {
-        if (!IS_ADMIN) {
-            alert('You do not have permission to update stock.');
-            return;
-        }
         document.getElementById('modal').style.display = 'block';
         document.getElementById('modal-body').innerHTML = `
             <h3>Update Stock</h3>
@@ -527,10 +493,6 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
     }
     // Category modals
     function showAddCategoryModal() {
-        if (!IS_ADMIN) {
-            alert('You do not have permission to add categories.');
-            return;
-        }
         document.getElementById('modal').style.display = 'block';
         document.getElementById('modal-body').innerHTML = `
             <h3>Add Category</h3>
@@ -553,10 +515,6 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         };
     }
     function showEditCategoryModal(id, name) {
-        if (!IS_ADMIN) {
-            alert('You do not have permission to edit categories.');
-            return;
-        }
         document.getElementById('modal').style.display = 'block';
         document.getElementById('modal-body').innerHTML = `
             <h3>Edit Category</h3>
@@ -580,10 +538,6 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         };
     }
     function showDeleteCategoryModal(id) {
-        if (!IS_ADMIN) {
-            alert('You do not have permission to delete categories.');
-            return;
-        }
         document.getElementById('modal').style.display = 'block';
         document.getElementById('modal-body').innerHTML = `
             <h3>Delete Category</h3>
@@ -607,10 +561,6 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
     }
     // Location modals
     function showAddLocationModal() {
-        if (!IS_ADMIN) {
-            alert('You do not have permission to add locations.');
-            return;
-        }
         document.getElementById('modal').style.display = 'block';
         document.getElementById('modal-body').innerHTML = `
             <h3>Add Location</h3>
@@ -633,10 +583,6 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         };
     }
     function showEditLocationModal(id, name) {
-        if (!IS_ADMIN) {
-            alert('You do not have permission to edit locations.');
-            return;
-        }
         document.getElementById('modal').style.display = 'block';
         document.getElementById('modal-body').innerHTML = `
             <h3>Edit Location</h3>
@@ -660,10 +606,6 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         };
     }
     function showDeleteLocationModal(id) {
-        if (!IS_ADMIN) {
-            alert('You do not have permission to delete locations.');
-            return;
-        }
         document.getElementById('modal').style.display = 'block';
         document.getElementById('modal-body').innerHTML = `
             <h3>Delete Location</h3>

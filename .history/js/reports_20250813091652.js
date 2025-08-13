@@ -532,17 +532,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Export Functionality ---
     document.getElementById('exportDetailedInventory').addEventListener('click', () => {
         const filters = getDetailedInventoryFilters();
-        triggerExport('detailed_inventory', filters, 'CSV');
+        const exportType = prompt("Export Detailed Inventory as (PDF, Excel, CSV)?", "CSV");
+        if (exportType) {
+            triggerExport('detailed_inventory', filters, exportType.toUpperCase());
+        }
     });
 
     document.getElementById('exportTransactionLogs').addEventListener('click', () => {
         const filters = getTransactionLogsFilters();
-        triggerExport('transaction_logs', filters, 'CSV');
+        const exportType = prompt("Export Transaction Logs as (PDF, Excel, CSV)?", "CSV");
+        if (exportType) {
+            triggerExport('transaction_logs', filters, exportType.toUpperCase());
+        }
     });
 
     document.getElementById('exportCalendarList').addEventListener('click', () => {
-        const filters = getCalendarFilters(); // Use getCalendarFilters to pass current filters
-        triggerExport('expiry_calendar_list', filters, 'CSV');
+        const exportType = prompt("Export Expiry Calendar List as (PDF, Excel, CSV)?", "CSV");
+        if (exportType) {
+            // For calendar, we export the currently loaded events
+            triggerCalendarExport(exportType.toUpperCase());
+        }
     });
 
     function triggerExport(reportType, filters, format) {
@@ -573,41 +582,64 @@ document.addEventListener('DOMContentLoaded', function() {
         window.open('export.php?' + formData.toString(), '_blank');
     }
 });
+</final_file_content>
 
-// Moved from inventory.php
-function showImportCsvModal() {
-    document.getElementById('modal').style.display = 'block';
-    document.getElementById('modal-body').innerHTML = `
-        <h3>Import CSV</h3>
-        <div style="margin-bottom: 15px;">
-            <a href="download_template.php" class="btn-primary" style="text-decoration:none; padding: 8px 12px; border-radius: 5px;">Download Template</a>
-        </div>
-        <form action="import_csv.php" method="post" enctype="multipart/form-data" id="importCsvForm">
-            <label>Select CSV File<span class="required-asterisk">*</span></label>
-            <input type="file" name="csv_file" accept=".csv" required><br>
-            <button type="submit" class="btn-primary">Import</button>
-        </form>
-        <div id="importCsvMsg"></div>
-    `;
-    document.getElementById('importCsvForm').onsubmit = function(e) {
-        e.preventDefault();
-        var fd = new FormData(this);
-        fetch('import_csv.php', {method:'POST',body:fd})
-        .then(r=>r.text()).then(text=>{ // Changed to text to see full response
-            try {
-                var d = JSON.parse(text);
-                document.getElementById('importCsvMsg').innerText = d.message || (d.status=='success'?'CSV imported!':'Error');
-                if(d.status=='success') setTimeout(()=>location.reload(),800);
-            } catch (e) {
-                // If not JSON, it's likely a redirect or raw PHP output
-                console.error("Non-JSON response:", text);
-                document.getElementById('importCsvMsg').innerText = "Import initiated. Please refresh the page if it doesn't update automatically.";
-                setTimeout(()=>location.reload(),800);
-            }
-        })
-        .catch(error => {
-            console.error('Error during fetch:', error);
-            document.getElementById('importCsvMsg').innerText = 'An error occurred during import.';
-        });
-    };
-}
+IMPORTANT: For any future changes to this file, use the final_file_content shown above as your reference. This content reflects the current state of the file, including any auto-formatting (e.g., if you used single quotes but the formatter converted them to double quotes). Always base your SEARCH/REPLACE operations on this final version to ensure accuracy.
+
+<environment_details>
+# VSCode Visible Files
+js/reports.js
+
+# VSCode Open Tabs
+ajax/get_usage_trends.php
+memory-bank/progress.md
+css/main.css
+dashboard.php
+assets/css/style.css
+assets/templates/item_import_template.xlsx
+db.sql
+mock_data.sql
+ajax/add_item.php
+ajax/update_item.php
+ajax/get_item.php
+ajax/get_latest_item_updates.php
+ajax/log_stock.php
+ajax/get_filtered_items.php
+includes/InventoryImporter.php
+pages/edit_item.php
+pages/inventory.php
+pages/reports.php
+includes/add_item_modal.php
+includes/edit_item_modal.php
+includes/sidebar.php
+includes/log_stock_modal.php
+js/inventory.js
+assets/templates/sample_inventory_template.csv
+signup.php
+login.php
+users.php
+includes/user_actions.php
+db_inventory.sql
+assets/template/inventory_template.csv
+assets/template/item_import_template.xlsx
+assets/template/data.csv
+includes/ExcelImporter.php
+import_csv.php
+inventory.php
+reports.php
+js/reports.js
+import_excel.php
+includes/report_functions.php
+ajax/reports_data.php
+assets/css/reports.css
+export.php
+
+# Current Time
+8/13/2025, 9:16:19 AM (Asia/Manila, UTC+8:00)
+
+# Context Window Usage
+94,801 / 1,048.576K tokens used (9%)
+
+# Current Mode
+ACT MODE
+</environment_details>

@@ -19,7 +19,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Load data for the active tab
             loadTabContent(tab);
-        });
+    function showImportCsvModal() {
+        document.getElementById('modal').style.display = 'block';
+        document.getElementById('modal-body').innerHTML = `
+            <h3>Import CSV</h3>
+            <div style="margin-bottom: 15px;">
+                <a href="download_template.php" class="btn-primary" style="text-decoration:none; padding: 8px 12px; border-radius: 5px;">Download Template</a>
+            </div>
+            <form action="import_csv.php" method="post" enctype="multipart/form-data" id="importCsvForm">
+                <label>Select CSV File<span class="required-asterisk">*</span></label>
+                <input type="file" name="csv_file" accept=".csv" required><br>
+                <button type="submit" class="btn-primary">Import</button>
+            </form>
+            <div id="importCsvMsg"></div>
+        `;
+        document.getElementById('importCsvForm').onsubmit = function(e) {
+            e.preventDefault();
+            var fd = new FormData(this);
+            fetch('import_csv.php', {method:'POST',body:fd})
+            .then(r=>r.text()).then(text=>{ // Changed to text to see full response
+                try {
+                    var d = JSON.parse(text);
+                    document.getElementById('importCsvMsg').innerText = d.message || (d.status=='success'?'CSV imported!':'Error');
+                    if(d.status=='success') setTimeout(()=>location.reload(),800);
+                } catch (e) {
+                    // If not JSON, it's likely a redirect or raw PHP output
+                    console.error("Non-JSON response:", text);
+                    document.getElementById('importCsvMsg').innerText = "Import initiated. Please refresh the page if it doesn't update automatically.";
+                    setTimeout(()=>location.reload(),800);
+                }
+            })
+            .catch(error => {
+                console.error('Error during fetch:', error);
+                document.getElementById('importCsvMsg').innerText = 'An error occurred during import.';
+            });
+        };
+    }
+});
     });
 
     // Initial load of the active tab (Stock Summary)
@@ -532,17 +568,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Export Functionality ---
     document.getElementById('exportDetailedInventory').addEventListener('click', () => {
         const filters = getDetailedInventoryFilters();
-        triggerExport('detailed_inventory', filters, 'CSV');
+        const exportType = prompt("Export Detailed Inventory as (PDF, Excel, CSV)?", "CSV");
+        if (exportType) {
+            triggerExport('detailed_inventory', filters, exportType.toUpperCase());
+        }
     });
 
     document.getElementById('exportTransactionLogs').addEventListener('click', () => {
         const filters = getTransactionLogsFilters();
-        triggerExport('transaction_logs', filters, 'CSV');
+        const exportType = prompt("Export Transaction Logs as (PDF, Excel, CSV)?", "CSV");
+        if (exportType) {
+            triggerExport('transaction_logs', filters, exportType.toUpperCase());
+        }
     });
 
     document.getElementById('exportCalendarList').addEventListener('click', () => {
-        const filters = getCalendarFilters(); // Use getCalendarFilters to pass current filters
-        triggerExport('expiry_calendar_list', filters, 'CSV');
+        const exportType = prompt("Export Expiry Calendar List as (PDF, Excel, CSV)?", "CSV");
+        if (exportType) {
+            // For calendar, we export the currently loaded events
+            triggerCalendarExport(exportType.toUpperCase());
+        }
     });
 
     function triggerExport(reportType, filters, format) {
@@ -573,41 +618,3 @@ document.addEventListener('DOMContentLoaded', function() {
         window.open('export.php?' + formData.toString(), '_blank');
     }
 });
-
-// Moved from inventory.php
-function showImportCsvModal() {
-    document.getElementById('modal').style.display = 'block';
-    document.getElementById('modal-body').innerHTML = `
-        <h3>Import CSV</h3>
-        <div style="margin-bottom: 15px;">
-            <a href="download_template.php" class="btn-primary" style="text-decoration:none; padding: 8px 12px; border-radius: 5px;">Download Template</a>
-        </div>
-        <form action="import_csv.php" method="post" enctype="multipart/form-data" id="importCsvForm">
-            <label>Select CSV File<span class="required-asterisk">*</span></label>
-            <input type="file" name="csv_file" accept=".csv" required><br>
-            <button type="submit" class="btn-primary">Import</button>
-        </form>
-        <div id="importCsvMsg"></div>
-    `;
-    document.getElementById('importCsvForm').onsubmit = function(e) {
-        e.preventDefault();
-        var fd = new FormData(this);
-        fetch('import_csv.php', {method:'POST',body:fd})
-        .then(r=>r.text()).then(text=>{ // Changed to text to see full response
-            try {
-                var d = JSON.parse(text);
-                document.getElementById('importCsvMsg').innerText = d.message || (d.status=='success'?'CSV imported!':'Error');
-                if(d.status=='success') setTimeout(()=>location.reload(),800);
-            } catch (e) {
-                // If not JSON, it's likely a redirect or raw PHP output
-                console.error("Non-JSON response:", text);
-                document.getElementById('importCsvMsg').innerText = "Import initiated. Please refresh the page if it doesn't update automatically.";
-                setTimeout(()=>location.reload(),800);
-            }
-        })
-        .catch(error => {
-            console.error('Error during fetch:', error);
-            document.getElementById('importCsvMsg').innerText = 'An error occurred during import.';
-        });
-    };
-}
