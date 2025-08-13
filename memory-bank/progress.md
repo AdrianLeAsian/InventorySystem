@@ -27,7 +27,7 @@
     -   User roles are loaded into the session upon login.
     -   Access to `inventory.php` and `users.php` is restricted to 'admin' role users.
     -   User management features (adding users, updating roles) are available on the `users.php` page for admins.
-    -   The 'Users' link in the sidebar is conditionally displayed only for 'admin' users.
+    -   The 'Users' link and 'Inventory' link in the sidebar are conditionally displayed only for 'admin' users.
     -   The GUI of the User Management page (`users.php`) has been updated for consistency with the system's overall look and feel.
 
 **What's left to build:**
