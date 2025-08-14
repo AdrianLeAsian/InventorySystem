@@ -8,7 +8,6 @@
     <?php endif; ?>
     <a href="reports.php" class="nav-link"><span class="icon"><span class="material-icons">bar_chart</span></span>Reports</a>
     <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-    <a href="import.php" class="nav-link"><span class="icon"><span class="material-icons">upload_file</span></span>Import</a>
     <a href="users.php" class="nav-link"><span class="icon"><span class="material-icons">people</span></span>Users</a>
     <?php endif; ?>
     <a href="logout.php" class="nav-link" style="margin-top:32px;color:#D33F49;"><span class="icon"><span class="material-icons">logout</span></span>Logout</a>

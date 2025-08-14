@@ -13,10 +13,6 @@
     --white-bg: #ffffff;
 }
 
-*, *::before, *::after {
-    box-sizing: border-box;
-}
-
 body {
     font-family: 'Quicksand', sans-serif;
     background: var(--light-bg);
@@ -78,16 +74,12 @@ body {
     color: var(--primary);
     border-bottom: 1px solid #eee;
     box-shadow: 0 4px 16px rgba(52,73,94,0.12);
-    position: relative; /* Ensure z-index works */
-    z-index: 50; /* Ensure header is above main content if needed */
 }
 
 .main-content {
     margin-left: 220px;
     padding: 36px;
     min-height: 100vh;
-    position: relative; /* Ensure proper positioning context */
-    overflow: hidden; /* Contains floats and prevents margin collapse */
 }
 
 .dashboard-section {

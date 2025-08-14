@@ -1,13 +1,5 @@
 <?php
-session_start(); // Start the session to access user role
 include 'db.php';
-
-// Check if user is logged in and has the 'admin' role for write operations
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    echo json_encode(['status' => 'error', 'message' => 'Access denied. Only administrators can manage categories and locations.']);
-    exit;
-}
-
 $action = isset($_POST['action']) ? $_POST['action'] : '';
 $type = isset($_POST['type']) ? $_POST['type'] : '';
 

@@ -1,13 +1,5 @@
 <?php
-session_start(); // Start the session to access user role
 include 'db.php';
-
-// Check if user is logged in and has the 'admin' role for write operations
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    echo json_encode(['status' => 'error', 'message' => 'Access denied. Only administrators can perform stock operations.']);
-    exit;
-}
-
 $action = isset($_POST['action']) ? $_POST['action'] : '';
 $item_id = isset($_POST['item_id']) ? intval($_POST['item_id']) : 0;
 
@@ -35,10 +27,10 @@ if ($action == 'update_stock') {
             $update_stock_stmt->execute();
             $update_stock_stmt->close();
             
-            // Log the action (category column removed from logs table)
-            $log_stmt = $conn->prepare("INSERT INTO logs (item_id, action) VALUES (?, ?)");
+            // Log the action
+            $log_stmt = $conn->prepare("INSERT INTO logs (item_id, action, category) VALUES (?, ?, ?)");
             $log_action = 'Stocked In';
-            $log_stmt->bind_param('is', $item_id, $log_action);
+            $log_stmt->bind_param('iss', $item_id, $log_action, $category_name);
             $log_stmt->execute();
 
             echo json_encode(['status' => 'success']);
@@ -89,10 +81,10 @@ if ($action == 'reduce_stock') {
             $update_stock_stmt->execute();
             $update_stock_stmt->close();
             
-            // Log the action (category column removed from logs table)
-            $log_stmt = $conn->prepare("INSERT INTO logs (item_id, action) VALUES (?, ?)");
+            // Log the action
+            $log_stmt = $conn->prepare("INSERT INTO logs (item_id, action, category) VALUES (?, ?, ?)");
             $log_action = 'Stocked Out';
-            $log_stmt->bind_param('is', $item_id, $log_action);
+            $log_stmt->bind_param('iss', $item_id, $log_action, $category_name);
             $log_stmt->execute();
 
             echo json_encode(['status' => 'success']);

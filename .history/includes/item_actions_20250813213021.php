@@ -159,10 +159,9 @@ if ($action == 'delete') {
 		$category_row = $category_result->fetch_assoc();
 		$category_name = $category_row['name'];
 
-		// Log the action (category column removed from logs table)
-		$log_stmt = $conn->prepare("INSERT INTO logs (item_id, action) VALUES (?, ?)");
+		$log_stmt = $conn->prepare("INSERT INTO logs (item_id, action, category) VALUES (?, ?, ?)");
 		$log_action = 'Deleted';
-		$log_stmt->bind_param('is', $id, $log_action);
+		$log_stmt->bind_param('iss', $id, $log_action, $category_name);
 		$log_stmt->execute();
 
 		echo json_encode(['status' => 'success']);

@@ -61,10 +61,11 @@ if ($action == 'add') {
 		$category_name_stmt->execute();
 		$category_result = $category_name_stmt->get_result();
 		$category_row = $category_result->fetch_assoc();
-		// Log the action (category column removed from logs table)
-		$log_stmt = $conn->prepare("INSERT INTO logs (item_id, action) VALUES (?, ?)");
+		$category_name = $category_row['name'];
+
+		$log_stmt = $conn->prepare("INSERT INTO logs (item_id, action, category) VALUES (?, ?, ?)");
 		$log_action = 'Added';
-		$log_stmt->bind_param('is', $item_id, $log_action);
+		$log_stmt->bind_param('iss', $item_id, $log_action, $category_name);
 		$log_stmt->execute();
 
 		echo json_encode(['status' => 'success']);
@@ -124,9 +125,8 @@ if ($action == 'edit') {
 			$log_action = 'Stocked Out';
 		}
 
-		// Log the action (category column removed from logs table)
-		$log_stmt = $conn->prepare("INSERT INTO logs (item_id, action) VALUES (?, ?)");
-		$log_stmt->bind_param('is', $id, $log_action);
+		$log_stmt = $conn->prepare("INSERT INTO logs (item_id, action, category) VALUES (?, ?, ?)");
+		$log_stmt->bind_param('iss', $id, $log_action, $category_name);
 		$log_stmt->execute();
 
 		echo json_encode(['status' => 'success']);
@@ -159,10 +159,9 @@ if ($action == 'delete') {
 		$category_row = $category_result->fetch_assoc();
 		$category_name = $category_row['name'];
 
-		// Log the action (category column removed from logs table)
-		$log_stmt = $conn->prepare("INSERT INTO logs (item_id, action) VALUES (?, ?)");
+		$log_stmt = $conn->prepare("INSERT INTO logs (item_id, action, category) VALUES (?, ?, ?)");
 		$log_action = 'Deleted';
-		$log_stmt->bind_param('is', $id, $log_action);
+		$log_stmt->bind_param('iss', $id, $log_action, $category_name);
 		$log_stmt->execute();
 
 		echo json_encode(['status' => 'success']);

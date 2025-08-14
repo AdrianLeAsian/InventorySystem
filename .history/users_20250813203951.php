@@ -20,16 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $password = trim($_POST['password']);
     $role = trim($_POST['role']); // Get the role from the form
 
-    // Input validation for add_user
-    if (empty($username) || empty($password) || empty($role)) {
-        $error = 'All fields are required for adding a user.';
-    } elseif (strlen($username) < 3) {
-        $error = 'Username must be at least 3 characters long.';
-    } elseif (strlen($password) < 6) { // Stronger password requirement
-        $error = 'Password must be at least 6 characters long.';
-    } elseif (!in_array($role, ['user', 'admin'])) {
-        $error = 'Invalid role specified.';
-    } else {
+    if ($username && $password && $role) {
         $hash = password_hash($password, PASSWORD_DEFAULT);
         // Check if username already exists
         $checkStmt = $conn->prepare('SELECT id FROM users WHERE username = ?');
@@ -49,20 +40,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
         }
         $checkStmt->close();
+    } else {
+        $error = 'Please enter username, password, and role.';
     }
 }
 
 // Handle role update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_role') {
-    $user_id = intval($_POST['user_id']); // Ensure user_id is an integer
-    $new_role = trim($_POST['role']);
+    $user_id = $_POST['user_id'];
+    $new_role = $_POST['role'];
 
-    // Input validation for update_role
-    if ($user_id <= 0) {
-        $error = 'Invalid user ID.';
-    } elseif (!in_array($new_role, ['user', 'admin'])) {
-        $error = 'Invalid role specified.';
-    } else {
+    if ($user_id && $new_role) {
         $stmt = $conn->prepare('UPDATE users SET role = ? WHERE id = ?');
         $stmt->bind_param('si', $new_role, $user_id);
         if ($stmt->execute()) {
@@ -70,6 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         } else {
             $error = 'Failed to update user role.';
         }
+    } else {
+        $error = 'Invalid user ID or role.';
     }
 }
 

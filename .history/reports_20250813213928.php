@@ -47,49 +47,6 @@ $user_role = $_SESSION['user_role'] ?? 'guest'; // Default to 'guest' if not set
 
             <div class="tab-content" id="detailed-inventory">
                 <h3>Detailed Inventory</h3>
-                <div class="filters-container">
-                    <input type="text" id="detailedInventorySearch" placeholder="Search by item name...">
-                    <select id="detailedInventoryCategoryFilter">
-                        <option value="">All Categories</option>
-                        <?php
-                        $categories_stmt = $conn->prepare("SELECT id, name FROM categories ORDER BY name ASC");
-                        $categories_stmt->execute();
-                        $categories_result = $categories_stmt->get_result();
-                        while ($cat = $categories_result->fetch_assoc()) {
-                            echo "<option value=\"{$cat['id']}\">{$cat['name']}</option>";
-                        }
-                        $categories_stmt->close();
-                        ?>
-                    </select>
-                    <select id="detailedInventoryLocationFilter">
-                        <option value="">All Locations</option>
-                        <?php
-                        $locations_stmt = $conn->prepare("SELECT id, name FROM locations ORDER BY name ASC");
-                        $locations_stmt->execute();
-                        $locations_result = $locations_stmt->get_result();
-                        while ($loc = $locations_result->fetch_assoc()) {
-                            echo "<option value=\"{$loc['id']}\">{$loc['name']}</option>";
-                        }
-                        $locations_stmt->close();
-                        ?>
-                    </select>
-                    <select id="detailedInventoryStockStatusFilter">
-                        <option value="">All Stock Status</option>
-                        <option value="green">Healthy</option>
-                        <option value="orange">Low Stock</option>
-                        <option value="red">Out of Stock</option>
-                    </select>
-                    <select id="detailedInventoryPerishableFilter">
-                        <option value="">All Perishable</option>
-                        <option value="1">Yes</option>
-                        <option value="0">No</option>
-                    </select>
-                    <label for="detailedInventoryExpiryDateStart">Expiry From:</label>
-                    <input type="date" id="detailedInventoryExpiryDateStart">
-                    <label for="detailedInventoryExpiryDateEnd">Expiry To:</label>
-                    <input type="date" id="detailedInventoryExpiryDateEnd">
-                    <button id="applyDetailedInventoryFilters" class="btn-primary">Apply Filters</button>
-                </div>
                 <div class="export-buttons">
                     <button class="btn-primary export-pdf" data-report="detailed-inventory">Export PDF</button>
                     <button class="btn-primary export-csv" data-report="detailed-inventory">Export CSV</button>

@@ -26,16 +26,11 @@ CREATE TABLE items (
     FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE CASCADE
 );
 
--- Add indexes for query optimization
-CREATE INDEX idx_items_expiry_date ON items (expiry_date);
-CREATE INDEX idx_items_current_stock ON items (current_stock);
-CREATE INDEX idx_items_category_id ON items (category_id);
-CREATE INDEX idx_items_location_id ON items (location_id);
-
 CREATE TABLE logs (
     log_id INT AUTO_INCREMENT PRIMARY KEY,
     item_id INT NOT NULL,
     action VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
     date_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
@@ -54,7 +49,6 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'user' NOT NULL
-
 );
 
 -- Table for import history
