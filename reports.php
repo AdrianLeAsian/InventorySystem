@@ -13,6 +13,7 @@ $user_role = $_SESSION['user_role'] ?? 'guest'; // Default to 'guest' if not set
     <meta charset="UTF-8">
     <title>Reports</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/reports.css">
     <script src="js/reports.js" defer></script>
 </head>
 <body>
@@ -29,7 +30,7 @@ $user_role = $_SESSION['user_role'] ?? 'guest'; // Default to 'guest' if not set
                     <button class="tab-button" data-tab="transaction-logs">Transaction Logs</button>
                 <?php endif; ?>
                 <?php if ($user_role === 'admin'): ?>
-                    <button class="tab-button" data-tab="expiry-calendar">Expiry Calendar</button>
+                    <button class="tab-button" data-tab="expiry-calendar">Expiry Logs</button>
                 <?php endif; ?>
             </div>
 
@@ -115,14 +116,14 @@ $user_role = $_SESSION['user_role'] ?? 'guest'; // Default to 'guest' if not set
             <?php endif; ?>
 
             <div class="tab-content" id="expiry-calendar">
-                <h3>Expiry Calendar</h3>
+                <h3>Expiry Logs</h3>
                 <div class="export-buttons">
                     <button class="btn-primary export-pdf" data-report="expiry-calendar">Export PDF</button>
                     <button class="btn-primary export-csv" data-report="expiry-calendar">Export CSV</button>
                 </div>
                 <div class="report-data" id="expiry-calendar-data">
                     <!-- Expiry Calendar data will be loaded here via AJAX -->
-                    <p>Loading Expiry Calendar...</p>
+                    <p>Loading Expiry Logs...</p>
                 </div>
             </div>
         </div>

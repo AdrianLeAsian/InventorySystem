@@ -55,6 +55,14 @@ if ($action == 'add') {
 	if ($stmt->execute()) {
 		$item_id = $conn->insert_id; // Get the ID of the newly inserted item
 
+		// If the item is perishable and has an expiry date, add it to item_batches
+		if ($is_perishable && $expiry_date !== NULL) {
+			$batch_stmt = $conn->prepare("INSERT INTO item_batches (item_id, expiry_date, quantity) VALUES (?, ?, ?)");
+			$batch_stmt->bind_param('isi', $item_id, $expiry_date, $stock);
+			$batch_stmt->execute();
+			$batch_stmt->close();
+		}
+
 		// Log the action
 		$category_name_stmt = $conn->prepare("SELECT name FROM categories WHERE id = ?");
 		$category_name_stmt->bind_param('i', $category_id);

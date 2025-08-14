@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
         switch (reportType) {
             case 'stock-summary':
                 html = `
-                    <div class="dashboard-summary">
+                    <div class="dashboard-summary reports-summary">
                         <div class="summary-card">
                             <div class="card-title">Total Items</div>
                             <div class="card-content">
@@ -121,13 +121,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="summary-card">
                             <div class="card-title">Low Stock Items</div>
                             <div class="card-content">
-                                <span class="counter status-orange">${data.low_stock_items}</span>
+                                <span class="counter stock-status-orange">${data.low_stock_items}</span>
                             </div>
                         </div>
                         <div class="summary-card">
                             <div class="card-title">Out of Stock Items</div>
                             <div class="card-content">
-                                <span class="counter status-red">${data.out_of_stock_items}</span>
+                                <span class="counter stock-status-red">${data.out_of_stock_items}</span>
                             </div>
                         </div>
                         <div class="summary-card">

@@ -1,23 +1,13 @@
-# Active Context
+### Current Work Focus
+- Ensuring perishable items are correctly integrated into the FIFO system upon initial addition.
 
-**Current work focus:**
-Implemented a role-based access control system and enhanced user management features.
+### Recent Changes
+- Modified `includes/item_actions.php` to insert new perishable items into the `item_batches` table when they are added. This includes the `item_id`, `expiry_date`, and `quantity` (initial stock).
 
-**Recent changes:**
--   **Role System Implementation**:
-    -   Modified `login.php` to fetch and store the user's role in the session (`$_SESSION['user_role']`) upon successful login.
-    -   Added role checks to `inventory.php` and `users.php` to restrict access to 'admin' role users only.
-    -   Updated `users.php` to include functionality for admins to add new users with specified roles and to manage existing users' roles. The GUI of the User Management page was also updated for consistency with the system.
-    -   Modified `includes/sidebar.php` to conditionally display the 'Users' link and the 'Inventory' link only for users with the 'admin' role.
--   **Previous Work (Prepared Statements & Authentication)**:
-    -   Implemented prepared statements for all database queries to prevent SQL injection.
-    -   Added session-based authentication checks to key pages (`dashboard.php`, `inventory.php`, `reports.php`, `users.php`) via `includes/auth.php`.
+### Next Steps
+- Monitor the functionality to ensure new perishable items are correctly recorded.
+- Consider future tasks for integrating `item_batches` into stock management and reporting.
 
-**Next steps:**
--   Address any further feedback or new requirements from the user.
-
-**Active decisions and considerations:**
--   Role-based access control enhances security by limiting access to sensitive features based on user privileges.
--   Centralizing role checks in pages and the sidebar ensures consistent enforcement of access policies.
--   The user management interface in `users.php` now provides admins with the necessary tools to manage user accounts and their roles.
--   The security concern regarding the database connection (`root` user with no password) noted in `techContext.md` remains for production environments.
+### Active Decisions and Considerations
+- The `item_batches` table is now the primary source for FIFO management of perishable goods.
+- The initial stock of a perishable item is now recorded as a batch with its expiry date.
