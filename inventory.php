@@ -115,15 +115,15 @@ include 'includes/db.php';
                     echo '<td>';
                     echo '<button class="btn-warning" onclick="showEditItemModal(' . $row['id'] . ')">Edit</button> ';
                     echo '<button class="btn-danger" onclick="showDeleteItemModal(' . $row['id'] . ')">Delete</button> ';
-                    echo '<button class="btn-update-stock" onclick="showUpdateStockModal(' . $row['id'] . ',' . $row['is_perishable'] . ')">Update Stock</button>';
+echo '<button class="btn-update-stock" onclick="showUpdateStockModal(' . $row['id'] . ',' . $row['is_perishable'] . ')">Stock In</button>';
                     echo '</td>';
                     echo '</tr>';
                 }
                 ?>
             </tbody>
         </table>
-        <!-- Perishable FIFO Table -->
-        <h3>Perishable Items (FIFO)</h3>
+        <!-- Perishable/Batched Items Table -->
+        <h3>Perishable/Batched Items</h3>
         <table border="1" cellpadding="10" cellspacing="0">
             <thead>
                 <tr>
@@ -131,11 +131,12 @@ include 'includes/db.php';
                     <th>Expiry Date</th>
                     <th>Status</th>
                     <th>Quantity</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                $fifoStmt = $conn->prepare("SELECT items.name, item_batches.expiry_date, item_batches.quantity FROM item_batches JOIN items ON item_batches.item_id=items.id WHERE items.is_perishable=1 ORDER BY item_batches.expiry_date ASC");
+                $fifoStmt = $conn->prepare("SELECT item_batches.id, items.name, item_batches.expiry_date, item_batches.quantity, items.is_perishable FROM item_batches JOIN items ON item_batches.item_id=items.id WHERE item_batches.quantity > 0 ORDER BY item_batches.expiry_date ASC, items.is_perishable DESC");
                 $fifoStmt->execute();
                 $fifoRes = $fifoStmt->get_result();
                 $now = strtotime(date('Y-m-d'));
@@ -144,26 +145,37 @@ include 'includes/db.php';
                     $days_total = ($exp - $now) / 86400;
                     $status = '';
                     $color = '';
-                    if ($days_total < 0) {
-                        $status = 'Expired';
-                        $color = '#D33F49';
-                    } else {
-                        // Assume shelf life is from today to expiry
-                        $fifo_life = $exp - $now;
-                        $half_life = $fifo_life / 2;
-                        if ($days_total <= $half_life / 86400) {
-                            $status = 'Near';
-                            $color = '#FFA500';
+
+                    if ($row['is_perishable']) {
+                        if ($days_total < 0) {
+                            $status = 'Expired';
+                            $color = '#D33F49';
                         } else {
-                            $status = 'Fresh';
-                            $color = '#27ae60';
+                            $fifo_life = $exp - $now;
+                            $half_life = $fifo_life / 2;
+                            if ($days_total <= $half_life / 86400) {
+                                $status = 'Near';
+                                $color = '#FFA500';
+                            } else {
+                                $status = 'Fresh';
+                                $color = '#27ae60';
+                            }
                         }
+                    } else {
+                        $status = 'N/A'; // Not Applicable for non-perishable
+                        $color = '#6c757d'; // Grey color for N/A
                     }
+                    
                     echo '<tr>';
                     echo '<td>' . htmlspecialchars($row['name']) . '</td>';
-                    echo '<td>' . htmlspecialchars($row['expiry_date']) . '</td>';
+                    echo '<td>' . ($row['expiry_date'] ? htmlspecialchars($row['expiry_date']) : 'N/A') . '</td>';
                     echo '<td><span style="color:' . $color . ';font-weight:bold;">' . $status . '</span></td>';
                     echo '<td>' . $row['quantity'] . '</td>';
+                    echo '<td>';
+                    echo '<button class="btn-warning" onclick="showEditBatchModal(' . $row['id'] . ', \'' . htmlspecialchars($row['name']) . '\', \'' . htmlspecialchars($row['expiry_date'] ?? '') . '\', ' . $row['quantity'] . ', ' . $row['is_perishable'] . ')">Edit</button> ';
+                    echo '<button class="btn-danger" onclick="showDeleteBatchModal(' . $row['id'] . ', \'' . htmlspecialchars($row['name']) . '\')">Delete</button> ';
+                    echo '<button class="btn-update-stock" onclick="showStockOutBatchModal(' . $row['id'] . ', \'' . htmlspecialchars($row['name']) . '\', ' . $row['quantity'] . ')">Stock Out</button>';
+                    echo '</td>';
                     echo '</tr>';
                 }
                 $fifoStmt->close();
@@ -474,7 +486,6 @@ include 'includes/db.php';
                 <input type="number" name="quantity" placeholder="Quantity" min="1" required><br>
                 ${is_perishable ? '<label>Expiry Date<span class="required-asterisk">*</span></label><input type="date" name="expiry_date" required><br>' : ''}
                 <button type="button" class="btn-primary" id="addStockBtn">Add Stock</button>
-                <button type="button" class="btn-danger" id="removeStockBtn">Remove Stock</button>
             </form>
             <div id="updateStockMsg"></div>
         `;
@@ -497,6 +508,76 @@ include 'includes/db.php';
             fetch('includes/stock_actions.php', {method:'POST',body:fd})
             .then(r=>r.json()).then(d=>{
                 document.getElementById('updateStockMsg').innerText = d.message || (d.status=='success'?'Stock removed!':'Error');
+                if(d.status=='success') setTimeout(()=>location.reload(),800);
+            });
+        };
+    }
+    function showEditBatchModal(id, itemName, expiryDate, quantity) {
+        document.getElementById('modal').style.display = 'block';
+        document.getElementById('modal-body').innerHTML = `
+            <h3>Edit Batch: ${itemName}</h3>
+            <form id="editBatchForm">
+                <input type="hidden" name="batch_id" value="${id}">
+                <label>Expiry Date<span class="required-asterisk">*</span></label>
+                <input type="date" name="expiry_date" value="${expiryDate}" required><br>
+                <label>Quantity<span class="required-asterisk">*</span></label>
+                <input type="number" name="quantity" value="${quantity}" min="0" required><br>
+                <button type="submit" class="btn-primary">Update Batch</button>
+            </form>
+            <div id="editBatchMsg"></div>
+        `;
+        document.getElementById('editBatchForm').onsubmit = function(e) {
+            e.preventDefault();
+            var fd = new FormData(this);
+            fd.append('action', 'edit_batch');
+            fetch('includes/stock_actions.php', {method:'POST',body:fd})
+            .then(r=>r.json()).then(d=>{
+                document.getElementById('editBatchMsg').innerText = d.message || (d.status=='success'?'Batch updated!':'Error');
+                if(d.status=='success') setTimeout(()=>location.reload(),800);
+            });
+        };
+    }
+    function showDeleteBatchModal(id, itemName) {
+        document.getElementById('modal').style.display = 'block';
+        document.getElementById('modal-body').innerHTML = `
+            <h3>Delete Batch: ${itemName}</h3>
+            <form id="deleteBatchForm">
+                <input type="hidden" name="batch_id" value="${id}">
+                <p>Are you sure you want to delete this batch? This will remove the entire batch quantity from the item's total stock.</p>
+                <button type="submit" class="btn-danger">Delete Batch</button>
+            </form>
+            <div id="deleteBatchMsg"></div>
+        `;
+        document.getElementById('deleteBatchForm').onsubmit = function(e) {
+            e.preventDefault();
+            var fd = new FormData(this);
+            fd.append('action', 'delete_batch');
+            fetch('includes/stock_actions.php', {method:'POST',body:fd})
+            .then(r=>r.json()).then(d=>{
+                document.getElementById('deleteBatchMsg').innerText = d.message || (d.status=='success'?'Batch deleted!':'Error');
+                if(d.status=='success') setTimeout(()=>location.reload(),800);
+            });
+        };
+    }
+    function showStockOutBatchModal(id, itemName, maxQuantity) {
+        document.getElementById('modal').style.display = 'block';
+        document.getElementById('modal-body').innerHTML = `
+            <h3>Stock Out Batch: ${itemName}</h3>
+            <form id="stockOutBatchForm">
+                <input type="hidden" name="batch_id" value="${id}">
+                <label>Quantity to Stock Out (Max: ${maxQuantity})<span class="required-asterisk">*</span></label>
+                <input type="number" name="quantity" placeholder="Quantity" min="1" max="${maxQuantity}" required><br>
+                <button type="submit" class="btn-danger">Stock Out</button>
+            </form>
+            <div id="stockOutBatchMsg"></div>
+        `;
+        document.getElementById('stockOutBatchForm').onsubmit = function(e) {
+            e.preventDefault();
+            var fd = new FormData(this);
+            fd.append('action', 'stock_out_batch');
+            fetch('includes/stock_actions.php', {method:'POST',body:fd})
+            .then(r=>r.json()).then(d=>{
+                document.getElementById('stockOutBatchMsg').innerText = d.message || (d.status=='success'?'Stock out successful!':'Error');
                 if(d.status=='success') setTimeout(()=>location.reload(),800);
             });
         };

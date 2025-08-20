@@ -43,7 +43,7 @@ CREATE TABLE logs (
 CREATE TABLE item_batches (
     id INT AUTO_INCREMENT PRIMARY KEY,
     item_id INT NOT NULL,
-    expiry_date DATE,
+    expiry_date DATE NULL, -- Modified to allow NULL values
     quantity INT DEFAULT 0,
     FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
 );
